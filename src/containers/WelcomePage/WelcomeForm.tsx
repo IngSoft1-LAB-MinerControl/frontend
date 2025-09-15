@@ -1,26 +1,21 @@
 import "./WelcomeForm.css";
 import InputField from "../../components/InputField";
 import Button from "../../components/Button";
-import AvatarSelector from "../../components/AvatarSelector";
 
 export default function WelcomeForm() {
-  const avatars = ["Avatar1"];
   return (
-    <div className="form-container">
-      <h2 className="form-title">Bienvenido/a!</h2>
-
-      <div className="form-inputs">
+    <form /*onSubmit={handleSubmit}*/ className="form-container">
+      <h1 className="form-title">Bienvenido/a!</h1>
+      <div className="form-input">
+        <label className="form-label">Nombre</label>
         <InputField placeholder="Ingrese su nombre" />
+        <label className="form-label">Fecha de nacimiento</label>
         <InputField placeholder="Ingrese su fecha de nacimiento" type="date" />
       </div>
-      <div className="form-avatar">
-        <AvatarSelector avatars={avatars} />
-      </div>
-
-      <div className="form-actions">
+      <div className="form-button">
         <Button label="Crear Partida" />
         <Button label="Listar Partidas" />
       </div>
-    </div>
+    </form>
   );
 }

@@ -1,11 +1,12 @@
 .input-field {
-  width: 90%;
-  padding: 10px;
-  margin: 8px 0;
+  background-color: transparent;
+  color: #2a1713;
+  border: 1px solid #cccccc;
+  border-radius: 6px;
+}
 
-  border: 2px solid black;
-  border-radius: 4px;
-
-  font-size: 1rem;
-  box-sizing: border-box;
+.input-field:focus {
+  outline: none;
+  border-color: #2a1713;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
