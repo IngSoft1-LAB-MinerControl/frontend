@@ -34,51 +34,52 @@ export default function HomePage() {
     setError("");
     return true;
   };
+
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
-      console.log("✅ Crear partida con:", playerName, playerDate); // acá iría la lógica de crear partida
+      console.log("✅ Crear partida con:", playerName, playerDate);
     }
   };
-  const handleList = (e: React.FormEvent) => {
-    e.preventDefault();
+
+  const handleList = () => {
     if (validate()) {
-      console.log("📋 Listar partidas para:", playerName); // acá iría la lógica de listar partidas
+      console.log("📋 Listar partidas para:", playerName);
     }
   };
+
   return (
     <div className="home-page">
       <form className="form-container">
-        <h1 className="form-title">Bienvenido/a!</h1>
+        <h1 className="form-title">¡Bienvenido!</h1>
 
-        <div className="form-input">
-          <div className="input-group">
-            <label className="form-label">Nombre</label>
-            <InputField
-              placeholder="Ingrese su nombre"
-              value={playerName}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setPlayerName(e.target.value)
-              }
-            />
-          </div>
-
-          <div className="input-group">
-            <label className="form-label">Fecha de nacimiento</label>
-            <InputField
-              type="date"
-              placeholder="Ingrese su fecha de nacimiento"
-              value={playerDate}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setPlayerDate(e.target.value)
-              }
-            />
-          </div>
+        <div className="form-field">
+          <label className="form-label">Nombre</label>
+          <InputField
+            placeholder="Ingrese su nombre"
+            value={playerName}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setPlayerName(e.target.value)
+            }
+          />
         </div>
-        {error && <p style={{ color: "red" }}>{error}</p>}
-        <div className="form-button">
-          <Button label="Crear Partida" onClick={handleCreate} />
-          <Button label="Listar Partidas" onClick={handleList} />
+        <div className="form-field">
+          <label className="form-label">Fecha de nacimiento</label>
+          <InputField
+            type="date"
+            value={playerDate}
+            placeholder="Ingrese su fecha de nacimiento"
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setPlayerDate(e.target.value)
+            }
+          />
+        </div>
+
+        <p className={`error-message ${error ? "active" : ""}`}>{error}</p>
+
+        <div className="form-buttons">
+          <Button type="button" label="Crear Partida" onClick={handleCreate} />
+          <Button type="button" label="Listar Partidas" onClick={handleList} />
         </div>
       </form>
     </div>

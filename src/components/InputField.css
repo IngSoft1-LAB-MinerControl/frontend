@@ -3,6 +3,7 @@
   color: #2a1713;
   border: 1px solid #cccccc;
   border-radius: 6px;
+  font-weight: 500;
 }
 
 .input-field:focus {
