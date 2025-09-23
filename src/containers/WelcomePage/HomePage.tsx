@@ -2,11 +2,13 @@ import "./HomePage.css";
 import InputField from "../../components/InputField";
 import Button from "../../components/Button";
 import { useState } from "react";
+import playerService from "../../services/playerService";
 
 export default function HomePage() {
   const [playerName, setPlayerName] = useState("");
   const [playerDate, setPlayerDate] = useState("");
   const [error, setError] = useState("");
+  const [playerId, setPlayerId] = useState<number | null>(null);
 
   const validate = () => {
     if (!playerName.trim()) {
@@ -35,10 +37,15 @@ export default function HomePage() {
     return true;
   };
 
-  const handleCreate = (e: React.FormEvent) => {
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
-      console.log("✅ Crear partida con:", playerName, playerDate);
+      const id = await playerService.createPlayer({
+        name: playerName,
+        birthdate: playerDate,
+        owner: true,
+      });
+      setPlayerId(id);
     }
   };
 
