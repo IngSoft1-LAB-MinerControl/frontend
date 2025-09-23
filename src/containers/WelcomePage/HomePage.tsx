@@ -2,13 +2,17 @@ import "./HomePage.css";
 import InputField from "../../components/InputField";
 import Button from "../../components/Button";
 import { useState } from "react";
-import playerService from "../../services/playerService";
+import { useNavigate } from "react-router-dom";
+import destinations from "../../navigation/destinations";
+//import playerService from "../../services/playerService";
 
 export default function HomePage() {
   const [playerName, setPlayerName] = useState("");
   const [playerDate, setPlayerDate] = useState("");
   const [error, setError] = useState("");
-  const [playerId, setPlayerId] = useState<number | null>(null);
+  //const [playerId, setPlayerId] = useState<number | null>(null);
+
+  const navigate = useNavigate();
 
   const validate = () => {
     if (!playerName.trim()) {
@@ -37,21 +41,27 @@ export default function HomePage() {
     return true;
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
-      const id = await playerService.createPlayer({
-        name: playerName,
-        birthdate: playerDate,
-        owner: true,
-      });
-      setPlayerId(id);
+      // 🔹 Esto lo usaremos más adelante cuando el backend esté listo
+      /*
+    const id = await playerService.createPlayer({
+      name: playerName,
+      birthdate: playerDate,
+      owner: true,
+    });
+    setPlayerId(id);
+    */
+
+      // Por ahora, solo probamos la navegación
+      navigate(destinations.crearPartida);
     }
   };
 
   const handleList = () => {
     if (validate()) {
-      console.log("📋 Listar partidas para:", playerName);
+      navigate(destinations.listarPartidas); //Redirigimos para mostrar las partidas disponibles
     }
   };
 
