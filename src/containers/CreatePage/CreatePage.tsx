@@ -33,38 +33,31 @@ export default function CreatePage() {
     setError("");
     return true;
   };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Primero validamos los campos
-    if (!validate()) return; // Si falla, ya se muestra el error y salimos
-
-    try {
-      setError(""); // Limpiamos error previo
-      console.log({ gameName, minPlayers, maxPlayers });
-
-      // Crear la partida
-      const newGame = await gameService.createGame({
-        name: gameName,
-        min_players: minPlayers,
-        max_players: maxPlayers,
-        status: "esperando jugadores",
-      });
-
-      // Crear el jugador host
-      await playerService.createPlayer({
-        name: initialName,
-        birth_date: initialDate,
-        host: true,
-        game_id: newGame.game_id,
-      });
-
-      // Redirigir al lobby
-      navigate(`/lobby/${newGame.game_id}`);
-    } catch (err) {
-      console.error(err);
-      setError("Error al crear la partida"); // Mensaje de error genérico si falla el backend
+    if (!validate()) {
+      return;
     }
+    // Crear la partida
+    const newGame = await gameService.createGame({
+      name: gameName,
+      min_players: minPlayers,
+      max_players: maxPlayers,
+      status: "esperando jugadores",
+    });
+
+    // Crear el jugador host
+    await playerService.createPlayer({
+      name: initialName,
+      birth_date: initialDate,
+      host: true,
+      game_id: newGame.game_id,
+    });
+
+    // Redirigir al lobby
+    navigate(`/lobby/${newGame.game_id}`);
   };
 
   return (

@@ -24,11 +24,8 @@ async function createGame(game: Game): Promise<GameResponse> {
     body: JSON.stringify(game),
   });
 
-  if (!response.ok) {
-    throw new Error("Error al crear partida");
-  }
-
-  return response.json();
+  const data: GameResponse = await response.json();
+  return data;
 }
 
 const gameService = {

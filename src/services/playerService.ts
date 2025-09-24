@@ -2,16 +2,17 @@ import { httpServerUrl } from "./config";
 
 export interface Player {
   name: string;
+  birth_date: string;
   host: boolean;
   game_id: number;
-  birth_date: string;
 }
 
 export interface PlayerResponse {
   id: number;
+  game_id: number;
 }
 
-async function createPlayer(player: Player): Promise<number> {
+async function createPlayer(player: Player): Promise<PlayerResponse> {
   const response = await fetch(`${httpServerUrl}/players`, {
     method: "POST",
     headers: {
@@ -21,7 +22,7 @@ async function createPlayer(player: Player): Promise<number> {
   });
 
   const data: PlayerResponse = await response.json(); // parseamos la respuesta del backend {"id: _"} a un json
-  return data.id; // devolvemos un id
+  return data; // devolvemos un id
 }
 
 const playerService = {
