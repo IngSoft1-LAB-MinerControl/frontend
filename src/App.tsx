@@ -3,8 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import destinations from "./navigation/destinations";
 
 import HomePage from "./containers/WelcomePage/HomePage";
-import FormGame from "./containers/FormGamePage/FormGame";
-import ListGames from "./containers/ListGamesPage/ListGames";
+import CreatePage from "./containers/CreatePage/CreatePage";
 
 export default function App() {
   return (
@@ -13,7 +12,7 @@ export default function App() {
       <Route path={destinations.home} element={<HomePage />} />
 
       {/* Ruta para crear partida */}
-      <Route path={destinations.crearPartida} element={<FormGame />} />
+      <Route path={destinations.crearPartida} element={<CreatePage />} />
 
       {/* Ruta para listar partidas */}
       <Route path={destinations.listarPartidas} element={<ListGames />} />
