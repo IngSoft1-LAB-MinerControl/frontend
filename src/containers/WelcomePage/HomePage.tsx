@@ -4,13 +4,11 @@ import Button from "../../components/Button";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import destinations from "../../navigation/destinations";
-//import playerService from "../../services/playerService";
 
 export default function HomePage() {
   const [playerName, setPlayerName] = useState("");
   const [playerDate, setPlayerDate] = useState("");
   const [error, setError] = useState("");
-  //const [playerId, setPlayerId] = useState<number | null>(null);
 
   const navigate = useNavigate();
 
@@ -44,18 +42,9 @@ export default function HomePage() {
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
-      //  Esto lo usaremos más adelante cuando el backend esté listo
-      /*
-    const id = await playerService.createPlayer({
-      name: playerName,
-      birthdate: playerDate,
-      owner: true,
-    });
-    setPlayerId(id);
-    */
-
-      // Por ahora, solo probamos la navegación
-      navigate(destinations.crearPartida);
+      navigate(destinations.crearPartida, {
+        state: { playerName, playerDate },
+      });
     }
   };
 
@@ -101,7 +90,7 @@ export default function HomePage() {
         <p className={`error-message ${error ? "active" : ""}`}>{error}</p>
 
         <div className="form-buttons">
-          <Button type="button" label="Crear Partida" onClick={handleCreate} />
+          <Button type="button" label="Nueva Partida" onClick={handleCreate} />
           <Button type="button" label="Listar Partidas" onClick={handleList} />
         </div>
       </form>

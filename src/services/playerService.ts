@@ -2,8 +2,9 @@ import { httpServerUrl } from "./config";
 
 export interface Player {
   name: string;
-  birthdate: string;
-  owner: boolean;
+  host: boolean;
+  game_id: number;
+  birth_date: string;
 }
 
 export interface PlayerResponse {

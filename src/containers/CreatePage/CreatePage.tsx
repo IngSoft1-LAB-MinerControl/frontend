@@ -1,87 +1,127 @@
-import "./CreatePage.css"
-import InputField from "../../components/InputField"
-import Button from "../../components/Button"
+import "./CreatePage.css";
+import InputField from "../../components/InputField";
+import Button from "../../components/Button";
 import { useState } from "react";
+import gameService from "../../services/gameService";
+import playerService from "../../services/playerService";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function CreatePage() {
   const [gameName, setGameName] = useState("");
-  // const [gamePassword, setGamePassword] = useState("");
   const [minPlayers, setMinPlayers] = useState(2);
   const [maxPlayers, setMaxPlayers] = useState(6);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const { playerName: initialName, playerDate: initialDate } =
+    location.state || {};
 
   const validate = () => {
+    if (!gameName.trim()) {
+      setError("Debe ingresar un nombre");
+      return false;
+    }
     if (minPlayers < 2 || maxPlayers > 6) {
       setError("La cantidad de jugadores debe estar entre 2 y 6.");
       return false;
     }
     if (minPlayers > maxPlayers) {
-      setError("El número minimo de jugadores no puede ser mayor al máximo");
+      setError("El número mínimo de jugadores no puede ser mayor al máximo");
       return false;
     }
     setError("");
     return true;
   };
-
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validate()) {
-      setError("");
-      console.log({
-        gameName,
-        // gamePassword,
-        minPlayers,
-        maxPlayers,
+
+    // Primero validamos los campos
+    if (!validate()) return; // Si falla, ya se muestra el error y salimos
+
+    try {
+      setError(""); // Limpiamos error previo
+      console.log({ gameName, minPlayers, maxPlayers });
+
+      // Crear la partida
+      const newGame = await gameService.createGame({
+        name: gameName,
+        min_players: minPlayers,
+        max_players: maxPlayers,
+        status: "esperando jugadores",
       });
-      alert(`Partida creada: ${gameName} (${minPlayers} - ${maxPlayers} jugadores)`);
+
+      // Crear el jugador host
+      await playerService.createPlayer({
+        name: initialName,
+        birth_date: initialDate,
+        host: true,
+        game_id: newGame.game_id,
+      });
+
+      // Redirigir al lobby
+      navigate(`/lobby/${newGame.game_id}`);
+    } catch (err) {
+      console.error(err);
+      setError("Error al crear la partida"); // Mensaje de error genérico si falla el backend
     }
   };
 
-    return (
-      <div className="home-page">
-        <form className="form-container">
-          <h1 className="form-title">Información de partida</h1>
-  
-          <div className="form-field">
-            <label className="form-label">Nombre de la Partida</label>
+  return (
+    <div className="home-page">
+      <form className="form-container">
+        <h1 className="form-title">Información de partida</h1>
+
+        <div className="form-field">
+          <label htmlFor="nombre-partida" className="form-label">
+            Nombre de la Partida
+          </label>
+          <InputField
+            id="nombre-partida"
+            placeholder="Ingrese un nombre para la partida."
+            value={gameName}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setGameName(e.target.value)
+            }
+          />
+        </div>
+
+        <div className="double-container">
+          <div className="double-field">
+            <label htmlFor="minimo-jugadores" className="form-label">
+              Mínimo de jugadores
+            </label>
             <InputField
-              placeholder="Ingrese un nombre para la partida."
-              value={gameName}
+              id="minimo-jugadores"
+              type="number"
+              placeholder=""
+              value={minPlayers.toString()}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setGameName(e.target.value)
+                setMinPlayers(Number(e.target.value))
               }
             />
           </div>
-          <div className="double-container">
-            <div className="double-field">
-              <label className="form-label">Minimo de jugadores</label>
-              <InputField
-                type="number"
-                value={minPlayers.toString()}
-                placeholder=""
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setMinPlayers(Number(e.target.value))
-                }
-              />
-            </div>
-            <div className="double-field">
-              <label className="form-label">Maximo de jugadores</label>
-              <InputField
-                type="number"
-                value={maxPlayers.toString()}
-                placeholder=""
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setMaxPlayers(Number(e.target.value))
-                }
-              />
-            </div>
+
+          <div className="double-field">
+            <label htmlFor="maximo-jugadores" className="form-label">
+              Máximo de jugadores
+            </label>
+            <InputField
+              id="maximo-jugadores"
+              type="number"
+              placeholder=""
+              value={maxPlayers.toString()}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setMaxPlayers(Number(e.target.value))
+              }
+            />
           </div>
+        </div>
 
-          <p className={`error-message ${error ? "active" : ""}`}>{error}</p>
+        <p className={`error-message ${error ? "active" : ""}`}>{error}</p>
 
-          <Button type="button" label="Crear Partida" onClick={handleSubmit} />
-        </form>
-      </div>
-    );
+        <Button type="button" label="Crear partida" onClick={handleSubmit} />
+      </form>
+    </div>
+  );
 }
