@@ -1,0 +1,62 @@
+.home-page{
+	display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100vw;
+  background-color: whitesmoke;
+  font-family: "Poppins";  
+}
+
+.list-container{
+	width: 20%;
+  height: 90%;
+  background-image: url("../../assets/background-img.jpeg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  padding: 2%;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-shadow: 0rem 0rem 1rem 0.2rem rgba(41, 3, 3, 0.5);
+}
+
+.list-title{
+	font-size: clamp(1rem, 2vw, 1.5rem);
+  font-weight: 500;
+  text-align: center;
+  color: #2a1713;
+}
+
+.game-list{
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  margin: 0.4rem 0;
+}
+
+.list-item{
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  margin: 0.4rem 0;
+}
+
+.item-title{
+	font-size: clamp(0.7rem, 1.2vw, 1rem);
+  font-weight: 500;
+  color: #2a1713;
+  margin-left: 0.1rem;
+}
+
+.item-data{
+	font-size: clamp(0.5rem, 1.2vw, 1rem);
+  font-weight: 300;
+  color: #2a1713;
+  margin-left: 0.1rem;
+}
+/* .form-button .custom-button */
