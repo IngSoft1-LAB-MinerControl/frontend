@@ -1,0 +1,106 @@
+.home-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100vw;
+  background-color: whitesmoke;
+  font-family: "Poppins";
+}
+
+.form-container {
+  width: 20%;
+  height: 90%;
+  background-image: url("../../assets/background-img.jpeg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  padding: 2%;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-shadow: 0rem 0rem 1rem 0.2rem rgba(41, 3, 3, 0.5);
+}
+
+.double-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin: 0.4rem;
+}
+
+.double-field{
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-title {
+  font-size: clamp(1rem, 2vw, 1.5rem);
+  font-weight: 500;
+  text-align: center;
+  color: #2a1713;
+}
+
+.form-field {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  margin: 0.4rem 0;
+}
+
+.form-label {
+  font-size: clamp(0.7rem, 1.2vw, 1rem);
+  font-weight: 500;
+  color: #2a1713;
+  color: #2a1713;
+  margin-left: 0.1rem;
+}
+
+.form-input {
+  padding: 0.5rem;
+  font-size: clamp(0.8rem, 1vw, 1rem);
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  width: 90%;
+}
+
+.error-message {
+  color: #dc2626;
+  font-size: 0.75rem;
+  text-align: center;
+  font-weight: 500;
+  height: 2.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  white-space: normal;
+  line-height: 1.2rem;
+  visibility: hidden;
+}
+
+.error-message.active {
+  visibility: visible;
+}
+
+.form-buttons {
+  width: 100%;
+  margin-top: 1rem;
+  margin-bottom: 0.2rem;
+  padding: clamp(0.4rem, 1vw, 0.8rem) clamp(0.8rem, 2vw, 1.2rem);
+  font-size: clamp(0.7rem, 1vw, 1rem);
+  display: inline-flex;
+  gap: 1rem;
+}
+
+.form-button .custom-button {
+  flex: 1;
+  padding: 0.5rem;
+  font-size: clamp(0.7rem, 1vw, 1rem);
+  border-radius: 6px;
+}
