@@ -71,8 +71,11 @@ export default function HomePage() {
         <h1 className="form-title">¡Bienvenido!</h1>
 
         <div className="form-field">
-          <label className="form-label">Nombre</label>
+          <label htmlFor="nombre" className="form-label">
+            Nombre
+          </label>
           <InputField
+            id="nombre"
             placeholder="Ingrese su nombre"
             value={playerName}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -81,11 +84,14 @@ export default function HomePage() {
           />
         </div>
         <div className="form-field">
-          <label className="form-label">Fecha de nacimiento</label>
+          <label htmlFor="fecha-nacimiento" className="form-label">
+            Fecha de nacimiento
+          </label>
           <InputField
+            id="fecha-nacimiento"
             type="date"
-            value={playerDate}
             placeholder="Ingrese su fecha de nacimiento"
+            value={playerDate}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
               setPlayerDate(e.target.value)
             }
