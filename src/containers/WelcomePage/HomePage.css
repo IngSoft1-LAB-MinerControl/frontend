@@ -1,6 +1,5 @@
 .home-page {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100vh;
@@ -10,19 +9,23 @@
 }
 
 .form-container {
-  width: 20%;
+  width: min(20%, 400px); /* hasta 400px */
+  aspect-ratio: 452 / 933; /* proporción de la carta */
   height: 90%;
+  padding-top: 3.4rem;
+  padding-right: 1rem;
+  padding-left: 1rem;
+  padding-bottom: 1rem;
   background-image: url("../../assets/background-img.jpeg");
   background-size: cover;
-  background-position: center;
+  background-position: top center;
   background-repeat: no-repeat;
-
-  padding: 2%;
   border-radius: 12px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   box-shadow: 0rem 0rem 1rem 0.2rem rgba(41, 3, 3, 0.5);
+  box-sizing: border-box;
 }
 
 .form-title {
@@ -30,13 +33,15 @@
   font-weight: 500;
   text-align: center;
   color: #2a1713;
+  margin-top: 0;
+  margin-bottom: 0.6rem;
 }
 
 .form-field {
   width: 100%;
   display: flex;
   flex-direction: column;
-  margin: 0.4rem 0;
+  margin: 0.2em 0;
 }
 
 .form-label {
@@ -44,30 +49,36 @@
   font-weight: 500;
   color: #2a1713;
   color: #2a1713;
-  margin-left: 0.1rem;
+  margin-left: 0.5rem;
 }
 
-.form-input {
+.input-field {
   padding: 0.5rem;
   font-size: clamp(0.8rem, 1vw, 1rem);
-  border-radius: 6px;
   border: 1px solid #ccc;
+  border-radius: 6px;
   width: 90%;
+  margin: 0 auto;
+  display: block;
+  box-sizing: border-box;
 }
 
 .error-message {
   color: #dc2626;
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   text-align: center;
   font-weight: 500;
-  height: 2.4rem;
+  min-height: 1.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.1rem;
+  visibility: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  white-space: normal;
-  line-height: 1.2rem;
-  visibility: hidden;
+  padding: 0 0.25rem;
+  box-sizing: border-box;
 }
 
 .error-message.active {
@@ -75,18 +86,29 @@
 }
 
 .form-buttons {
-  width: 100%;
-  margin-top: 1rem;
-  margin-bottom: 0.2rem;
-  padding: clamp(0.4rem, 1vw, 0.8rem) clamp(0.8rem, 2vw, 1.2rem);
-  font-size: clamp(0.7rem, 1vw, 1rem);
-  display: inline-flex;
-  gap: 1rem;
+  width: 90%;
+  margin: 0 auto 1rem auto;
+  padding: clamp(0.4rem, 1vw, 0.8rem) 0;
+  display: flex;
+  gap: 0.75rem;
+  align-items: stretch;
+  justify-content: center;
+  box-sizing: border-box;
+  flex-wrap: nowrap;
 }
 
-.form-button .custom-button {
-  flex: 1;
-  padding: 0.5rem;
-  font-size: clamp(0.7rem, 1vw, 1rem);
+.form-buttons .custom-button {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0.6rem;
+  font-size: clamp(0.8rem, 1vw, 1rem);
   border-radius: 6px;
+  box-sizing: border-box;
+  text-align: center;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

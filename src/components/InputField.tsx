@@ -1,6 +1,8 @@
 import "./InputField.css";
 
 type Props = {
+  id?: string;
+  name?: string;
   placeholder: string;
   type?: string;
   value: string;
@@ -8,6 +10,7 @@ type Props = {
 };
 
 export default function InputField({
+  id,
   placeholder,
   type = "text",
   value,
@@ -15,6 +18,7 @@ export default function InputField({
 }: Props) {
   return (
     <input
+      id={id}
       className="input-field"
       type={type}
       placeholder={placeholder}

@@ -2,11 +2,17 @@ import "./HomePage.css";
 import InputField from "../../components/InputField";
 import Button from "../../components/Button";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import destinations from "../../navigation/destinations";
+//import playerService from "../../services/playerService";
 
 export default function HomePage() {
   const [playerName, setPlayerName] = useState("");
   const [playerDate, setPlayerDate] = useState("");
   const [error, setError] = useState("");
+  //const [playerId, setPlayerId] = useState<number | null>(null);
+
+  const navigate = useNavigate();
 
   const validate = () => {
     if (!playerName.trim()) {
@@ -38,13 +44,24 @@ export default function HomePage() {
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
-      console.log("✅ Crear partida con:", playerName, playerDate);
+      //  Esto lo usaremos más adelante cuando el backend esté listo
+      /*
+    const id = await playerService.createPlayer({
+      name: playerName,
+      birthdate: playerDate,
+      owner: true,
+    });
+    setPlayerId(id);
+    */
+
+      // Por ahora, solo probamos la navegación
+      navigate(destinations.crearPartida);
     }
   };
 
   const handleList = () => {
     if (validate()) {
-      console.log("📋 Listar partidas para:", playerName);
+      navigate(destinations.listarPartidas); //Redirigimos para mostrar las partidas disponibles
     }
   };
 
@@ -54,8 +71,11 @@ export default function HomePage() {
         <h1 className="form-title">¡Bienvenido!</h1>
 
         <div className="form-field">
-          <label className="form-label">Nombre</label>
+          <label htmlFor="nombre" className="form-label">
+            Nombre
+          </label>
           <InputField
+            id="nombre"
             placeholder="Ingrese su nombre"
             value={playerName}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -64,11 +84,14 @@ export default function HomePage() {
           />
         </div>
         <div className="form-field">
-          <label className="form-label">Fecha de nacimiento</label>
+          <label htmlFor="fecha-nacimiento" className="form-label">
+            Fecha de nacimiento
+          </label>
           <InputField
+            id="fecha-nacimiento"
             type="date"
-            value={playerDate}
             placeholder="Ingrese su fecha de nacimiento"
+            value={playerDate}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
               setPlayerDate(e.target.value)
             }
