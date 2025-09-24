@@ -11,7 +11,6 @@ type Props = {
 
 export default function InputField({
   id,
-  name,
   placeholder,
   type = "text",
   value,
@@ -20,7 +19,6 @@ export default function InputField({
   return (
     <input
       id={id}
-      name={name}
       className="input-field"
       type={type}
       placeholder={placeholder}

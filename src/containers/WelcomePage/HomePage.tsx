@@ -44,7 +44,7 @@ export default function HomePage() {
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
-      // 🔹 Esto lo usaremos más adelante cuando el backend esté listo
+      //  Esto lo usaremos más adelante cuando el backend esté listo
       /*
     const id = await playerService.createPlayer({
       name: playerName,
