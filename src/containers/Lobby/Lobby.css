@@ -14,7 +14,7 @@
   content: "";
   position: fixed;
   inset: 0;
-  background-image: url("./assets/background_lobby.jpg");
+  background-image: url("../../assets/background_lobby.jpg");
   background-size: cover;
   background-position: center;
   filter: blur(4px) brightness(0.9);
