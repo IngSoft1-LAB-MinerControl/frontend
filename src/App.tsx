@@ -4,6 +4,7 @@ import destinations from "./navigation/destinations";
 import HomePage from "./containers/WelcomePage/HomePage";
 import CreatePage from "./containers/CreatePage/CreatePage";
 import ListGames from "./containers/ListPage/ListGames";
+import Lobby from "./containers/Lobby/Lobby";
 
 export default function App() {
   return (
@@ -16,6 +17,9 @@ export default function App() {
 
       {/* Ruta para listar partidas */}
       {<Route path={destinations.listarPartidas} element={<ListGames />} />}
+
+      {/* Ruta para ir al lobby*/}
+      {<Route path={destinations.lobby} element={<Lobby />} />}
     </Routes>
   );
 }
