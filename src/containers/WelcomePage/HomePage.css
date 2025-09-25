@@ -1,25 +1,24 @@
 .home-page {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100vh;
   width: 100vw;
-  background-color: whitesmoke;
+  background-image: url("../../assets/background-page.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   font-family: "Poppins";
 }
 
 .form-container {
-  width: min(20%, 400px); /* hasta 400px */
-  aspect-ratio: 452 / 933; /* proporción de la carta */
-  height: 90%;
-  padding-top: 3.4rem;
-  padding-right: 1rem;
-  padding-left: 1rem;
-  padding-bottom: 1rem;
-  background-image: url("../../assets/background-img.jpeg");
-  background-size: cover;
-  background-position: top center;
-  background-repeat: no-repeat;
+  width: 35%;
+  height: 50%;
+  min-width: 470px;
+  min-height: 450px;
+  background-color: transparent;
+  padding: 2%;
   border-radius: 12px;
   display: flex;
   flex-direction: column;
@@ -33,15 +32,14 @@
   font-weight: 500;
   text-align: center;
   color: #2a1713;
-  margin-top: 0;
-  margin-bottom: 0.6rem;
 }
 
 .form-field {
   width: 100%;
   display: flex;
   flex-direction: column;
-  margin: 0.2em 0;
+  margin: 0rem 0;
+
 }
 
 .form-label {
@@ -49,23 +47,19 @@
   font-weight: 500;
   color: #2a1713;
   color: #2a1713;
-  margin-left: 0.5rem;
+  margin-left: 0.1rem;
 }
 
-.input-field {
-  padding: 0.5rem;
+/* .input-field {
   font-size: clamp(0.8rem, 1vw, 1rem);
-  border: 1px solid #ccc;
   border-radius: 6px;
-  width: 90%;
-  margin: 0 auto;
+  margin: 0 0;
   display: block;
-  box-sizing: border-box;
-}
+} */
 
 .error-message {
   color: #dc2626;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   text-align: center;
   font-weight: 500;
   min-height: 1.2rem;

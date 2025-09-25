@@ -23,7 +23,7 @@ export default function ListGames() {
       id: "2",
       name: "Partida 2",
       minPlayers: 2,
-      maxPlayers: 2,
+      maxPlayers: 4,
       currPlayers: 2,
     },
     {
@@ -46,14 +46,14 @@ export default function ListGames() {
         <ul className="game-list">
           {partidas.map((partida) => (
             <li key={partida.id} className="list-item">
-              <div>
+              <div className="side-info">
                 <div className="item-title">{partida.name}</div>
                 <div className="item-data">
-                  mínimo:{partida.minPlayers} • máximo: {partida.maxPlayers} •
-                  actuales: {partida.currPlayers}
+                  De {partida.minPlayers} a {partida.maxPlayers} jugadores.
+                  Actuales: {partida.currPlayers}.
                 </div>
               </div>
-              <div>
+              <div className="side-button">
                 <Button
                   type="button"
                   label="Unirme"

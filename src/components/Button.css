@@ -1,7 +1,7 @@
 .custom-button {
   background-color: gray;
   color: white;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   border: none;
   transition: background-color 0.2 ease-in-out;

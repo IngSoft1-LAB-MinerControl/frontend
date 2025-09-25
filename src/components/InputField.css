@@ -1,9 +1,11 @@
 .input-field {
   background-color: transparent;
   color: #2a1713;
-  border: 1px solid #cccccc;
+  border: 2px solid #2a1713a0;
   border-radius: 6px;
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 100%;
+  padding: 0.7rem;
 }
 
 .input-field:focus {
@@ -11,3 +13,10 @@
   border-color: #2a1713;
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
+
+.input-field::placeholder {
+  color: rgb(93, 93, 93);
+  opacity: 1;
+}
+
+/* fijate que cuando le modifiques la altura no deje que se hagan los scroll horizontal y veticalmente. osea que se vaya achicando todo el tamaño, tanto el del contenedor como el de los titulos,inputs,etck */

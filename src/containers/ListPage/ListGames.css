@@ -5,17 +5,22 @@
   justify-content: center;
   height: 100vh;
   width: 100vw;
-  background-color: whitesmoke;
+  background-image: url("../../assets/background-page.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   font-family: "Poppins";  
 }
 
 .list-container{
-	width: 20%;
-  height: 90%;
-  background-image: url("../../assets/background-img.jpeg");
+	width: 30%;
+  height: 70%;
+  min-width: 520px;
+  background-color: transparent;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  backdrop-filter: blur(20px) brightness(120%);
 
   padding: 2%;
   border-radius: 12px;
@@ -26,37 +31,63 @@
 }
 
 .list-title{
-	font-size: clamp(1rem, 2vw, 1.5rem);
+	font-size: clamp(1rem, 4vw, 2.5rem);
   font-weight: 500;
   text-align: center;
   color: #2a1713;
 }
 
 .game-list{
-  width: 100%;
+  /*width: 100%;*/
   display: flex;
   flex-direction: column;
-  margin: 0.4rem 0;
+  margin: 0.4rem;
+  padding-left: 0;
 }
 
 .list-item{
-  width: 100%;
   display: flex;
-  flex-direction: column;
-  margin: 0.4rem 0;
+  align-items: right;
+  /* margin-top: 0.3rem;
+  margin-bottom: 0.3rem; */
+  /* border: #2a1713;
+  border-radius: 10px; */
+  justify-content: center;
+  gap: 1rem;
 }
 
 .item-title{
-	font-size: clamp(0.7rem, 1.2vw, 1rem);
-  font-weight: 500;
+	font-size: clamp(1.2rem, 2.3vw, 1.5rem);
+  font-weight: 700;
   color: #2a1713;
   margin-left: 0.1rem;
 }
 
 .item-data{
-	font-size: clamp(0.5rem, 1.2vw, 1rem);
-  font-weight: 300;
+	font-size: clamp(1rem, 2vw, 1.3rem);
+  font-weight: 500;
   color: #2a1713;
   margin-left: 0.1rem;
 }
-/* .form-button .custom-button */
+
+.side-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.side-button{
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.custom-button{
+  text-align: center;
+  justify-content: center;
+  padding: 0.5rem;
+  height: clamp(1rem 1.5rem 2rem);
+  font-size: 120%;
+}

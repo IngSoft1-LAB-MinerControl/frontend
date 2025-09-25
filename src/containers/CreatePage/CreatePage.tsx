@@ -5,6 +5,7 @@ import { useState } from "react";
 import gameService from "../../services/gameService";
 import playerService from "../../services/playerService";
 import { useNavigate, useLocation } from "react-router-dom";
+import destinations from "../../navigation/destinations";
 
 export default function CreatePage() {
   const [gameName, setGameName] = useState("");
