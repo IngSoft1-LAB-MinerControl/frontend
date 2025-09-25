@@ -9,10 +9,6 @@ export interface Game {
 
 export interface GameResponse {
   game_id: number;
-  name: string;
-  min_players: number;
-  max_players: number;
-  status: string;
 }
 
 async function createGame(game: Game): Promise<GameResponse> {
@@ -24,11 +20,10 @@ async function createGame(game: Game): Promise<GameResponse> {
     body: JSON.stringify(game),
   });
 
-  if (!response.ok) {
-    throw new Error("Error al crear partida");
-  }
+  const data = await response.json();
+  console.log("⬅️ Respuesta createGame:", data);
 
-  return response.json();
+  return data; // se devuelve el objeto ya parseado
 }
 
 const gameService = {

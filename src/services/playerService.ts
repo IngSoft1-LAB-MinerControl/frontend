@@ -11,17 +11,18 @@ export interface PlayerResponse {
   id: number;
 }
 
-async function createPlayer(player: Player): Promise<number> {
+async function createPlayer(player: Player): Promise<PlayerResponse> {
+  console.log("➡️ Enviando player:", player); // 👈 log para ver el body
   const response = await fetch(`${httpServerUrl}/players`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json", // el cuerpo de la petición (el Player) está en formato JSON
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify(player), // como en content-type dijimos que era applicacition/json, el cuerpo de la peticion POST debe ser un json y no JS. Entonces convertimos el objeto JS a un JSON
+    body: JSON.stringify(player),
   });
 
-  const data: PlayerResponse = await response.json(); // parseamos la respuesta del backend {"id: _"} a un json
-  return data.id; // devolvemos un id
+  const data: PlayerResponse = await response.json();
+  return data;
 }
 
 const playerService = {

@@ -55,13 +55,13 @@ export default function CreatePage() {
       // Crear el jugador host
       await playerService.createPlayer({
         name: initialName,
-        birth_date: initialDate,
+        birth_date: new Date(initialDate).toISOString().split("T")[0],
         host: true,
         game_id: newGame.game_id,
       });
 
       // Redirigir al lobby
-      navigate(`/lobby/${newGame.game_id}`);
+      navigate(destinations.lobby);
     } catch (err) {
       console.error(err);
       setError("Error al crear la partida"); // Mensaje de error genérico si falla el backend
