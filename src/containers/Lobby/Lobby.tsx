@@ -1,14 +1,17 @@
 import "./Lobby.css";
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation /*useNavigate*/ } from "react-router-dom";
 import playerService from "../../services/playerService";
 import type { Player } from "../../services/playerService";
+import Button from "../../components/Button";
 
 function Lobby() {
   const location = useLocation();
+  // const navigate = useNavigate();
   const { game, playerName, playerDate } = location.state || {};
 
   const [players, setPlayers] = useState<Player[]>([]);
+  const [error, setError] = useState<string>("");
 
   // Traer jugadores de la partida
   const fetchPlayers = async () => {
@@ -34,6 +37,28 @@ function Lobby() {
   );
   const isHost = currentPlayer?.host ?? false;
 
+  // Validación para iniciar partida
+  const validate = () => {
+    if (players.length < (game?.min_players ?? 1)) {
+      setError(
+        `La partida necesita al menos ${
+          game?.min_players ?? 1
+        } jugadores para iniciar.`
+      );
+      return false;
+    }
+    setError(""); // limpiar error
+    return true;
+  };
+
+  const handleStartClick = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (validate()) {
+      // Lógica para iniciar partida o navegar
+      //navigate("/game", { state: { game, playerName, playerDate } });
+    }
+  };
+
   return (
     <div className="lobby-page">
       <h1 className="lobby-title">SALA DE ESPERA</h1>
@@ -46,11 +71,15 @@ function Lobby() {
             return (
               <div key={index} className="lobby-slot">
                 {player ? (
-                  <>
-                    <div>{player.name}</div>
+                  <div className="player-info">
+                    <div className="player-name">
+                      {player.name}{" "}
+                      {player.host && (
+                        <span className="host-badge">(HOST)</span>
+                      )}
+                    </div>
                     <div className="player-date">{player.birth_date}</div>
-                    {player.host && <span className="host-badge">👑</span>}
-                  </>
+                  </div>
                 ) : (
                   <div className="empty-slot" />
                 )}
@@ -62,14 +91,17 @@ function Lobby() {
         {/* Acción de iniciar o mensaje de espera */}
         <div className="lobby-actions">
           {isHost ? (
-            <button
-              type="button"
-              className="lobby-button"
-              disabled={players.length < game.min_players}
-              onClick={() => console.log("INICIAR")}
-            >
-              INICIAR
-            </button>
+            <>
+              {/* Reservamos espacio para el error */}
+              <p className={`error-message ${error ? "active" : ""}`}>
+                {error || " "}
+              </p>
+              <Button
+                type="button"
+                label="Iniciar"
+                onClick={handleStartClick}
+              />
+            </>
           ) : (
             <p className="waiting-text">
               Esperando a que el anfitrión inicie la partida...
