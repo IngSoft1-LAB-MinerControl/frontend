@@ -12,7 +12,6 @@ export interface PlayerResponse {
 }
 
 async function createPlayer(player: Player): Promise<PlayerResponse> {
-  console.log("➡️ Enviando player:", player); // 👈 log para ver el body
   const response = await fetch(`${httpServerUrl}/players`, {
     method: "POST",
     headers: {
@@ -24,9 +23,21 @@ async function createPlayer(player: Player): Promise<PlayerResponse> {
   const data: PlayerResponse = await response.json();
   return data;
 }
+async function getPlayersByGame(gameId: number): Promise<Player[]> {
+  const response = await fetch(`${httpServerUrl}/lobby/players/${gameId}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const data: Player[] = await response.json();
+  return data;
+}
 
 const playerService = {
   createPlayer,
+  getPlayersByGame,
 };
 
 export default playerService;

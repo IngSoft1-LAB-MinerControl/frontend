@@ -15,8 +15,7 @@ export default function CreatePage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { playerName: initialName, playerDate: initialDate } =
-    location.state || {};
+  const { playerName, playerDate } = location.state || {};
 
   const validate = () => {
     if (!gameName.trim()) {
@@ -54,14 +53,16 @@ export default function CreatePage() {
 
       // Crear el jugador host
       await playerService.createPlayer({
-        name: initialName,
-        birth_date: new Date(initialDate).toISOString().split("T")[0],
+        name: playerName,
+        birth_date: playerDate, //new Date(initialDate).toISOString().split("T")[0],
         host: true,
         game_id: newGame.game_id,
       });
 
       // Redirigir al lobby
-      navigate(destinations.lobby);
+      navigate(destinations.lobby, {
+        state: { game: newGame, playerName, playerDate },
+      });
     } catch (err) {
       console.error(err);
       setError("Error al crear la partida"); // Mensaje de error genérico si falla el backend

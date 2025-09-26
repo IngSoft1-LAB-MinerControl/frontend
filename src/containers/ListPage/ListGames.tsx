@@ -44,12 +44,12 @@ export default function ListGames() {
       console.log(playerName, playerDate);
       await playerService.createPlayer({
         name: playerName,
-        birth_date: new Date(playerDate).toISOString().split("T")[0],
+        birth_date: playerDate, //new Date(playerDate).toISOString().split("T")[0],
         host: false,
         game_id: game.game_id!, // ⚠️ usamos game_id del GET
       });
 
-      navigate(destinations.lobby, { state: { game } });
+      navigate(destinations.lobby, { state: { game, playerName, playerDate } });
     } catch (err) {
       console.error(err);
       setError("Error al unirse a la partida");
