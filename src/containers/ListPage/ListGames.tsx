@@ -1,69 +1,84 @@
 import "./ListGames.css";
 import Button from "../../components/Button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import destinations from "../../navigation/destinations";
+import gameService from "../../services/gameService";
+import type { Game } from "../../services/gameService";
+import playerService from "../../services/playerService";
 
 export default function ListGames() {
-  type Partida = {
-    id: string;
-    name: string;
-    minPlayers: number;
-    maxPlayers: number;
-    currPlayers: number;
+  const [partidas, setPartidas] = useState<Game[]>([]);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const { playerName, playerDate } = location.state || {};
+
+  // Función para traer las partidas
+  const fetchGames = async () => {
+    try {
+      const games = await gameService.getGames();
+      setPartidas(games);
+    } catch (err) {
+      console.error(err);
+      setError("Error al obtener partidas");
+    }
   };
 
-  const [partidas, setPartidas] = useState<Partida[]>([
-    {
-      id: "1",
-      name: "Partida 1",
-      minPlayers: 2,
-      maxPlayers: 4,
-      currPlayers: 1,
-    },
-    {
-      id: "2",
-      name: "Partida 2",
-      minPlayers: 2,
-      maxPlayers: 4,
-      currPlayers: 2,
-    },
-    {
-      id: "3",
-      name: "Partida 3",
-      minPlayers: 3,
-      maxPlayers: 6,
-      currPlayers: 4,
-    },
-  ]);
+  // Cargar partidas al montar el componente y refrescar cada 5 seg.
+  useEffect(() => {
+    fetchGames();
+    const interval = setInterval(fetchGames, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
-  const handleJoin = (name: string) => {
-    alert(`Te uniste a la partida: ${name}`);
+  // Función al unirse a una partida
+  const handleJoin = async (game: Game) => {
+    if (!playerName || !playerDate) {
+      setError("No se encontró información del jugador");
+      return;
+    }
+
+    try {
+      console.log(playerName, playerDate);
+      await playerService.createPlayer({
+        name: playerName,
+        birth_date: new Date(playerDate).toISOString().split("T")[0],
+        host: false,
+        game_id: game.game_id!, // ⚠️ usamos game_id del GET
+      });
+
+      navigate(destinations.lobby, { state: { game } });
+    } catch (err) {
+      console.error(err);
+      setError("Error al unirse a la partida");
+    }
   };
 
   return (
     <div className="home-page">
-      <div className="list-container">
-        <h1 className="list-title">Partidas disponibles:</h1>
-        <ul className="game-list">
-          {partidas.map((partida) => (
-            <li key={partida.id} className="list-item">
-              <div className="side-info">
-                <div className="item-title">{partida.name}</div>
-                <div className="item-data">
-                  De {partida.minPlayers} a {partida.maxPlayers} jugadores.
-                  Actuales: {partida.currPlayers}.
-                </div>
+      <h1 className="list-title">Partidas disponibles:</h1>
+      <p className={`error-message ${error ? "active" : ""}`}>{error}</p>
+      <ul className="game-list">
+        {partidas.map((partida) => (
+          <li key={partida.game_id} className="list-item">
+            <div className="side-info">
+              <div className="item-title">{partida.name}</div>
+              <div className="item-data">
+                De {partida.min_players} a {partida.max_players} jugadores.
               </div>
-              <div className="side-button">
-                <Button
-                  type="button"
-                  label="Unirme"
-                  onClick={() => handleJoin(partida.name)}
-                />
-              </div>
-            </li>
-          ))}
-        </ul>
-      </div>
+            </div>
+            <div className="side-button">
+              <Button
+                type="button"
+                label="Unirme"
+                onClick={() => handleJoin(partida)}
+              />
+            </div>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

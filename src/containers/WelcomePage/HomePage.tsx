@@ -50,7 +50,10 @@ export default function HomePage() {
 
   const handleList = () => {
     if (validate()) {
-      navigate(destinations.listarPartidas); //Redirigimos para mostrar las partidas disponibles
+      navigate(destinations.listarPartidas, {
+        state: { playerName, playerDate },
+      });
+      //Redirigimos para mostrar las partidas disponibles
     }
   };
 

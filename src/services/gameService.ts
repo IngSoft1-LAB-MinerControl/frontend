@@ -5,6 +5,7 @@ export interface Game {
   min_players: number;
   max_players: number;
   status: string;
+  game_id?: number;
 }
 
 export interface GameResponse {
@@ -21,13 +22,24 @@ async function createGame(game: Game): Promise<GameResponse> {
   });
 
   const data = await response.json();
-  console.log("⬅️ Respuesta createGame:", data);
-
-  return data; // se devuelve el objeto ya parseado
+  return data;
 }
 
 const gameService = {
   createGame,
+  getGames,
 };
 
 export default gameService;
+
+async function getGames(): Promise<Game[]> {
+  const response = await fetch(`${httpServerUrl}/games`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  const data = await response.json();
+
+  return data;
+}
