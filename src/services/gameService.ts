@@ -33,7 +33,7 @@ const gameService = {
 export default gameService;
 
 async function getGames(): Promise<Game[]> {
-  const response = await fetch(`${httpServerUrl}/games`, {
+  const response = await fetch(`${httpServerUrl}/games/availables`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
