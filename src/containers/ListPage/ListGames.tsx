@@ -57,28 +57,29 @@ export default function ListGames() {
   };
 
   return (
-    <div className="home-page">
-      <h1 className="list-title">Partidas disponibles:</h1>
-      <p className={`error-message ${error ? "active" : ""}`}>{error}</p>
-      <ul className="game-list">
-        {partidas.map((partida) => (
-          <li key={partida.game_id} className="list-item">
-            <div className="side-info">
-              <div className="item-title">{partida.name}</div>
-              <div className="item-data">
-                De {partida.min_players} a {partida.max_players} jugadores.
+    <div className="list-page">
+      <div className="list-container">
+        <h1 className="container-title">Partidas disponibles</h1>
+        <p className={`list-error-message ${error ? "active" : ""}`}>{error}</p>
+        <ul className="game-list">
+          {partidas.map((partida) => (
+            <li key={partida.game_id} className="list-item">
+              <div className="side-info">
+                <div className="item-title">{partida.name}</div>
+                <div className="item-data">
+                  De {partida.min_players} a {partida.max_players} jugadores.
+                  {/* Lugares disponibles: aca pondria el partida.amiunt_players */}
+                </div>
               </div>
-            </div>
-            <div className="side-button">
               <Button
                 type="button"
                 label="Unirme"
                 onClick={() => handleJoin(partida)}
               />
-            </div>
-          </li>
-        ))}
-      </ul>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
