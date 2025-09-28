@@ -1,13 +1,13 @@
 import "./Lobby.css";
 import { useEffect, useState } from "react";
-import { useLocation /*useNavigate*/ } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import playerService from "../../services/playerService";
 import type { Player } from "../../services/playerService";
 import Button from "../../components/Button";
 
 function Lobby() {
   const location = useLocation();
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
   const { game, playerName, playerDate } = location.state || {};
 
   const [players, setPlayers] = useState<Player[]>([]);
@@ -55,7 +55,7 @@ function Lobby() {
     e.preventDefault();
     if (validate()) {
       // Lógica para iniciar partida o navegar
-      //navigate("/game", { state: { game, playerName, playerDate } });
+      navigate("/game", { state: { game, playerName, playerDate } });
     }
   };
 

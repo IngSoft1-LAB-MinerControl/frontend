@@ -1,57 +1,44 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
-import CardBase from "../../components/Cards/CardBase";
 import "./GamePage.css";
+import playerService from "../../services/playerService";
+import type { Player } from "../../services/playerService";
+import CardBase from "../../components/Cards/CardBase";
 
-// Tipado básico (ajustalo a tu modelo real)
-type GameInfo = {
+// Tipo mínimo de Game: solo lo que usás acá
+type Game = {
   game_id: string;
   min_players: number;
-  max_players: number;
+  max_players?: number;
   name?: string;
 };
-type Player = {
-  id: string;
-  name: string;
-  birth_date: string;
-  host?: boolean;
-  // si ya tienen avatar/otras props, agregarlas
-};
 
-// Simula tu servicio real (reemplazá por tu playerService)
-const playerService = {
-  async getPlayersByGame(gameId: string): Promise<Player[]> {
-    // TODO: llamar a tu backend real
-    // mock para ver la vista:
-    return [
-      { id: "1", name: "Ulises", birth_date: "2000-01-01", host: true },
-      { id: "2", name: "Marple", birth_date: "1970-11-11" },
-      { id: "3", name: "Parker", birth_date: "1980-05-05" },
-      { id: "4", name: "Tommy", birth_date: "1990-03-03" },
-      { id: "5", name: "Tuppence", birth_date: "1991-02-02" },
-      // { id: "6", name: "Poirot", birth_date: "1960-10-10" },
-    ];
-  },
-};
-
-export default function Game() {
+export default function GamePage() {
   const location = useLocation();
-  // Recibo el estado que te pasan desde la navegación (ajustá nombres si difieren)
-  const { game, playerName, playerDate } = (location.state ?? {}) as {
-    game: GameInfo;
-    playerName: string;
-    playerDate: string;
-  };
+
+  const { game, playerName, playerDate } = (location.state ?? {}) as
+    | { game: Game; playerName: string; playerDate: string }
+    | {};
 
   const [players, setPlayers] = useState<Player[]>([]);
   const [error, setError] = useState("");
+
+  if (!game) {
+    return (
+      <div className="game-page">
+        <div className="inline-error">
+          Falta el contexto de la partida. Volvé al lobby e ingresá nuevamente.
+        </div>
+      </div>
+    );
+  }
 
   // Traer jugadores de la partida
   const fetchPlayers = async () => {
     try {
       if (!game?.game_id) return;
-      const list = await playerService.getPlayersByGame(game.game_id);
-      setPlayers(list);
+      const jugadores = await playerService.getPlayersByGame(game.game_id);
+      setPlayers(jugadores);
     } catch (err) {
       console.error("Error al obtener jugadores:", err);
     }
@@ -62,7 +49,7 @@ export default function Game() {
     fetchPlayers();
     const t = setInterval(fetchPlayers, 3000);
     return () => clearInterval(t);
-  }, [game?.game_id]);
+  }, [game.game_id]);
 
   // Player actual
   const currentPlayer = players.find(
@@ -74,7 +61,7 @@ export default function Game() {
   const distribution = useMemo(() => {
     if (!players.length)
       return {
-        bottom: null,
+        bottom: null as Player | null,
         top: [] as Player[],
         left: null as Player | null,
         right: null as Player | null,
@@ -90,9 +77,8 @@ export default function Game() {
     return { bottom: me, top, left, right };
   }, [players, currentPlayer]);
 
-  // Validación simple (por si querés usarla)
+  // Validación simple
   const validateCanStart = () => {
-    if (!game) return false;
     const ok = players.length >= (game.min_players ?? 2);
     setError(ok ? "" : `Se necesitan al menos ${game.min_players} jugadores.`);
     return ok;
@@ -103,7 +89,7 @@ export default function Game() {
       {/* Capa de mesa encima del fondo estético */}
       <div className="game-table-overlay" aria-hidden="true" />
 
-      {/* Opcional: título arriba a la izquierda */}
+      {/* Header */}
       <header className="game-header">
         <h1 className="game-title">{game?.name ?? "Partida"}</h1>
         {isHost && (
@@ -121,7 +107,7 @@ export default function Game() {
         )}
       </header>
 
-      {/* MESA: 3 áreas → TOP | MIDDLE (left/center/right) | BOTTOM */}
+      {/* MESA: TOP | MIDDLE (left/center/right) | BOTTOM */}
       <main className="table-grid">
         {/* TOP: hasta 3 oponentes */}
         <section className="area-top">
@@ -178,10 +164,20 @@ function Decks() {
   return (
     <div className="decks">
       <div className="deck draw-deck" title="Mazo para robar">
-        <Card size="large" />
+        <CardBase
+          key="draw"
+          shown={true}
+          size="medium"
+          image="/images/card_back.png"
+        />
       </div>
       <div className="deck discard-deck" title="Descarte (tope visible)">
-        <Card size="large" />
+        <CardBase
+          key="discard"
+          shown={true}
+          size="medium"
+          image="/images/card_back.png"
+        />
       </div>
     </div>
   );
@@ -194,13 +190,23 @@ function Opponent({ player }: { player: Player }) {
 
       <div className="op-hand">
         {Array.from({ length: 5 }).map((_, i) => (
-          <CardBase shown={true} size="medium" image="/images/card_back.png" />
+          <CardBase
+            key={`op-hand-${player.id}-${i}`}
+            shown={true}
+            size="medium"
+            image="/images/card_back.png"
+          />
         ))}
       </div>
 
       <div className="op-secrets">
         {Array.from({ length: 3 }).map((_, i) => (
-          <CardBase shown={true} size="medium" image="/images/detective1.png" />
+          <CardBase
+            key={`op-secret-${player.id}-${i}`}
+            shown={true}
+            size="medium"
+            image="/images/detective1.png"
+          />
         ))}
       </div>
     </div>
@@ -214,13 +220,23 @@ function You({ player }: { player: Player }) {
 
       <div className="you-hand">
         {Array.from({ length: 5 }).map((_, i) => (
-          <CardBase shown={true} size="medium" image="/images/detective1.png" />
+          <CardBase
+            key={`me-hand-${i}`}
+            shown={true}
+            size="medium"
+            image="/images/detective1.png"
+          />
         ))}
       </div>
 
       <div className="you-secrets">
         {Array.from({ length: 3 }).map((_, i) => (
-          <CardBase shown={true} size="medium" image="/images/detective1.png" />
+          <CardBase
+            key={`me-secret-${i}`}
+            shown={true}
+            size="medium"
+            image="/images/detective1.png"
+          />
         ))}
       </div>
     </div>
