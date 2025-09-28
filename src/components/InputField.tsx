@@ -6,6 +6,7 @@ type Props = {
   placeholder: string;
   type?: string;
   value: string;
+  maxLength?: number;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
@@ -14,6 +15,7 @@ export default function InputField({
   placeholder,
   type = "text",
   value,
+  maxLength,
   onChange,
 }: Props) {
   return (
@@ -23,6 +25,7 @@ export default function InputField({
       type={type}
       placeholder={placeholder}
       value={value}
+      maxLength={maxLength}
       onChange={onChange}
     />
   );
