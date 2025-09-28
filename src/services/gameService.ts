@@ -10,6 +10,11 @@ export interface Game {
 
 export interface GameResponse {
   game_id: number;
+  name: string;
+  status: string;
+  min_players: number;
+  max_players: number;
+  players_amount: number;
 }
 
 async function createGame(game: Game): Promise<GameResponse> {
@@ -32,7 +37,7 @@ const gameService = {
 
 export default gameService;
 
-async function getGames(): Promise<Game[]> {
+async function getGames(): Promise<GameResponse[]> {
   const response = await fetch(`${httpServerUrl}/games/availables`, {
     method: "GET",
     headers: {

@@ -4,18 +4,17 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import destinations from "../../navigation/destinations";
 import gameService from "../../services/gameService";
-import type { Game } from "../../services/gameService";
+import type { Game, GameResponse } from "../../services/gameService";
 import playerService from "../../services/playerService";
 
 export default function ListGames() {
-  const [partidas, setPartidas] = useState<Game[]>([]);
+  const [partidas, setPartidas] = useState<GameResponse[]>([]);
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
 
   const { playerName, playerDate } = location.state || {};
 
-  // Función para traer las partidas
   const fetchGames = async () => {
     try {
       const games = await gameService.getGames();
@@ -26,14 +25,12 @@ export default function ListGames() {
     }
   };
 
-  // Cargar partidas al montar el componente y refrescar cada 5 seg.
   useEffect(() => {
     fetchGames();
-    const interval = setInterval(fetchGames, 5000);
+    const interval = setInterval(fetchGames, 3000);
     return () => clearInterval(interval);
   }, []);
 
-  // Función al unirse a una partida
   const handleJoin = async (game: Game) => {
     if (!playerName || !playerDate) {
       setError("No se encontró información del jugador");
@@ -44,9 +41,9 @@ export default function ListGames() {
       console.log(playerName, playerDate);
       await playerService.createPlayer({
         name: playerName,
-        birth_date: playerDate, //new Date(playerDate).toISOString().split("T")[0],
+        birth_date: playerDate,
         host: false,
-        game_id: game.game_id!, // ⚠️ usamos game_id del GET
+        game_id: game.game_id!,
       });
 
       navigate(destinations.lobby, { state: { game, playerName, playerDate } });
@@ -68,7 +65,8 @@ export default function ListGames() {
                 <div className="item-title">{partida.name}</div>
                 <div className="item-data">
                   De {partida.min_players} a {partida.max_players} jugadores.
-                  {/* Lugares disponibles: aca pondria el partida.amiunt_players */}
+                  Lugares disponibles:{" "}
+                  {partida.max_players - partida.players_amount}
                 </div>
               </div>
               <Button
