@@ -1,12 +1,13 @@
 import "./Lobby.css";
 import { useEffect, useState } from "react";
-import { useLocation /*useNavigate*/ } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import playerService from "../../services/playerService";
 import type { Player } from "../../services/playerService";
+import gameService from "../../services/gameService";
 
 function Lobby() {
   const location = useLocation();
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
   const { game, playerName, playerDate } = location.state || {};
 
   const [players, setPlayers] = useState<Player[]>([]);
@@ -30,6 +31,26 @@ function Lobby() {
     return () => clearInterval(interval);
   }, [game]);
 
+  // Hook para revisar si el juego ya empezó
+  useEffect(() => {
+    const checkGameStatus = async () => {
+      if (!game?.game_id) return;
+      try {
+        const updatedGame = await gameService.getGameById(game.game_id);
+        if (updatedGame.status === "in course") {
+          navigate("/game", {
+            state: { game: updatedGame, playerName, playerDate },
+          });
+        }
+      } catch (err) {
+        console.error("Error al chequear estado del juego:", err);
+      }
+    };
+
+    const interval = setInterval(checkGameStatus, 3000);
+    return () => clearInterval(interval);
+  }, [game, playerName, playerDate, navigate]);
+
   // Detectar el jugador actual
   const currentPlayer = players.find(
     (p) => p.name === playerName && p.birth_date === playerDate
@@ -50,11 +71,15 @@ function Lobby() {
     return true;
   };
 
-  const handleStartClick = (e: React.FormEvent) => {
+  const handleStartClick = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
-      // Lógica para iniciar partida o navegar
-      //navigate("/game", { state: { game, playerName, playerDate } });
+      try {
+        await gameService.startGame(game.game_id);
+        //todos  los players entran cuando checkGameStatus detecta "in course"
+      } catch (err) {
+        console.error("Error iniciando el juego:", err);
+      }
     }
   };
 
