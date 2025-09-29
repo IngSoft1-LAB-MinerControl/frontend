@@ -82,6 +82,7 @@ export default function CreatePage() {
             id="nombre-partida"
             placeholder="Ingrese un nombre para la partida."
             value={gameName}
+            maxLength={30}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
               setGameName(e.target.value)
             }
