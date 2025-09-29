@@ -4,6 +4,8 @@ import "./GamePage.css";
 import playerService from "../../services/playerService";
 import type { Player } from "../../services/playerService";
 import CardBase from "../../components/Cards/CardBase";
+import Secret from "../../components/Cards/Secret";
+import TurnActions from "./ButtonGame";
 
 // Tipo mínimo de Game: solo lo que usás acá
 type Game = {
@@ -55,7 +57,11 @@ export default function GamePage() {
   const currentPlayer = players.find(
     (p) => p.name === playerName && p.birth_date === playerDate
   );
-  const isHost = currentPlayer?.host ?? false;
+
+  // let isHost = false;
+  // if (currentPlayer && currentPlayer.host) {
+  //   isHost = true;
+  // }
 
   // Distribución visual: yo abajo; 3 arriba; 1 izq; 1 der
   const distribution = useMemo(() => {
@@ -77,13 +83,6 @@ export default function GamePage() {
     return { bottom: me, top, left, right };
   }, [players, currentPlayer]);
 
-  // Validación simple
-  const validateCanStart = () => {
-    const ok = players.length >= (game.min_players ?? 2);
-    setError(ok ? "" : `Se necesitan al menos ${game.min_players} jugadores.`);
-    return ok;
-  };
-
   return (
     <div className="game-page">
       {/* Capa de mesa encima del fondo estético */}
@@ -92,19 +91,6 @@ export default function GamePage() {
       {/* Header */}
       <header className="game-header">
         <h1 className="game-title">{game?.name ?? "Partida"}</h1>
-        {isHost && (
-          <button
-            className="host-start-button"
-            onClick={() => {
-              if (validateCanStart()) {
-                console.log("Iniciar partida");
-                // TODO: POST /games/:id/start
-              }
-            }}
-          >
-            Iniciar (Host)
-          </button>
-        )}
       </header>
 
       {/* MESA: TOP | MIDDLE (left/center/right) | BOTTOM */}
@@ -147,6 +133,7 @@ export default function GamePage() {
           ) : (
             <div className="empty-hint">Esperando jugadores…</div>
           )}
+          <TurnActions />
         </section>
       </main>
 
@@ -164,20 +151,10 @@ function Decks() {
   return (
     <div className="decks">
       <div className="deck draw-deck" title="Mazo para robar">
-        <CardBase
-          key="draw"
-          shown={true}
-          size="medium"
-          image="/images/card_back.png"
-        />
+        <CardBase key="draw" shown={false} size="medium" />
       </div>
       <div className="deck discard-deck" title="Descarte (tope visible)">
-        <CardBase
-          key="discard"
-          shown={true}
-          size="medium"
-          image="/images/card_back.png"
-        />
+        <CardBase key="discard" shown={true} size="medium" />
       </div>
     </div>
   );
@@ -192,20 +169,18 @@ function Opponent({ player }: { player: Player }) {
         {Array.from({ length: 5 }).map((_, i) => (
           <CardBase
             key={`op-hand-${player.id}-${i}`}
-            shown={true}
+            shown={false}
             size="medium"
-            image="/images/card_back.png"
           />
         ))}
       </div>
 
       <div className="op-secrets">
         {Array.from({ length: 3 }).map((_, i) => (
-          <CardBase
+          <Secret
             key={`op-secret-${player.id}-${i}`}
-            shown={true}
+            shown={false}
             size="medium"
-            image="/images/detective1.png"
           />
         ))}
       </div>
@@ -218,25 +193,15 @@ function You({ player }: { player: Player }) {
     <div className="you">
       <div className="you-name">{player.name}</div>
 
-      <div className="you-hand">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <CardBase
-            key={`me-hand-${i}`}
-            shown={true}
-            size="medium"
-            image="/images/detective1.png"
-          />
+      <div className="you-secrets">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Secret key={`me-secret-${i}`} shown={false} size="medium" />
         ))}
       </div>
 
-      <div className="you-secrets">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <CardBase
-            key={`me-secret-${i}`}
-            shown={true}
-            size="medium"
-            image="/images/detective1.png"
-          />
+      <div className="you-hand">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <CardBase key={`me-hand-${i}`} shown={true} size="medium" />
         ))}
       </div>
     </div>

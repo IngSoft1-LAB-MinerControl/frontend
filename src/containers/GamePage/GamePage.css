@@ -57,15 +57,18 @@
 }
 
 /* ====== Layout de mesa (grid por áreas) ====== */
+
 .table-grid {
   position: relative;
-  z-index: 1; /* por encima del overlay */
-  min-height: 100vh;
-  padding: 70px 16px 16px; /* deja espacio para el header */
+  z-index: 1;
+  height: 100vh; /* en lugar de min-height */
+  padding: 70px 16px 16px;
   display: grid;
   grid-template-rows: auto 1fr auto; /* TOP | MIDDLE | BOTTOM */
   grid-template-columns: 1fr;
   gap: 12px;
+  box-sizing: border-box; /* asegura que padding cuente dentro del 100vh */
+  overflow: hidden; /* por si algo se sale */
 }
 
 /* TOP: fila con hasta 3 oponentes */

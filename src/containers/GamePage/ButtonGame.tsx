@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "./TurnActions.css";
+import "./ButtonGame.css";
 
 export default function TurnActions() {
   const [step, setStep] = useState<0 | 1 | 2>(0);
@@ -26,7 +26,7 @@ export default function TurnActions() {
             setStep(0); // vuelve al inicio
           }}
         >
-          REPONER CARTA
+          REPONER
         </button>
       )}
     </div>

@@ -1,6 +1,6 @@
-import "./CardBase.css";
+import "./Secret.css";
 import cardBack from "/src/assets/card_back.png";
-import notSoFast from "/src/assets/not_so_fast.png";
+import secret from "/src/assets/secret.png";
 
 type CardSize = "mini" | "medium" | "large";
 
@@ -10,17 +10,17 @@ export type CardBaseProps = {
   image?: string;
 };
 
-export default function CardBase({
+export default function Secret({
   shown,
   size = "medium",
   image,
 }: CardBaseProps) {
   // Si no hay imagen, usamos el back por defecto
-  const imgSrc = shown ? image ?? notSoFast : cardBack;
+  const imgSrc = shown ? image ?? secret : cardBack;
 
   return (
-    <div className={`card card-${size}`}>
-      <img src={imgSrc} alt="card" />
+    <div className={`card secret-${size}`}>
+      <img src={imgSrc} alt="secret" />
     </div>
   );
 }

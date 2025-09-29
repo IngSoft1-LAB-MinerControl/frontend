@@ -33,6 +33,7 @@ async function createGame(game: Game): Promise<GameResponse> {
 const gameService = {
   createGame,
   getGames,
+  startGame,
 };
 
 export default gameService;
@@ -46,5 +47,16 @@ async function getGames(): Promise<GameResponse[]> {
   });
   const data = await response.json();
 
+  return data;
+}
+
+async function startGame(gameId: number): Promise<GameResponse[]> {
+  const response = await fetch(`${httpServerUrl}/game/beginning/${gameId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  const data: GameResponse[] = await response.json();
   return data;
 }
