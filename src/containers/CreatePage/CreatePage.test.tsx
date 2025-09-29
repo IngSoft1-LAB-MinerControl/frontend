@@ -7,13 +7,16 @@ import { MemoryRouter } from "react-router-dom";
 import CreatePage from "./CreatePage";
 import destinations from "../../navigation/destinations";
 
-// Mock de useNavigate
+// Mock de useNavigate y useLocation
 const mockedNavigate = vi.fn();
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual<any>("react-router-dom");
   return {
     ...actual,
     useNavigate: () => mockedNavigate,
+    useLocation: () => ({
+      state: { playerName: "Alice", playerDate: "2000-01-01" },
+    }),
   };
 });
 
@@ -30,7 +33,10 @@ describe("CreatePage", () => {
 
     // Configuramos los mocks de los servicios para que devuelvan valores simulados
     (gameService.createGame as any).mockResolvedValue({ game_id: 123 });
-    (playerService.createPlayer as any).mockResolvedValue({});
+    (playerService.createPlayer as any).mockResolvedValue({
+      id: 1,
+      name: "Alice",
+    });
   });
 
   it("renderiza título, inputs y botones", () => {
@@ -150,9 +156,8 @@ describe("CreatePage", () => {
       destinations.lobby,
       expect.objectContaining({
         state: expect.objectContaining({
-          playerName: undefined,
-          playerDate: undefined,
           game: { game_id: 123 },
+          player: { id: 1, name: "Alice" },
         }),
       })
     );

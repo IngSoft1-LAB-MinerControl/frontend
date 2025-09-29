@@ -8,7 +8,7 @@ import destinations from "../../navigation/destinations";
 import gameService from "../../services/gameService";
 import playerService from "../../services/playerService";
 
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 // Mock de navigate
 const mockedNavigate = vi.fn();
@@ -19,6 +19,7 @@ vi.mock("react-router-dom", async () => {
   return {
     ...actual,
     useNavigate: () => mockedNavigate,
+    // 👇 Incluimos playerName y playerDate porque ListGames los usa
     useLocation: vi.fn(() => ({
       state: { playerName: "Alice", playerDate: "2000-01-01" },
     })),
@@ -31,8 +32,6 @@ describe("ListGames", () => {
   });
 
   it("renderiza partidas disponibles correctamente", async () => {
-    console.log("TEST: renderiza partidas disponibles correctamente");
-
     const partidasMock = [
       {
         game_id: 1,
@@ -70,8 +69,6 @@ describe("ListGames", () => {
   });
 
   it("navega al lobby al unirse a una partida", async () => {
-    console.log("TEST: navega al lobby al unirse a una partida");
-
     const partidasMock = [
       {
         game_id: 1,
@@ -83,8 +80,16 @@ describe("ListGames", () => {
       },
     ];
 
+    const playerMock = {
+      player_id: 1,
+      name: "Alice",
+      birth_date: "2000-01-01",
+      host: false,
+      game_id: 1,
+    };
+
     vi.spyOn(gameService, "getGames").mockResolvedValue(partidasMock);
-    vi.spyOn(playerService, "createPlayer").mockResolvedValue({ id: 1 });
+    vi.spyOn(playerService, "createPlayer").mockResolvedValue(playerMock);
 
     render(<ListGames />);
 
@@ -101,15 +106,12 @@ describe("ListGames", () => {
     expect(mockedNavigate).toHaveBeenCalledWith(destinations.lobby, {
       state: {
         game: partidasMock[0],
-        playerName: "Alice",
-        playerDate: "2000-01-01",
+        player: playerMock, // ✅ se pasa el player completo
       },
     });
   });
 
   it("muestra error si no hay info del jugador", async () => {
-    console.log("TEST: muestra error si no hay info del jugador");
-
     // Cambiamos useLocation solo para este test
     (useLocation as any).mockReturnValue({ state: {} });
 
@@ -127,12 +129,14 @@ describe("ListGames", () => {
     vi.spyOn(gameService, "getGames").mockResolvedValue(partidasMock);
 
     render(<ListGames />);
+
     const button = await screen.findByRole("button", { name: /Unirme/i });
     await userEvent.click(button);
 
     expect(
-      await screen.findByText("No se encontró información del jugador")
+      await screen.findByText("No se encontro informacion del jugador")
     ).toBeInTheDocument();
+
     expect(mockedNavigate).not.toHaveBeenCalled();
   });
 });
