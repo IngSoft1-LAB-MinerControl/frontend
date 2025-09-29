@@ -1,5 +1,5 @@
-.home-page{
-	display: flex;
+.list-page {
+  display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -9,85 +9,81 @@
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  font-family: "Poppins";  
+  font-family: "Poppins";
 }
 
-.list-container{
-	width: 30%;
-  height: 70%;
-  min-width: 520px;
+.list-container {
+  width: 35%;
+  height: 80%;
+  min-width: 550px;
   background-color: transparent;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  backdrop-filter: blur(20px) brightness(120%);
-
   padding: 2%;
   border-radius: 12px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   box-shadow: 0rem 0rem 1rem 0.2rem rgba(41, 3, 3, 0.5);
+  box-sizing: border-box;
+  backdrop-filter: blur(30px) brightness(115%);
+  overflow: hidden;
+  padding-top: 0.2rem;
 }
 
-.list-title{
-	font-size: clamp(1rem, 4vw, 2.5rem);
+.container-title {
+  margin-top: 0.3rem;
+  font-size: clamp(1rem, 4vw, 2.5rem);
   font-weight: 500;
   text-align: center;
   color: #2a1713;
+  flex-shrink: 0;
 }
 
-.game-list{
-  /*width: 100%;*/
+.game-list {
+  flex: 1;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   margin: 0.4rem;
   padding-left: 0;
 }
 
-.list-item{
+.list-item {
   display: flex;
-  align-items: right;
-  /* margin-top: 0.3rem;
-  margin-bottom: 0.3rem; */
-  /* border: #2a1713;
-  border-radius: 10px; */
-  justify-content: center;
-  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0.3rem 0;
+  border-bottom: 1px solid black;
 }
 
-.item-title{
-	font-size: clamp(1.2rem, 2.3vw, 1.5rem);
+.list-item:last-child {
+  border-bottom: none;
+}
+
+.side-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+}
+.item-title {
+  font-size: clamp(1.2rem, 2.3vw, 1.5rem);
   font-weight: 700;
   color: #2a1713;
   margin-left: 0.1rem;
 }
 
-.item-data{
-	font-size: clamp(1rem, 2vw, 1.3rem);
+.item-data {
+  font-size: clamp(1rem, 2vw, 1.3rem);
   font-weight: 500;
   color: #2a1713;
   margin-left: 0.1rem;
 }
 
-.side-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.side-button{
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.custom-button{
-  text-align: center;
-  justify-content: center;
-  padding: 0.5rem;
-  height: clamp(1rem 1.5rem 2rem);
-  font-size: 120%;
+.list-container .custom-button {
+  padding: 0.5rem 1.2rem;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  min-width: 100px;
+  margin-left: 1rem;
+  margin-right: 0.5rem;
 }

@@ -48,7 +48,7 @@ export default function CreatePage() {
         name: gameName,
         min_players: minPlayers,
         max_players: maxPlayers,
-        status: "esperando jugadores",
+        status: "waiting players",
       });
 
       // Crear el jugador host

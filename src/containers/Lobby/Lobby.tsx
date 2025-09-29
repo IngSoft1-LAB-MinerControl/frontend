@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import playerService from "../../services/playerService";
 import type { Player } from "../../services/playerService";
-import Button from "../../components/Button";
 
 function Lobby() {
   const location = useLocation();
@@ -66,41 +65,33 @@ function Lobby() {
       <section className="lobby-card" aria-label="Sala de espera">
         {/* Slots de jugadores */}
         <div className="lobby-slots" aria-label="Jugadores">
-          {Array.from({ length: 6 }).map((_, index) => {
-            const player = players[index];
-            return (
-              <div key={index} className="lobby-slot">
-                {player ? (
-                  <div className="player-info">
-                    <div className="player-name">
-                      {player.name}{" "}
-                      {player.host && (
-                        <span className="host-badge">(HOST)</span>
-                      )}
-                    </div>
-                    <div className="player-date">{player.birth_date}</div>
-                  </div>
-                ) : (
-                  <div className="empty-slot" />
-                )}
+          {players.map((player, index) => (
+            <div key={index} className="lobby-slot filled">
+              <div className="player-info">
+                <div className="player-name">
+                  {player.name}{" "}
+                  {player.host && <span className="host-badge">(HOST)</span>}
+                </div>
+                <div className="player-date">{player.birth_date}</div>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
 
         {/* Acción de iniciar o mensaje de espera */}
         <div className="lobby-actions">
           {isHost ? (
             <>
-              {/* Reservamos espacio para el error */}
-              <p className={`error-message ${error ? "active" : ""}`}>
+              <p className={`start-error ${error ? "active" : ""}`}>
                 {error || " "}
               </p>
-              <Button
+              <button
                 type="button"
-                label="Iniciar"
+                className="start-button"
                 onClick={handleStartClick}
-              />
+              >
+                Iniciar
+              </button>
             </>
           ) : (
             <p className="waiting-text">
