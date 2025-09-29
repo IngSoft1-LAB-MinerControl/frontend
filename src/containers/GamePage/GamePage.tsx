@@ -2,27 +2,18 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import "./GamePage.css";
 import playerService from "../../services/playerService";
-import type { Player } from "../../services/playerService";
+import type { PlayerResponse } from "../../services/playerService";
+
 import CardBase from "../../components/Cards/CardBase";
 import Secret from "../../components/Cards/Secret";
-import TurnActions from "./ButtonGame";
-
-// Tipo mínimo de Game: solo lo que usás acá
-type Game = {
-  game_id: string;
-  min_players: number;
-  max_players?: number;
-  name?: string;
-};
+import TurnActions from "./TurnActions";
 
 export default function GamePage() {
   const location = useLocation();
 
-  const { game, playerName, playerDate } = (location.state ?? {}) as
-    | { game: Game; playerName: string; playerDate: string }
-    | {};
+  const { game, player } = location.state ?? {};
 
-  const [players, setPlayers] = useState<Player[]>([]);
+  const [players, setPlayers] = useState<PlayerResponse[]>([]);
   const [error, setError] = useState("");
 
   if (!game) {
@@ -54,23 +45,16 @@ export default function GamePage() {
   }, [game.game_id]);
 
   // Player actual
-  const currentPlayer = players.find(
-    (p) => p.name === playerName && p.birth_date === playerDate
-  );
-
-  // let isHost = false;
-  // if (currentPlayer && currentPlayer.host) {
-  //   isHost = true;
-  // }
+  const currentPlayer = players.find((p) => p.player_id === player.player_id);
 
   // Distribución visual: yo abajo; 3 arriba; 1 izq; 1 der
   const distribution = useMemo(() => {
     if (!players.length)
       return {
-        bottom: null as Player | null,
-        top: [] as Player[],
-        left: null as Player | null,
-        right: null as Player | null,
+        bottom: null as PlayerResponse | null,
+        top: [] as PlayerResponse[],
+        left: null as PlayerResponse | null,
+        right: null as PlayerResponse | null,
       };
 
     const me = currentPlayer ?? players[0]; // fallback por si no encontró
@@ -99,7 +83,7 @@ export default function GamePage() {
         <section className="area-top">
           <div className="opponents-row">
             {distribution.top.map((p) => (
-              <Opponent key={p.id} player={p} />
+              <Opponent key={p.player_id} player={p} />
             ))}
           </div>
         </section>
@@ -160,7 +144,7 @@ function Decks() {
   );
 }
 
-function Opponent({ player }: { player: Player }) {
+function Opponent({ player }: { player: PlayerResponse }) {
   return (
     <div className="opponent">
       <div className="op-name">{player.name}</div>
@@ -168,9 +152,9 @@ function Opponent({ player }: { player: Player }) {
       <div className="op-hand">
         {Array.from({ length: 6 }).map((_, i) => (
           <CardBase
-            key={`op-hand-${player.id}-${i}`}
+            key={`op-hand-${player.player_id}-${i}`}
             shown={false}
-            size="medium"
+            size="mini"
           />
         ))}
       </div>
@@ -178,9 +162,9 @@ function Opponent({ player }: { player: Player }) {
       <div className="op-secrets">
         {Array.from({ length: 3 }).map((_, i) => (
           <Secret
-            key={`op-secret-${player.id}-${i}`}
+            key={`op-secret-${player.player_id}-${i}`}
             shown={false}
-            size="medium"
+            size="mini"
           />
         ))}
       </div>
@@ -188,7 +172,7 @@ function Opponent({ player }: { player: Player }) {
   );
 }
 
-function You({ player }: { player: Player }) {
+function You({ player }: { player: PlayerResponse }) {
   return (
     <div className="you">
       <div className="you-name">{player.name}</div>

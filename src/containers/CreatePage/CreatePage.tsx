@@ -52,16 +52,17 @@ export default function CreatePage() {
       });
 
       // Crear el jugador host
-      await playerService.createPlayer({
+      const newPlayer = await playerService.createPlayer({
         name: playerName,
         birth_date: playerDate, //new Date(initialDate).toISOString().split("T")[0],
         host: true,
         game_id: newGame.game_id,
       });
+      console.log("newPlayer (create):", newPlayer);
 
       // Redirigir al lobby
       navigate(destinations.lobby, {
-        state: { game: newGame, playerName, playerDate },
+        state: { game: newGame, player: newPlayer },
       });
     } catch (err) {
       console.error(err);

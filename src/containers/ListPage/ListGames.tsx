@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import destinations from "../../navigation/destinations";
 import gameService from "../../services/gameService";
+
 import type { Game, GameResponse } from "../../services/gameService";
 import playerService from "../../services/playerService";
 
@@ -33,20 +34,21 @@ export default function ListGames() {
 
   const handleJoin = async (game: Game) => {
     if (!playerName || !playerDate) {
-      setError("No se encontró información del jugador");
+      setError("No se encontro informacion del jugador");
       return;
     }
 
     try {
       console.log(playerName, playerDate);
-      await playerService.createPlayer({
+      const newPlayer = await playerService.createPlayer({
         name: playerName,
         birth_date: playerDate,
         host: false,
         game_id: game.game_id!,
       });
+      console.log("player (join):", newPlayer);
 
-      navigate(destinations.lobby, { state: { game, playerName, playerDate } });
+      navigate(destinations.lobby, { state: { game, player: newPlayer } });
     } catch (err) {
       console.error(err);
       setError("Error al unirse a la partida");

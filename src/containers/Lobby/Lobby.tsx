@@ -2,15 +2,16 @@ import "./Lobby.css";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import playerService from "../../services/playerService";
-import type { Player } from "../../services/playerService";
+import type { PlayerResponse } from "../../services/playerService";
 import gameService from "../../services/gameService";
 
 function Lobby() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { game, playerName, playerDate } = location.state || {};
 
-  const [players, setPlayers] = useState<Player[]>([]);
+  const { game, player } = location.state || {};
+
+  const [players, setPlayers] = useState<PlayerResponse[]>([]);
   const [error, setError] = useState<string>("");
 
   // Traer jugadores de la partida
@@ -39,7 +40,7 @@ function Lobby() {
         const updatedGame = await gameService.getGameById(game.game_id);
         if (updatedGame.status === "in course") {
           navigate("/game", {
-            state: { game: updatedGame, playerName, playerDate },
+            state: { game: updatedGame, player },
           });
         }
       } catch (err) {
@@ -49,13 +50,19 @@ function Lobby() {
 
     const interval = setInterval(checkGameStatus, 3000);
     return () => clearInterval(interval);
-  }, [game, playerName, playerDate, navigate]);
+  }, [game, player, navigate]);
 
   // Detectar el jugador actual
-  const currentPlayer = players.find(
-    (p) => p.name === playerName && p.birth_date === playerDate
-  );
+  const currentPlayer = players.find((p) => p.player_id === player.player_id);
   const isHost = currentPlayer?.host ?? false;
+
+  // No renderizar hasta que ya hayan cargado los jugadores
+  if (!players.length) return <p>Cargando jugadores...</p>;
+
+  console.log("players en lobby:", players);
+  console.log("player actual:", player);
+  console.log("currentPlayer:", currentPlayer);
+  console.log("isHost:", isHost);
 
   // Validación para iniciar partida
   const validate = () => {
@@ -86,18 +93,17 @@ function Lobby() {
   return (
     <div className="lobby-page">
       <h1 className="lobby-title">SALA DE ESPERA</h1>
-
       <section className="lobby-card" aria-label="Sala de espera">
         {/* Slots de jugadores */}
         <div className="lobby-slots" aria-label="Jugadores">
-          {players.map((player, index) => (
+          {players.map((p, index) => (
             <div key={index} className="lobby-slot filled">
               <div className="player-info">
                 <div className="player-name">
-                  {player.name}{" "}
-                  {player.host && <span className="host-badge">(HOST)</span>}
+                  {p.name}{" "}
+                  {p.host && <span className="host-badge">(HOST)</span>}
                 </div>
-                <div className="player-date">{player.birth_date}</div>
+                <div className="player-date">{p.birth_date}</div>
               </div>
             </div>
           ))}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "./ButtonGame.css";
+import "./TurnActions.css";
 
 export default function TurnActions() {
   const [step, setStep] = useState<0 | 1 | 2>(0);
