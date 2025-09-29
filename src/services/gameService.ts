@@ -30,14 +30,6 @@ async function createGame(game: Game): Promise<GameResponse> {
   return data;
 }
 
-const gameService = {
-  createGame,
-  getGames,
-  startGame,
-};
-
-export default gameService;
-
 async function getGames(): Promise<GameResponse[]> {
   const response = await fetch(`${httpServerUrl}/games/availables`, {
     method: "GET",
@@ -50,13 +42,34 @@ async function getGames(): Promise<GameResponse[]> {
   return data;
 }
 
-async function startGame(gameId: number): Promise<GameResponse[]> {
+async function startGame(gameId: number): Promise<GameResponse> {
   const response = await fetch(`${httpServerUrl}/game/beginning/${gameId}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
   });
-  const data: GameResponse[] = await response.json();
+  const data: GameResponse = await response.json();
   return data;
 }
+
+async function getGameById(gameId: number): Promise<GameResponse> {
+  const response = await fetch(`${httpServerUrl}/games/${gameId}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const data: GameResponse = await response.json();
+  return data;
+}
+
+const gameService = {
+  createGame,
+  getGames,
+  startGame,
+  getGameById,
+};
+
+export default gameService;

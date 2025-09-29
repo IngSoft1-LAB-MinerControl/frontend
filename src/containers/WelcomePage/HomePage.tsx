@@ -70,6 +70,7 @@ export default function HomePage() {
             id="nombre"
             placeholder="Ingrese su nombre"
             value={playerName}
+            maxLength={20}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
               setPlayerName(e.target.value)
             }
