@@ -166,7 +166,7 @@ function Opponent({ player }: { player: Player }) {
       <div className="op-name">{player.name}</div>
 
       <div className="op-hand">
-        {Array.from({ length: 5 }).map((_, i) => (
+        {Array.from({ length: 6 }).map((_, i) => (
           <CardBase
             key={`op-hand-${player.id}-${i}`}
             shown={false}
@@ -200,7 +200,7 @@ function You({ player }: { player: Player }) {
       </div>
 
       <div className="you-hand">
-        {Array.from({ length: 5 }).map((_, i) => (
+        {Array.from({ length: 6 }).map((_, i) => (
           <CardBase key={`me-hand-${i}`} shown={true} size="medium" />
         ))}
       </div>
