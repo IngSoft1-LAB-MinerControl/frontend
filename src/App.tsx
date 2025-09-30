@@ -1,35 +1,29 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Routes, Route } from "react-router-dom";
+import destinations from "./navigation/destinations";
 
-function App() {
-  const [count, setCount] = useState(0)
+import HomePage from "./containers/WelcomePage/HomePage";
+import CreatePage from "./containers/CreatePage/CreatePage";
+import ListGames from "./containers/ListPage/ListGames";
+import Lobby from "./containers/Lobby/Lobby";
+import GamePage from "./containers/GamePage/GamePage";
 
+export default function App() {
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <Routes>
+      {/* Ruta inicial */}
+      <Route path={destinations.home} element={<HomePage />} />
 
-export default App
+      {/* Ruta para crear partida */}
+      <Route path={destinations.crearPartida} element={<CreatePage />} />
+
+      {/* Ruta para listar partidas */}
+      {<Route path={destinations.listarPartidas} element={<ListGames />} />}
+
+      {/* Ruta para ir al lobby*/}
+      {<Route path={destinations.lobby} element={<Lobby />} />}
+
+      {/* Ruta para ir a la partida */}
+      {<Route path={destinations.game} element={<GamePage />} />}
+    </Routes>
+  );
+}
