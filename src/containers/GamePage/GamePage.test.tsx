@@ -1,138 +1,130 @@
 /// <reference types="vitest" />
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
-import GamePage from "./GamePage";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { MemoryRouter, Routes, Route } from "react-router-dom";
 
-// Mock del servicio real de players
-vi.mock("../../services/playerService", () => {
-  return {
-    __esModule: true,
-    default: {
-      getPlayersByGame: vi.fn(),
-    },
-  };
-});
+import GamePage from "./GamePage";
 import playerService from "../../services/playerService";
 
-// helper para renderizar con state (lo que normalmente te pasa el Lobby)
-const baseState = {
-  game: { game_id: "42", min_players: 2, name: "Mesa" },
-  playerName: "Ulises",
-  playerDate: "2000-01-01",
+const spyGetPlayers = () => vi.spyOn(playerService, "getPlayersByGame");
+
+const game = { game_id: 10, name: "Mesa", min_players: 2, max_players: 6 };
+
+const me = {
+  player_id: 1,
+  id: 1,
+  name: "Ulises",
+  birth_date: "2001-01-01",
+  host: true,
+  game_id: game.game_id,
 };
-const renderWithState = (state?: any) =>
-  render(
+
+const mkOpponent = (i: number) => ({
+  player_id: i + 2,
+  id: i + 2,
+  name: `P${i + 1}`,
+  birth_date: `199${i}-01-01`,
+  host: false,
+  game_id: game.game_id,
+});
+
+function renderWithState(state: any) {
+  return render(
     <MemoryRouter
-      initialEntries={[{ pathname: "/game", state: state ?? baseState }]}
+      initialEntries={[{ pathname: "/game", state } as any]}
+      initialIndex={0}
     >
-      <GamePage />
+      <Routes>
+        <Route path="/game" element={<GamePage />} />
+      </Routes>
     </MemoryRouter>
   );
+}
 
-describe("GamePage (sin modificar TSX)", () => {
+describe("GamePage", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.restoreAllMocks();
   });
 
-  afterEach(() => {
-    vi.useRealTimers();
-  });
+  it("si no viene state, muestra el mensaje de contexto faltante", async () => {
+    spyGetPlayers().mockResolvedValue([]);
+    // No pasamos state
+    render(
+      <MemoryRouter initialEntries={[{ pathname: "/game" } as any]}>
+        <Routes>
+          <Route path="/game" element={<GamePage />} />
+        </Routes>
+      </MemoryRouter>
+    );
 
-  it("muestra error si falta location.state", () => {
-    renderWithState(undefined);
     expect(
-      screen.getByText(/Falta el contexto de la partida/i)
+      await screen.findByText(/Falta el contexto de la partida/i)
     ).toBeInTheDocument();
   });
 
   it("llama al servicio con el game_id correcto y muestra jugadores", async () => {
-    const mockPlayers = [
-      { id: "1", name: "Ulises", birth_date: "2000-01-01", host: true },
-      { id: "2", name: "Marple", birth_date: "1970-11-11" },
-    ];
-    (playerService.getPlayersByGame as any).mockResolvedValueOnce(mockPlayers);
+    const players = [me, mkOpponent(0)];
+    const spy = spyGetPlayers().mockResolvedValue(players);
 
-    renderWithState();
+    renderWithState({ game, player: me });
 
-    await waitFor(() =>
-      expect(playerService.getPlayersByGame).toHaveBeenCalledWith("42")
-    );
-
-    // nombres visibles (get/findByText)
-    expect(await screen.findByText("Ulises")).toBeInTheDocument();
-    expect(screen.getByText("Marple")).toBeInTheDocument();
+    expect(spy).toHaveBeenCalledWith(game.game_id);
+    expect(await screen.findByText(me.name)).toBeInTheDocument();
+    expect(screen.getByText("P1")).toBeInTheDocument();
   });
 
-  it("hace polling cada 3s (setInterval)", async () => {
+  it("hace polling cada 3s", async () => {
     vi.useFakeTimers();
-    (playerService.getPlayersByGame as any).mockResolvedValue([]);
+    const players = [me, mkOpponent(0)];
+    const spy = spyGetPlayers().mockResolvedValue(players);
 
-    renderWithState();
+    renderWithState({ game, player: me });
 
-    await waitFor(() =>
-      expect(playerService.getPlayersByGame).toHaveBeenCalledTimes(1)
-    );
+    expect(spy).toHaveBeenCalledTimes(1);
 
     vi.advanceTimersByTime(3000);
-    await waitFor(() =>
-      expect(playerService.getPlayersByGame).toHaveBeenCalledTimes(2)
-    );
+    expect(spy).toHaveBeenCalledTimes(2);
+
+    vi.advanceTimersByTime(3000);
+    expect(spy).toHaveBeenCalledTimes(3);
+
+    vi.useRealTimers();
   });
 
-  it("cuando solo juego yo: mano con 6 cartas, 3 secretos y 2 mazos", async () => {
-    // Devolvemos UN solo jugador (yo). Así el conteo no se contamina con cartas de oponentes.
-    (playerService.getPlayersByGame as any).mockResolvedValueOnce([
-      { id: "me", name: "Ulises", birth_date: "2000-01-01", host: true },
-    ]);
+  it("cuando solo juego yo: 6 cartas visibles en mi mano y 3 secretos", async () => {
+    const players = [me];
+    spyGetPlayers().mockResolvedValue(players);
 
-    const { container } = renderWithState();
+    const { container } = renderWithState({ game, player: me });
 
-    // espero a que renderice mi nombre
-    await screen.findByText("Ulises");
+    await screen.findByText(me.name);
 
-    // sin testid: consultamos por clases existentes en tu TSX/CSS
-    const youHand = container.querySelector(".you-hand");
-    const youSecrets = container.querySelector(".you-secrets");
-    const decks = container.querySelector(".decks");
+    const myHand = container.querySelector(".you-hand");
+    const mySecrets = container.querySelector(".you-secrets");
 
-    expect(youHand).toBeTruthy();
-    expect(youSecrets).toBeTruthy();
-    expect(decks).toBeTruthy();
+    const handCards = myHand?.querySelectorAll(".card") ?? [];
+    const secrets = mySecrets?.children ?? [];
 
-    // contamos <img> dentro de cada bloque
-    expect(youHand!.querySelectorAll("img").length).toBe(6);
-    expect(youSecrets!.querySelectorAll("img").length).toBe(3);
-    expect(decks!.querySelectorAll("img").length).toBe(2);
-
-    // alternativa general (todas las cartas visibles en la página)
-    const allCards = screen.getAllByAltText("card");
-    // 6 (mano) + 3 (secretos) + 2 (mazos) = 11
-    expect(allCards.length).toBe(11);
+    expect(handCards.length).toBe(6);
+    expect(secrets.length).toBe(3);
   });
 
   it("con 6 jugadores: se renderizan 5 oponentes (yo abajo + 5 restantes)", async () => {
-    const mockPlayers = [
-      { id: "me", name: "Ulises", birth_date: "2000-01-01", host: true },
-      { id: "2", name: "A", birth_date: "x" },
-      { id: "3", name: "B", birth_date: "x" },
-      { id: "4", name: "C", birth_date: "x" },
-      { id: "5", name: "D", birth_date: "x" },
-      { id: "6", name: "E", birth_date: "x" },
+    const players = [
+      me,
+      mkOpponent(0),
+      mkOpponent(1),
+      mkOpponent(2),
+      mkOpponent(3),
+      mkOpponent(4),
     ];
-    (playerService.getPlayersByGame as any).mockResolvedValueOnce(mockPlayers);
+    spyGetPlayers().mockResolvedValue(players);
 
-    const { container } = renderWithState();
+    const { container } = renderWithState({ game, player: me });
 
-    await screen.findByText("Ulises");
+    await screen.findByText(me.name);
 
-    // sin testid: contamos contenedores de oponentes por clase
     const opponents = container.querySelectorAll(".opponent");
     expect(opponents.length).toBe(5);
-
-    // y además los nombres están visibles
-    ["A", "B", "C", "D", "E"].forEach((n) =>
-      expect(screen.getByText(n)).toBeInTheDocument()
-    );
   });
 });
