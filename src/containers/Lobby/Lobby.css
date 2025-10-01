@@ -12,10 +12,10 @@
   content: "";
   position: fixed;
   inset: 0;
-  background-image: url("../../assets/background_lobby.jpg");
+  background-image: url("../../assets/background-table.jpg");
   background-size: cover;
   background-position: center;
-  filter: blur(4px) brightness(0.9);
+  filter: brightness(0.9);
   transform: scale(1.05);
   z-index: -1;
   pointer-events: none;
@@ -28,12 +28,25 @@
 }
 
 .lobby-title {
-  margin-top: 0.2rem;
+  margin-top: -0.5rem;
+}
+
+.title-text1 {
   color: #ffffff;
   font-weight: 800;
   letter-spacing: 2px;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
-  font-size: clamp(20px, 2.6vw, 32px);
+  font-size: clamp(30px, 4vw, 60px);
+  text-align: center;
+  z-index: 2;
+}
+
+.title-text2 {
+  color: #ffffff;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+  font-size: clamp(20px, 2.5vw, 30px);
   text-align: center;
   z-index: 2;
 }
@@ -55,16 +68,20 @@
   grid-template-columns: repeat(3, 1fr);
   grid-auto-rows: 140px;
   gap: 16px;
+  text-align: center;
 } /* Slots ocupados */
 .lobby-slot.filled {
-  background: rgba(0, 180, 100, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  backdrop-filter: blur(5px);
+  border: 2px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   color: #fff;
   display: grid;
   place-items: center;
   font-weight: 600;
   animation: fadeIn 0.4s ease;
+  padding: 1.4rem;
+  height: min-content;
 }
 /* Animación al aparecer */
 @keyframes fadeIn {

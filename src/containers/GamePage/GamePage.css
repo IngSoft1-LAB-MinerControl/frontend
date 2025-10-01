@@ -1,9 +1,8 @@
-/* ====== Fondos (dos capas) ====== */
 .game-page {
   position: relative;
-  min-height: 100vh;
+  height: 100dvh;
   width: 100vw;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 /* Fondo estético detrás de todo */
@@ -11,20 +10,9 @@
   content: "";
   position: fixed;
   inset: 0;
-  background: url("../../assets/background-page.jpg") center/cover no-repeat;
+  background: url("../../assets/background-table.jpg") center/cover no-repeat;
   filter: brightness(0.9);
   z-index: -2;
-}
-
-/* Mesa de madera por encima (ideal si tiene transparencia) */
-.game-table-overlay {
-  position: fixed;
-  inset: 0;
-  background: url("../../assets/background_gamepage.png") center/contain
-    no-repeat;
-  opacity: 0.92;
-  z-index: -1;
-  pointer-events: none;
 }
 
 /* ====== Header opcional ====== */
@@ -61,14 +49,15 @@
 .table-grid {
   position: relative;
   z-index: 1;
-  height: 100vh; /* en lugar de min-height */
+  height: 100%;
+  max-height: 100dvh; /* en lugar de min-height */
   padding: 70px 16px 16px;
   display: grid;
   grid-template-rows: auto 1fr auto; /* TOP | MIDDLE | BOTTOM */
   grid-template-columns: 1fr;
   gap: 12px;
   box-sizing: border-box; /* asegura que padding cuente dentro del 100vh */
-  overflow: hidden; /* por si algo se sale */
+  overflow-y: auto; /* por si algo se sale */
 }
 
 /* TOP: fila con hasta 3 oponentes */

@@ -92,7 +92,10 @@ function Lobby() {
 
   return (
     <div className="lobby-page">
-      <h1 className="lobby-title">SALA DE ESPERA</h1>
+      <div className="lobby-title">
+        <h1 className="title-text1"> {game.name} </h1>
+        <h1 className="title-text2">Sala de Espera</h1>
+      </div>
       <section className="lobby-card" aria-label="Sala de espera">
         {/* Slots de jugadores */}
         <div className="lobby-slots" aria-label="Jugadores">
