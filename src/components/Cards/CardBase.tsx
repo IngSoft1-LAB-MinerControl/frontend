@@ -5,12 +5,14 @@ import notSoFast from "/src/assets/not_so_fast.png";
 type CardSize = "mini" | "medium" | "large";
 
 export type CardBaseProps = {
+  card_id?: number;
   shown: boolean;
   size?: CardSize;
   image?: string;
 };
 
 export default function CardBase({
+  card_id,
   shown,
   size = "medium",
   image,
@@ -19,8 +21,8 @@ export default function CardBase({
   const imgSrc = shown ? image ?? notSoFast : cardBack;
 
   return (
-    <div className={`card card-${size}`}>
-      <img src={imgSrc} alt="card" />
+    <div className={`card card-${size}`} data-card-id={card_id}>
+      <img src={imgSrc} alt={`card-${card_id}`} />
     </div>
   );
 }

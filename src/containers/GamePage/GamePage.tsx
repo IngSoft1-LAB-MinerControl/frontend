@@ -4,9 +4,11 @@ import "./GamePage.css";
 import playerService from "../../services/playerService";
 import type { PlayerResponse } from "../../services/playerService";
 
-import CardBase from "../../components/Cards/CardBase";
-import Secret from "../../components/Cards/Secret";
 import TurnActions from "./TurnActions";
+import Opponent from "../../components/Opponent";
+import Decks from "../../components/Decks";
+import You from "../../components/MyHand";
+import EmptySlot from "../../components/EmptySlot";
 
 export default function GamePage() {
   const location = useLocation();
@@ -125,73 +127,4 @@ export default function GamePage() {
       {error && <div className="inline-error">{error}</div>}
     </div>
   );
-}
-
-/* ===========================
-   Sub-componentes de la mesa
-   =========================== */
-
-function Decks() {
-  return (
-    <div className="decks">
-      <div className="deck draw-deck" title="Mazo para robar">
-        <CardBase key="draw" shown={false} size="medium" />
-      </div>
-      <div className="deck discard-deck" title="Descarte (tope visible)">
-        <CardBase key="discard" shown={true} size="medium" />
-      </div>
-    </div>
-  );
-}
-
-function Opponent({ player }: { player: PlayerResponse }) {
-  return (
-    <div className="opponent">
-      <div className="op-name">{player.name}</div>
-
-      <div className="op-hand">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <CardBase
-            key={`op-hand-${player.player_id}-${i}`}
-            shown={false}
-            size="mini"
-          />
-        ))}
-      </div>
-
-      <div className="op-secrets">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Secret
-            key={`op-secret-${player.player_id}-${i}`}
-            shown={false}
-            size="mini"
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function You({ player }: { player: PlayerResponse }) {
-  return (
-    <div className="you">
-      <div className="you-name">{player.name}</div>
-
-      <div className="you-secrets">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Secret key={`me-secret-${i}`} shown={false} size="medium" />
-        ))}
-      </div>
-
-      <div className="you-hand">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <CardBase key={`me-hand-${i}`} shown={true} size="medium" />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function EmptySlot() {
-  return <div className="empty-slot" aria-hidden="true" />;
 }
