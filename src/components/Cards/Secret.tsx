@@ -1,28 +1,44 @@
 import "./Secret.css";
 import cardBack from "/src/assets/card_back.png";
-import secret from "/src/assets/secret.png";
+import secretBaseImg from "/src/assets/secret.png";
 
 type CardSize = "mini" | "medium" | "large";
 
 export type SecretBaseProps = {
-  s_id?: number;
-  shown: boolean;
+  secret_id?: number;
   size?: CardSize;
-  image?: string;
+  mine: boolean;
+  revealed: boolean;
 };
 
 export default function Secret({
-  s_id,
-  shown,
+  secret_id,
   size = "medium",
-  image,
+  mine,
+  revealed,
 }: SecretBaseProps) {
-  // Si no hay imagen, usamos el back por defecto
-  const imgSrc = shown ? image ?? secret : cardBack;
+  let imgSrc: string;
+  let cssClass = "";
+
+  if (mine) {
+    imgSrc = secretBaseImg;
+    cssClass = revealed ? "normal-brightness" : "dim-secret";
+  } else {
+    if (revealed) {
+      imgSrc = secretBaseImg;
+      cssClass = "normal-brightness";
+    } else {
+      imgSrc = cardBack;
+      cssClass = "";
+    }
+  }
 
   return (
-    <div className={`card secret-${size}`} data-secret-id={s_id}>
-      <img src={imgSrc} alt={`secret-${s_id}`} />
+    <div
+      className={`card secret-${size} ${cssClass}`}
+      data-secret-id={secret_id}
+    >
+      <img src={imgSrc} alt={`secret-${secret_id}`} />
     </div>
   );
 }

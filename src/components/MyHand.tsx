@@ -22,8 +22,8 @@ export default function You({ player }: { player: PlayerResponse }) {
       ]);
       setMyCards(cards);
       setMySecrets(secrets);
+      console.log("Secretos cargados:", secrets); // ¡Agrega esto!
     }
-
     loadData();
   }, [player.player_id]);
 
@@ -34,9 +34,10 @@ export default function You({ player }: { player: PlayerResponse }) {
       <div className="you-secrets">
         {mySecrets.map((secret: SecretResponse) => (
           <Secret
-            key={secret.s_id}
-            s_id={secret.s_id}
-            shown={secret.revealed}
+            key={secret.secret_id}
+            secret_id={secret.secret_id}
+            mine={true}
+            revealed={secret.revealed}
             size="medium"
           />
         ))}

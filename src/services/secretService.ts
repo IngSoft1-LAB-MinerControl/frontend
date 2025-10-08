@@ -1,10 +1,11 @@
 import { httpServerUrl } from "./config";
 
 export interface SecretResponse {
-  s_id: number;
+  secret_id: number;
+  player_id?: number;
   game_id: number;
-  player_id: number;
-  type: string;
+  murderer: boolean;
+  accomplice: boolean;
   revealed: boolean;
 }
 
