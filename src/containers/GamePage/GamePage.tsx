@@ -1,14 +1,17 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import "./GamePage.css";
 import playerService from "../../services/playerService";
 import type { PlayerResponse } from "../../services/playerService";
+import gameService from "../../services/gameService";
 
 import TurnActions from "./TurnActions";
 import Opponent from "../../components/Opponent";
 import Decks from "../../components/Decks";
 import You from "../../components/MyHand";
 import EmptySlot from "../../components/EmptySlot";
+import type { GameResponse } from "../../services/gameService";
+import type { CardResponse } from "../../services/cardService";
 
 export default function GamePage() {
   const location = useLocation();
@@ -16,6 +19,10 @@ export default function GamePage() {
   const { game, player } = location.state ?? {};
 
   const [players, setPlayers] = useState<PlayerResponse[]>([]);
+  const [currentGame, setCurrentGame] = useState<GameResponse>(game);
+  const [refreshYouTrigger, setRefreshYouTrigger] = useState(0); // forzar la actualización de You
+  const [lastDiscarded, setLastDiscarded] = useState<CardResponse | null>(null);
+
   const [error, setError] = useState("");
 
   if (!game) {
@@ -49,6 +56,32 @@ export default function GamePage() {
   // Player actual
   const currentPlayer = players.find((p) => p.player_id === player.player_id);
 
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const updatedGame = await gameService.getGameById(currentGame.game_id);
+        setCurrentGame(updatedGame);
+      } catch (error) {
+        console.error("Error al actualizar el juego:", error);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [game.game_id]);
+
+  // Determinar si es mi turno
+  const isMyTurn = useMemo(() => {
+    if (
+      !currentGame ||
+      !currentPlayer ||
+      currentPlayer.turn_order === undefined ||
+      currentGame.current_turn === undefined
+    ) {
+      return false;
+    }
+    return currentPlayer.turn_order === currentGame.current_turn;
+  }, [currentGame, currentPlayer]);
+
   // Distribución visual: yo abajo; 3 arriba; 1 izq; 1 der
   const distribution = useMemo(() => {
     if (!players.length)
@@ -68,6 +101,13 @@ export default function GamePage() {
 
     return { bottom: me, top, left, right };
   }, [players, currentPlayer]);
+
+  const handleTurnUpdated = useCallback((updatedGame: GameResponse | null) => {
+    if (updatedGame) {
+      setCurrentGame(updatedGame);
+    }
+    setRefreshYouTrigger((prev) => prev + 1); // <-- Actualiza el trigger para que You se refresque
+  }, []);
 
   return (
     <div className="game-page">
@@ -101,7 +141,7 @@ export default function GamePage() {
 
         {/* CENTER: mazos */}
         <section className="area-center">
-          <Decks />
+          <Decks lastDiscarded={lastDiscarded} />
         </section>
 
         <section className="area-right">
@@ -115,11 +155,25 @@ export default function GamePage() {
         {/* BOTTOM: YO (mano y secretos grandes) */}
         <section className="area-bottom">
           {distribution.bottom ? (
-            <You player={distribution.bottom} />
+            <You
+              player={distribution.bottom}
+              refreshTrigger={refreshYouTrigger}
+            />
           ) : (
             <div className="empty-hint">Esperando jugadores…</div>
           )}
-          <TurnActions />
+
+          {/* acciones de turno */}
+          {isMyTurn && (
+            <div className="turn-actions-container">
+              <TurnActions
+                gameId={currentGame.game_id}
+                playerId={player.player_id}
+                onTurnUpdated={handleTurnUpdated}
+                onCardDiscarded={(card) => setLastDiscarded(card)}
+              />
+            </div>
+          )}
         </section>
       </main>
 

@@ -5,27 +5,34 @@ import Secret from "./Cards/Secret";
 import cardService, { type CardResponse } from "../services/cardService";
 import secretService, { type SecretResponse } from "../services/secretService";
 
-export default function You({ player }: { player: PlayerResponse }) {
+interface YouProps {
+  player: PlayerResponse;
+  refreshTrigger: number;
+}
+
+export default function You({ player, refreshTrigger }: YouProps) {
   const [myCards, setMyCards] = useState<CardResponse[]>([]);
   const [mySecrets, setMySecrets] = useState<SecretResponse[]>([]);
 
-  const loaded = useRef(false);
-
   useEffect(() => {
-    if (loaded.current) return;
-    loaded.current = true;
-
     async function loadData() {
-      const [cards, secrets] = await Promise.all([
-        cardService.getCardsByPlayer(player.player_id),
-        secretService.getSecretsByPlayer(player.player_id),
-      ]);
-      setMyCards(cards);
-      setMySecrets(secrets);
-      console.log("Secretos cargados:", secrets); // ¡Agrega esto!
+      try {
+        const [cards, secrets] = await Promise.all([
+          cardService.getCardsByPlayer(player.player_id),
+          secretService.getSecretsByPlayer(player.player_id),
+        ]);
+        setMyCards(cards);
+        setMySecrets(secrets);
+      } catch (error) {
+        console.error("Error al cargar datos del juagdor:", error);
+        setMyCards([]);
+        setMySecrets([]);
+      }
     }
     loadData();
-  }, [player.player_id]);
+    const interval = setInterval(loadData, 3000);
+    return () => clearInterval(interval);
+  }, [player.player_id, refreshTrigger]);
 
   return (
     <div className="you">

@@ -15,6 +15,14 @@ export interface GameResponse {
   min_players: number;
   max_players: number;
   players_amount: number;
+  current_turn: number;
+}
+
+export interface GameInit {
+  game_id: number;
+  status: string;
+  name: string;
+  players_amount: number;
 }
 
 async function createGame(game: Game): Promise<GameResponse> {
@@ -42,14 +50,14 @@ async function getGames(): Promise<GameResponse[]> {
   return data;
 }
 
-async function startGame(gameId: number): Promise<GameResponse> {
+async function startGame(gameId: number): Promise<GameInit> {
   const response = await fetch(`${httpServerUrl}/game/beginning/${gameId}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
   });
-  const data: GameResponse = await response.json();
+  const data: GameInit = await response.json();
   return data;
 }
 
@@ -65,11 +73,23 @@ async function getGameById(gameId: number): Promise<GameResponse> {
   return data;
 }
 
+async function updateTurn(gameId: number): Promise<GameResponse> {
+  const response = await fetch(`${httpServerUrl}/game/update_turn/${gameId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  const data: GameResponse = await response.json();
+  return data;
+}
+
 const gameService = {
   createGame,
   getGames,
   startGame,
   getGameById,
+  updateTurn,
 };
 
 export default gameService;

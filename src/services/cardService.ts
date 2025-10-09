@@ -24,8 +24,46 @@ async function getCardsByPlayer(player_id: number): Promise<CardResponse[]> {
   return data;
 }
 
+async function discardAuto(player_id: number): Promise<CardResponse> {
+  const response = await fetch(`${httpServerUrl}/cards/drop/${player_id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(
+      errorData.detail || "Error al descartar la carta automaticamente"
+    );
+  }
+  return response.json();
+}
+
+async function drawCard(
+  player_id: number,
+  game_id: number
+): Promise<CardResponse> {
+  const response = await fetch(
+    `${httpServerUrl}/cards/pick_up/${player_id},${game_id}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || "Error al levantar carta");
+  }
+  return response.json();
+}
+
 const cardService = {
   getCardsByPlayer,
+  discardAuto,
+  drawCard,
 };
 
 export default cardService;

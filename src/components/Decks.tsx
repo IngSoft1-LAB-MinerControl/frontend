@@ -1,13 +1,26 @@
 import CardBase from "./Cards/CardBase";
+import type { CardResponse } from "../services/cardService";
 
-export default function Decks() {
+interface DeckProps {
+  lastDiscarded: CardResponse | null;
+}
+export default function Decks({ lastDiscarded }: DeckProps) {
   return (
     <div className="decks">
       <div className="deck draw-deck" title="Mazo para robar">
         <CardBase key="draw" shown={false} size="medium" />
       </div>
       <div className="deck discard-deck" title="Descarte (tope visible)">
-        <CardBase key="discard" shown={true} size="medium" />
+        {lastDiscarded ? (
+          <CardBase
+            key={lastDiscarded.card_id}
+            card_id={lastDiscarded.card_id}
+            shown={true}
+            size="medium"
+          />
+        ) : (
+          <CardBase key="discard" shown={false} size="medium" />
+        )}
       </div>
     </div>
   );

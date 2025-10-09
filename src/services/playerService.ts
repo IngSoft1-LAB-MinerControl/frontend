@@ -13,6 +13,7 @@ export interface PlayerResponse {
   host: boolean;
   game_id: number;
   birth_date: string;
+  turn_order?: number;
 }
 
 async function createPlayer(player: Player): Promise<PlayerResponse> {
