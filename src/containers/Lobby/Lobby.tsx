@@ -143,7 +143,7 @@
 import "./Lobby.css";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import playerService from "../../services/playerService";
+// import playerService from "../../services/playerService";
 import type { PlayerResponse } from "../../services/playerService";
 import gameService from "../../services/gameService";
 import { httpServerUrl } from "../../services/config";

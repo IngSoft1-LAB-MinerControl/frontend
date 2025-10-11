@@ -2,20 +2,17 @@ import { useState } from "react";
 import "./TurnActions.css";
 import gameService from "../../services/gameService";
 import cardService from "../../services/cardService";
-import type { CardResponse } from "../../services/cardService";
 
 interface TurnActionProps {
   gameId: number;
   playerId: number;
   onTurnUpdated: (updatedGame: any) => void;
-  onCardDiscarded?: (card: CardResponse) => void;
 }
 
 export default function TurnActions({
   gameId,
   playerId,
   onTurnUpdated,
-  onCardDiscarded,
 }: TurnActionProps) {
   const [step, setStep] = useState<0 | 1 | 2>(0);
   const [discarding, setDiscarding] = useState(false);
@@ -24,10 +21,9 @@ export default function TurnActions({
     if (discarding) return;
     setDiscarding(true);
     try {
-      const discardedCard = await cardService.discardAuto(playerId);
-      console.log("Carta descartada:", discardedCard);
+      await cardService.discardAuto(playerId);
+      console.log("Carta descartada");
 
-      onCardDiscarded?.(discardedCard);
       setStep(2);
     } catch (err) {
       console.error("Error al descartar carta automáticamente:", err);

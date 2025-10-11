@@ -205,8 +205,7 @@ export default function GamePage() {
 
   const [players, setPlayers] = useState<PlayerStateResponse[]>([]);
   const [currentGame, setCurrentGame] = useState<GameResponse>(game);
-  // const [refreshYouTrigger, setRefreshYouTrigger] = useState(0);
-  const [lastDiscarded, setLastDiscarded] = useState<CardResponse[] | null>(null);
+  const [lastDiscarded, setLastDiscarded] = useState<CardResponse | null>(null);
   const [error, setError] = useState("");
 
   if (!game) {
@@ -218,6 +217,16 @@ export default function GamePage() {
       </div>
     );
   }
+
+  // const fetchDiscardPile = useCallback(async () => {
+  //   try {
+  //     if (!game?.game_id) return;
+  //     const pile = await ;
+  //     setLastDiscarded();
+  //   } catch (err) {
+  //     console.error("Error al obtener la ultims carta de descarte:", err); // Asegurarse de que no quede null en caso de error
+  //   }
+  // }, [game?.game_id]);
 
   // ------------------- INICIO DE LOS CAMBIOS -------------------
 
@@ -241,11 +250,12 @@ export default function GamePage() {
       try {
         const message = JSON.parse(event.data);
         console.log("MSJ WS", message);
-            // Lógica para manejar datos que pueden ser string o ya un objeto
+        // Lógica para manejar datos que pueden ser string o ya un objeto
         // Esta es la clave: si es un string, lo parseamos. Si no, lo usamos directamente.
-        const dataContent = typeof message.data === 'string' 
-          ? JSON.parse(message.data) 
-          : message.data;
+        const dataContent =
+          typeof message.data === "string"
+            ? JSON.parse(message.data)
+            : message.data;
         // Usamos un switch para manejar los diferentes tipos de actualizaciones
         switch (message.type) {
           case "playersState":
@@ -257,14 +267,14 @@ export default function GamePage() {
 
           case "gameUpdated":
             // Actualiza el estado completo de la partida (ej: cambio de turno)
-            
+
             setCurrentGame(dataContent);
             break;
 
           case "droppedCards":
             // Actualiza la última carta descartada
-            console.log("SE RECIBIERON LAS CARTAS DESCARTADAS", dataContent)
-            setLastDiscarded(dataContent);
+            console.log("SE RECIBIERON LAS CARTAS DESCARTADAS", dataContent);
+            setLastDiscarded(dataContent[0]);
             // Forzamos un refresh de la mano por si la carta vino de ahí
             // setRefreshYouTrigger((prev) => prev + 1);
             break;
@@ -317,8 +327,8 @@ export default function GamePage() {
   // ya que reacciona a los cambios de estado que ahora son actualizados por el WebSocket.
 
   const currentPlayer = players.find((p) => p.player_id === player.player_id);
-// --- BLOQUE DE DEPURACIÓN PARA isMyTurn ---
-/* 
+  // --- BLOQUE DE DEPURACIÓN PARA isMyTurn ---
+  /* 
 console.log("--- DEBUG: CÁLCULO DE TURNO ---");
   console.log("Objeto 'player' del Lobby:", player);
   console.log("Objeto 'currentGame':", currentGame);
@@ -368,10 +378,8 @@ console.log("--- DEBUG: CÁLCULO DE TURNO ---");
     if (updatedGame) {
       setCurrentGame(updatedGame);
     }
-    // setRefreshYouTrigger((prev) => prev + 1);
   }, []);
 
-  // El JSX no necesita cambios
   return (
     <div className="game-page">
       <div className="game-table-overlay" aria-hidden="true" />
@@ -405,10 +413,7 @@ console.log("--- DEBUG: CÁLCULO DE TURNO ---");
         </section>
         <section className="area-bottom">
           {distribution.bottom ? (
-            <You
-              player={distribution.bottom}
-              // refreshTrigger={refreshYouTrigger}
-            />
+            <You player={distribution.bottom} />
           ) : (
             <div className="empty-hint">Esperando jugadores…</div>
           )}
@@ -418,7 +423,6 @@ console.log("--- DEBUG: CÁLCULO DE TURNO ---");
                 gameId={currentGame.game_id}
                 playerId={player.player_id}
                 onTurnUpdated={handleTurnUpdated}
-                onCardDiscarded={(card) => setLastDiscarded(card)}
               />
             </div>
           )}

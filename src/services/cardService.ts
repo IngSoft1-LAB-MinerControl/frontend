@@ -24,7 +24,7 @@ async function getCardsByPlayer(player_id: number): Promise<CardResponse[]> {
   return data;
 }
 
-async function discardAuto(player_id: number): Promise<CardResponse> {
+async function discardAuto(player_id: number): Promise<CardResponse[]> {
   const response = await fetch(`${httpServerUrl}/cards/drop/${player_id}`, {
     method: "PUT",
     headers: {
@@ -64,6 +64,7 @@ const cardService = {
   getCardsByPlayer,
   discardAuto,
   drawCard,
+  // getDiscardPile,
 };
 
 export default cardService;
