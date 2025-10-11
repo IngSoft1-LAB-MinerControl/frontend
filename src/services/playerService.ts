@@ -1,4 +1,6 @@
+import type { CardResponse } from "./cardService";
 import { httpServerUrl } from "./config";
+import type { SecretResponse } from "./secretService";
 
 export interface Player {
   name: string;
@@ -15,6 +17,17 @@ export interface PlayerResponse {
   birth_date: string;
   turn_order?: number;
 }
+export interface PlayerStateResponse {
+  player_id: number;
+  name: string;
+  host: boolean;
+  game_id: number;
+  birth_date: string;
+  turn_order?: number;
+  cards : CardResponse[]
+  secrets : SecretResponse[]
+}
+
 
 async function createPlayer(player: Player): Promise<PlayerResponse> {
   const response = await fetch(`${httpServerUrl}/players`, {
