@@ -1,49 +1,33 @@
-import { useEffect, useRef, useState } from "react";
-import type { PlayerResponse } from "../services/playerService";
-import secretService, { type SecretResponse } from "../services/secretService";
+import type { PlayerStateResponse } from "../services/playerService";
 import CardBase from "./Cards/CardBase";
 import Secret from "./Cards/Secret";
-import cardService, { type CardResponse } from "../services/cardService";
+// ¡Ya no se necesitan hooks ni servicios!
 
-export default function Opponent({ player }: { player: PlayerResponse }) {
-  const [opCards, setOpCards] = useState<CardResponse[]>([]);
-  const [opSecrets, setOpSecrets] = useState<SecretResponse[]>([]);
+// La prop sigue siendo la misma, pero el objeto 'player' es ahora más completo.
+interface OpponentProps {
+  player: PlayerStateResponse;
+}
 
-  const loaded = useRef(false);
-
-  useEffect(() => {
-    if (loaded.current) return;
-    loaded.current = true;
-
-    async function loadData() {
-      const [cards, secrets] = await Promise.all([
-        cardService.getCardsByPlayer(player.player_id),
-        secretService.getSecretsByPlayer(player.player_id),
-      ]);
-      setOpCards(cards);
-      setOpSecrets(secrets);
-      console.log("Secretos cargados:", secrets); // ¡Agrega esto!
-    }
-    loadData();
-  }, [player.player_id]);
-
+export default function Opponent({ player }: OpponentProps) {
   return (
     <div className="opponent">
       <div className="op-name">{player.name}</div>
 
       <div className="op-hand">
-        {opCards.map((card: CardResponse) => (
+        {/* Mapeamos directamente desde player.cards que viene en las props */}
+        {player.cards.map((card, index) => (
           <CardBase
-            key={card.card_id}
+            key={`op-card-${player.player_id}-${index}`}
             card_id={card.card_id}
-            shown={false}
+            shown={false} // Para oponentes, las cartas están boca abajo
             size="mini"
           />
         ))}
       </div>
 
       <div className="op-secrets">
-        {opSecrets.map((secret: SecretResponse) => (
+        {/* Mapeamos directamente desde player.secrets que viene en las props */}
+        {player.secrets.map((secret) => (
           <Secret
             key={`op-secret-${player.player_id}-${secret.secret_id}`}
             secret_id={secret.secret_id}
