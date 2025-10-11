@@ -186,7 +186,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./GamePage.css";
-import type { PlayerResponse } from "../../services/playerService";
+import type { PlayerStateResponse } from "../../services/playerService";
 import { httpServerUrl } from "../../services/config"; // Importar la URL base
 
 import TurnActions from "./TurnActions";
@@ -203,10 +203,10 @@ export default function GamePage() {
 
   const { game, player } = location.state ?? {};
 
-  const [players, setPlayers] = useState<PlayerResponse[]>([]);
+  const [players, setPlayers] = useState<PlayerStateResponse[]>([]);
   const [currentGame, setCurrentGame] = useState<GameResponse>(game);
-  const [refreshYouTrigger, setRefreshYouTrigger] = useState(0);
-  const [lastDiscarded, setLastDiscarded] = useState<CardResponse | null>(null);
+  // const [refreshYouTrigger, setRefreshYouTrigger] = useState(0);
+  const [lastDiscarded, setLastDiscarded] = useState<CardResponse[] | null>(null);
   const [error, setError] = useState("");
 
   if (!game) {
@@ -240,24 +240,33 @@ export default function GamePage() {
     ws.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
-
+        console.log("MSJ WS", message);
+            // Lógica para manejar datos que pueden ser string o ya un objeto
+        // Esta es la clave: si es un string, lo parseamos. Si no, lo usamos directamente.
+        const dataContent = typeof message.data === 'string' 
+          ? JSON.parse(message.data) 
+          : message.data;
         // Usamos un switch para manejar los diferentes tipos de actualizaciones
         switch (message.type) {
-          case "players_update":
+          case "playersState":
             // Actualiza la lista de jugadores
-            setPlayers(message.data);
+            //Parseo a JSON primero de string
+            // const playersData = JSON.parse(message.data)
+            setPlayers(dataContent);
             break;
 
-          case "game_state_update":
+          case "gameUpdated":
             // Actualiza el estado completo de la partida (ej: cambio de turno)
-            setCurrentGame(message.data);
+            
+            setCurrentGame(dataContent);
             break;
 
-          case "discard_update":
+          case "droppedCards":
             // Actualiza la última carta descartada
-            setLastDiscarded(message.data);
+            console.log("SE RECIBIERON LAS CARTAS DESCARTADAS", dataContent)
+            setLastDiscarded(dataContent);
             // Forzamos un refresh de la mano por si la carta vino de ahí
-            setRefreshYouTrigger((prev) => prev + 1);
+            // setRefreshYouTrigger((prev) => prev + 1);
             break;
 
           // Aquí se podrían agregar más casos, como "player_played_card", "game_over", etc.
@@ -308,7 +317,21 @@ export default function GamePage() {
   // ya que reacciona a los cambios de estado que ahora son actualizados por el WebSocket.
 
   const currentPlayer = players.find((p) => p.player_id === player.player_id);
+// --- BLOQUE DE DEPURACIÓN PARA isMyTurn ---
+/* 
+console.log("--- DEBUG: CÁLCULO DE TURNO ---");
+  console.log("Objeto 'player' del Lobby:", player);
+  console.log("Objeto 'currentGame':", currentGame);
+  console.log("Objeto 'currentPlayer' (encontrado en la lista):", currentPlayer);
 
+  if (currentGame) {
+    console.log("  ➡️ Turno actual del juego (current_turn):", currentGame.current_turn);
+  }
+  if (currentPlayer) {
+    console.log("  ➡️ Mi orden de turno (turn_order):", currentPlayer.turn_order);
+  }
+  console.log("---------------------------------");
+  // --- FIN DEL BLOQUE DE DEPURACIÓN ---*/
   const isMyTurn = useMemo(() => {
     if (
       !currentGame ||
@@ -325,10 +348,10 @@ export default function GamePage() {
     // ... (sin cambios)
     if (!players.length)
       return {
-        bottom: null as PlayerResponse | null,
-        top: [] as PlayerResponse[],
-        left: null as PlayerResponse | null,
-        right: null as PlayerResponse | null,
+        bottom: null as PlayerStateResponse | null,
+        top: [] as PlayerStateResponse[],
+        left: null as PlayerStateResponse | null,
+        right: null as PlayerStateResponse | null,
       };
 
     const me = currentPlayer ?? players[0];
@@ -345,7 +368,7 @@ export default function GamePage() {
     if (updatedGame) {
       setCurrentGame(updatedGame);
     }
-    setRefreshYouTrigger((prev) => prev + 1);
+    // setRefreshYouTrigger((prev) => prev + 1);
   }, []);
 
   // El JSX no necesita cambios
@@ -384,7 +407,7 @@ export default function GamePage() {
           {distribution.bottom ? (
             <You
               player={distribution.bottom}
-              refreshTrigger={refreshYouTrigger}
+              // refreshTrigger={refreshYouTrigger}
             />
           ) : (
             <div className="empty-hint">Esperando jugadores…</div>

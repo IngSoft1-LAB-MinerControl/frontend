@@ -205,7 +205,7 @@ function Lobby() {
             (p: PlayerResponse) => p.player_id === player.player_id
           );
           setIsHost(currentUser?.host ?? false);
-        } else if (message.type === "game") {
+        } else if (message.type === "game" || message.type === "gameUpdated") {
           // Si el juego empezó, redirigimos al tablero
           // PARSEO 2: Convierte el string de 'data' en el objeto del juego
           const gameData = JSON.parse(message.data);
