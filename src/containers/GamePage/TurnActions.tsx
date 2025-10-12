@@ -7,14 +7,21 @@ interface TurnActionProps {
   gameId: number;
   playerId: number;
   onTurnUpdated: (updatedGame: any) => void;
+  selectedCardIds: number[];
+  setSelectedCardIds: (ids: number[]) => void;
+  step: 0 | 1 | 2;
+  setStep: (step: 0 | 1 | 2) => void;
 }
 
 export default function TurnActions({
   gameId,
   playerId,
   onTurnUpdated,
+  selectedCardIds,
+  setSelectedCardIds,
+  step,
+  setStep,
 }: TurnActionProps) {
-  const [step, setStep] = useState<0 | 1 | 2>(0);
   const [discarding, setDiscarding] = useState(false);
 
   const handleDiscardAuto = async () => {
@@ -23,11 +30,33 @@ export default function TurnActions({
     try {
       await cardService.discardAuto(playerId);
       console.log("Carta descartada");
-
+      setSelectedCardIds([]);
       setStep(2);
     } catch (err) {
       console.error("Error al descartar carta automáticamente:", err);
       alert("Error al descartar carta. Intenta de nuevo.");
+    } finally {
+      setDiscarding(false);
+    }
+  };
+
+  const handleDiscardSel = async () => {
+    if (discarding) return;
+    if (!selectedCardIds || selectedCardIds.length === 0) {
+      alert("No seleccionaste ninguna carta.");
+      return;
+    }
+    setDiscarding(true);
+    try {
+      await cardService.discardSelectedList(playerId, selectedCardIds);
+      console.log(
+        `${selectedCardIds.length} cartas descartadas. Un solo request al back.`
+      );
+      setSelectedCardIds([]);
+      setStep(2);
+    } catch (err) {
+      console.error("Error al descartar cartas seleccionadas:", err);
+      alert("Error al descartar cartas seleccionadas. Intenta de nuevo.");
     } finally {
       setDiscarding(false);
     }
@@ -50,41 +79,43 @@ export default function TurnActions({
     <div className="turn-actions">
       {step === 0 && (
         <>
-          <button className="action-button" onClick={() => setStep(1)}>
-            DESCARTAR CARTA
-          </button>
           <button
             className="action-button"
             onClick={() => {
-              /* Lógica para saltear turno si aplica */ setStep(2);
+              setStep(1);
             }}
           >
-            SALTEAR TURNO
+            Saltear Turno
           </button>
         </>
       )}
 
       {step === 1 && (
         <div className="discard-actions">
-          <h3>¿Deseas descartar una carta?</h3>
-          <p>Se descartará una de tus cartas automáticamente.</p>
+          <h3>Necesitas descartar al menos una carta</h3>
           <button
             className="action-button"
             onClick={handleDiscardAuto}
             disabled={discarding}
           >
-            {discarding ? "DESCARTANDO..." : "SÍ, DESCARTAR"}
+            {discarding ? "DESCARTANDO..." : "Descarte Automatico"}
           </button>
-          <button className="action-button" onClick={() => setStep(0)}>
-            NO DESCARTAR
+          <button
+            className="action-button"
+            onClick={handleDiscardSel}
+            disabled={discarding}
+          >
+            {discarding ? "DESCARTANDO..." : "Descartar Seleccionadas"}
           </button>
         </div>
       )}
 
       {step === 2 && (
-        <button className="action-button" onClick={handleUpdateAndDraw}>
-          REPONER y FINALIZAR TURNO
-        </button>
+        <div>
+          <button className="action-button" onClick={handleUpdateAndDraw}>
+            REPONER y FINALIZAR TURNO
+          </button>
+        </div>
       )}
     </div>
   );

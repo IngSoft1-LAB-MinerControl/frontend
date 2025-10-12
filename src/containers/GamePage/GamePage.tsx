@@ -22,6 +22,8 @@ export default function GamePage() {
   const [currentGame, setCurrentGame] = useState<GameResponse>(game);
   const [lastDiscarded, setLastDiscarded] = useState<CardResponse | null>(null);
   const [error, setError] = useState("");
+  const [selectedCardIds, setSelectedCardIds] = useState<number[]>([]);
+  const [turnActionStep, setTurnActionStep] = useState<0 | 1 | 2>(0);
 
   if (!game) {
     return (
@@ -161,6 +163,14 @@ export default function GamePage() {
     }
   }, []);
 
+  useEffect(() => {
+    // Si no es mi turno, aseguramos que las acciones no se muestren
+    if (!isMyTurn) {
+      setTurnActionStep(0); // Reiniciar el estado de acciones
+      return;
+    }
+  }, [isMyTurn, turnActionStep]);
+
   return (
     <div className="game-page">
       <div className="game-table-overlay" aria-hidden="true" />
@@ -194,7 +204,11 @@ export default function GamePage() {
         </section>
         <section className="area-bottom">
           {distribution.bottom ? (
-            <You player={distribution.bottom} />
+            <You
+              player={distribution.bottom}
+              selectedCardIds={selectedCardIds}
+              onCardsSelected={setSelectedCardIds}
+            />
           ) : (
             <div className="empty-hint">Esperando jugadores…</div>
           )}
@@ -204,6 +218,10 @@ export default function GamePage() {
                 gameId={currentGame.game_id}
                 playerId={player.player_id}
                 onTurnUpdated={handleTurnUpdated}
+                selectedCardIds={selectedCardIds}
+                setSelectedCardIds={setSelectedCardIds}
+                step={turnActionStep}
+                setStep={setTurnActionStep}
               />
             </div>
           )}

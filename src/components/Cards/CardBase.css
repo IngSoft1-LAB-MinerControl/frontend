@@ -8,6 +8,12 @@
   background-color: white;
 }
 
+.card.selected {
+  outline: 2px solid rgb(98, 22, 15);
+  transform: translateY(-10px);
+  transition: all 0.2s ease;
+}
+
 /* Imagen dentro de la carta */
 .card img {
   width: 100%;

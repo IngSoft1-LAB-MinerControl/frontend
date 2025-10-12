@@ -40,6 +40,32 @@ async function discardAuto(player_id: number): Promise<CardResponse[]> {
   return response.json();
 }
 
+async function discardSelectedList(
+  player_id: number,
+  card_ids: number[]
+): Promise<CardResponse[]> {
+  const body = {
+    card_ids: card_ids,
+  };
+  const response = await fetch(
+    `${httpServerUrl}/cards/game/drop_list/${player_id}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    }
+  );
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(
+      errorData.detail || "Error al descartar la carta seleccionada"
+    );
+  }
+  return response.json();
+}
+
 async function drawCard(
   player_id: number,
   game_id: number
@@ -64,7 +90,7 @@ const cardService = {
   getCardsByPlayer,
   discardAuto,
   drawCard,
-  // getDiscardPile,
+  discardSelectedList,
 };
 
 export default cardService;
