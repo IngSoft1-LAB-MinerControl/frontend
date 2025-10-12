@@ -1,9 +1,7 @@
 import type { PlayerStateResponse } from "../services/playerService";
 import CardBase from "./Cards/CardBase";
 import Secret from "./Cards/Secret";
-// ¡Tampoco se necesitan hooks ni servicios aquí!
 
-// La prop 'refreshTrigger' ya no es necesaria.
 interface YouProps {
   player: PlayerStateResponse;
 }
@@ -32,7 +30,7 @@ export default function You({ player }: YouProps) {
           <CardBase
             key={card.card_id}
             card_id={card.card_id}
-            shown={true} // Para ti, las cartas están boca arriba
+            shown={true}
             size="medium"
           />
         ))}
