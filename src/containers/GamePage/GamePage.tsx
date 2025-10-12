@@ -110,6 +110,7 @@ export default function GamePage() {
   // ya que reacciona a los cambios de estado que ahora son actualizados por el WebSocket.
 
   const currentPlayer = players.find((p) => p.player_id === player.player_id);
+  const cardCount = currentPlayer ? currentPlayer.cards.length : 0;
 
   // DEPURACIÓN isMyTurn
 
@@ -222,6 +223,7 @@ export default function GamePage() {
                 setSelectedCardIds={setSelectedCardIds}
                 step={turnActionStep}
                 setStep={setTurnActionStep}
+                cardCount={cardCount}
               />
             </div>
           )}

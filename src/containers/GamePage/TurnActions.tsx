@@ -11,6 +11,7 @@ interface TurnActionProps {
   setSelectedCardIds: (ids: number[]) => void;
   step: 0 | 1 | 2;
   setStep: (step: 0 | 1 | 2) => void;
+  cardCount: number;
 }
 
 export default function TurnActions({
@@ -21,6 +22,7 @@ export default function TurnActions({
   setSelectedCardIds,
   step,
   setStep,
+  cardCount,
 }: TurnActionProps) {
   const [discarding, setDiscarding] = useState(false);
 
@@ -62,16 +64,24 @@ export default function TurnActions({
     }
   };
 
-  const handleUpdateAndDraw = async () => {
+  const handleDraw = async () => {
     try {
       await cardService.drawCard(playerId, gameId); // Robo carta
       console.log("se levanto una carta.");
-      const updatedGame = await gameService.updateTurn(gameId); // Asumo que esto avanza el turno
-      onTurnUpdated(updatedGame);
-      setStep(0); // Volver al inicio del ciclo de acciones de turno
     } catch (err) {
-      console.error("Error al finalizar turno y reponer:", err);
-      alert("Error al finalizar turno y reponer. Intenta de nuevo.");
+      console.error("Error al fobar carta:", err);
+      alert("Error al robar carta. Intenta de nuevo.");
+    }
+  };
+
+  const handleEndTurn = async () => {
+    try {
+      const updatedGame = await gameService.updateTurn(gameId);
+      onTurnUpdated(updatedGame);
+      setStep(0);
+    } catch (err) {
+      console.error("Error al finalizar el turno:", err);
+      alert("Error al rfinalizar turno. Intenta de nuevo.");
     }
   };
 
@@ -112,8 +122,11 @@ export default function TurnActions({
 
       {step === 2 && (
         <div>
-          <button className="action-button" onClick={handleUpdateAndDraw}>
-            REPONER y FINALIZAR TURNO
+          <button
+            className="action-button"
+            onClick={cardCount < 6 ? handleDraw : handleEndTurn}
+          >
+            {cardCount < 6 ? "Robar carta" : "Finalizar turno"}
           </button>
         </div>
       )}
