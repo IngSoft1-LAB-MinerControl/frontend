@@ -1,6 +1,6 @@
 import "./CardBase.css";
-import cardBack from "/src/assets/card_back.png";
-import notSoFast from "/src/assets/not_so_fast.png";
+import cardBack from "/src/assets/card_back.svg";
+import notSoFast from "/src/assets/not_so_fast.svg";
 
 type CardSize = "mini" | "medium" | "large";
 
