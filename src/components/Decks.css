@@ -1,0 +1,43 @@
+.decks {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0;
+}
+
+.deck img {
+  width: 84px;
+  height: 124px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.35);
+}
+
+.deck.draw-deck {
+  position: relative;
+}
+/* posicion del counter*/
+.card-counter {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 28px;
+  height: 28px;
+
+  background-color: #1a1a1a;
+  color: white;
+  border-radius: 50%; /* Esto lo hace un círculo */
+  border: 2px solid white;
+
+  font-size: 14px;
+  font-weight: bold;
+
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+  z-index: 2; /* Para que esté por encima de la carta */
+}

@@ -194,7 +194,10 @@ export default function GamePage() {
           )}
         </section>
         <section className="area-center">
-          <Decks lastDiscarded={lastDiscarded} />
+          <Decks
+            lastDiscarded={lastDiscarded}
+            cardsLeftCount={currentGame?.cards_left ?? null}
+          />
         </section>
         <section className="area-right">
           {distribution.right ? (
