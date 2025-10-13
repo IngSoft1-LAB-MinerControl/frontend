@@ -167,10 +167,6 @@ export default function GamePage() {
 
   return (
     <div className="game-page">
-      <div className="game-table-overlay" aria-hidden="true" />
-      <header className="game-header">
-        <h1 className="game-title">{game?.name ?? "Partida"}</h1>
-      </header>
       <main className="table-grid">
         <section className="area-top">
           <div className="opponents-row">

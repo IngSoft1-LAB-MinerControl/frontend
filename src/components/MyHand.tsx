@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { PlayerStateResponse } from "../services/playerService";
 import CardBase from "./Cards/CardBase";
 import Secret from "./Cards/Secret";
@@ -14,6 +15,8 @@ export default function You({
   onCardsSelected,
   selectedCardIds,
 }: YouProps) {
+  const [handExpanded, setHandExpanded] = useState(false);
+
   const handleCardClick = (cardId: number) => {
     const isCurrentlySelected = selectedCardIds.includes(cardId);
     let newSelectedCards: number[];
@@ -26,10 +29,13 @@ export default function You({
     onCardsSelected(newSelectedCards);
   };
 
+  const toggleHandView = () => {
+    setHandExpanded(!handExpanded);
+  };
+
   return (
     <div className="you">
       <div className="you-name">{player.name}</div>
-
       <div className="you-secrets">
         {/* Mapeamos directamente desde player.secrets que viene en las props */}
         {player.secrets.map((secret) => (
@@ -42,17 +48,15 @@ export default function You({
           />
         ))}
       </div>
-
-      <div className="you-hand">
+      <div className={`you-hand ${handExpanded ? "expanded" : "compact"}`}>
         {player.cards.map((card) => {
           if (card.card_id === undefined) return null;
-
           return (
             <CardBase
               key={card.card_id}
               card_id={card.card_id}
               shown={true}
-              size="medium"
+              size={handExpanded ? "large" : "medium"}
               onCardClick={
                 card.card_id !== undefined
                   ? () => handleCardClick(card.card_id!)
@@ -62,6 +66,20 @@ export default function You({
             />
           );
         })}
+      </div>
+
+      <div className="controls-row">
+        <button
+          className="hand-toggle-button"
+          onClick={toggleHandView}
+          title={
+            handExpanded
+              ? "Reducir el espacio de la mano"
+              : "Ver cartas de forma más clara"
+          }
+        >
+          {handExpanded ? "volver" : "ver cartas"}
+        </button>
       </div>
     </div>
   );

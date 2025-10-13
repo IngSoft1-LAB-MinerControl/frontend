@@ -14,21 +14,6 @@
   z-index: -2;
 }
 
-.game-header {
-  position: fixed;
-  top: 12px;
-  left: 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  z-index: 2;
-}
-.game-title {
-  margin: 0;
-  color: #fff;
-  font-weight: 800;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
-}
 .host-start-button {
   background: #1a1a1a;
   color: #fff;
@@ -51,7 +36,7 @@
   max-height: 100dvh; /* en lugar de min-height */
   padding: 70px 16px 16px;
   display: grid;
-  grid-template-rows: auto 1fr auto; /* TOP | MIDDLE | BOTTOM */
+  grid-template-rows: auto auto auto; /* TOP | MIDDLE | BOTTOM */
   grid-template-columns: 1fr;
   gap: 12px;
   box-sizing: border-box; /* asegura que padding cuente dentro del 100vh */
@@ -70,6 +55,7 @@
   flex-wrap: nowrap;
   gap: 16px;
   max-width: min(1100px, 92vw);
+  align-items: center;
 }
 
 .area-center {
@@ -90,7 +76,7 @@
 @media (min-width: 900px) {
   .table-grid {
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr auto; /* T | M | B */
+    grid-template-rows: auto auto auto; /* T | M | B */
     gap: 16px;
   }
 
