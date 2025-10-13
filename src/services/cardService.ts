@@ -5,6 +5,7 @@ export interface CardResponse {
   game_id: number;
   player_id: number;
   type: string;
+  name: string;
   picked_up: boolean;
   dropped: boolean;
 }

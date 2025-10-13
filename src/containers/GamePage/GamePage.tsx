@@ -8,7 +8,6 @@ import TurnActions from "./TurnActions";
 import Opponent from "../../components/Opponent";
 import Decks from "../../components/Decks";
 import You from "../../components/MyHand";
-import EmptySlot from "../../components/EmptySlot";
 import type { GameResponse } from "../../services/gameService";
 import type { CardResponse } from "../../services/cardService";
 
