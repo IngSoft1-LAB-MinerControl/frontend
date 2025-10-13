@@ -1,0 +1,31 @@
+.op-hand {
+  display: flex;
+  gap: 0;
+  justify-items: center;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 12px;
+}
+
+.op-hand .card {
+  margin-right: -30px;
+  transition: margin 0.2s ease;
+}
+
+.op-hand .card:last-child {
+  margin-right: 0;
+}
+
+.op-secrets {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+}
+
+.op-name {
+  color: #fff;
+  font-weight: 700;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  justify-self: center;
+}

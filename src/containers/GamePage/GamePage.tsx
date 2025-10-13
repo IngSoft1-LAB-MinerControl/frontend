@@ -45,7 +45,7 @@ export default function GamePage() {
     const ws = new WebSocket(wsURL);
 
     ws.onopen = () => {
-      console.log(`✅ Conectado al WebSocket de la partida: ${wsURL}`);
+      console.log(`Conectado al WebSocket de la partida: ${wsURL}`);
       setError("");
     };
 
@@ -90,14 +90,14 @@ export default function GamePage() {
     };
 
     ws.onerror = (event) => {
-      console.error("❌ Error en WebSocket:", event);
+      console.error("Error en WebSocket:", event);
       setError(
         "Error en la conexión en tiempo real. Intenta recargar la página."
       );
     };
 
     ws.onclose = () => {
-      console.log("🔌 Conexión WebSocket de la partida cerrada.");
+      console.log("Conexión WebSocket de la partida cerrada.");
     };
 
     // cerramos la conexión cuando el componente se desmonta
@@ -139,23 +139,16 @@ export default function GamePage() {
   }, [currentGame, currentPlayer]);
 
   const distribution = useMemo(() => {
-    // ... (sin cambios)
     if (!players.length)
       return {
         bottom: null as PlayerStateResponse | null,
-        top: [] as PlayerStateResponse[],
-        left: null as PlayerStateResponse | null,
-        right: null as PlayerStateResponse | null,
+        opponents: [] as PlayerStateResponse[],
       };
 
     const me = currentPlayer ?? players[0];
-    const others = players.filter((p) => p !== me);
+    const opponents = players.filter((p) => p !== me);
 
-    const top = others.slice(0, 3);
-    const left = others.slice(3, 4)[0] ?? null;
-    const right = others.slice(4, 5)[0] ?? null;
-
-    return { bottom: me, top, left, right };
+    return { bottom: me, opponents };
   }, [players, currentPlayer]);
 
   const handleTurnUpdated = useCallback((updatedGame: GameResponse | null) => {
@@ -181,28 +174,16 @@ export default function GamePage() {
       <main className="table-grid">
         <section className="area-top">
           <div className="opponents-row">
-            {distribution.top.map((p) => (
+            {distribution.opponents.map((p) => (
               <Opponent key={p.player_id} player={p} />
             ))}
           </div>
         </section>
-        <section className="area-left">
-          {distribution.left ? (
-            <Opponent player={distribution.left} />
-          ) : (
-            <EmptySlot />
-          )}
-        </section>
+
         <section className="area-center">
           <Decks lastDiscarded={lastDiscarded} />
         </section>
-        <section className="area-right">
-          {distribution.right ? (
-            <Opponent player={distribution.right} />
-          ) : (
-            <EmptySlot />
-          )}
-        </section>
+
         <section className="area-bottom">
           {distribution.bottom ? (
             <You
@@ -229,7 +210,6 @@ export default function GamePage() {
           )}
         </section>
       </main>
-      {error && <div className="inline-error">{error}</div>}
     </div>
   );
 }

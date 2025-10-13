@@ -1,6 +1,7 @@
 import type { PlayerStateResponse } from "../services/playerService";
 import CardBase from "./Cards/CardBase";
 import Secret from "./Cards/Secret";
+import "./MyHand.css";
 
 interface YouProps {
   player: PlayerStateResponse;

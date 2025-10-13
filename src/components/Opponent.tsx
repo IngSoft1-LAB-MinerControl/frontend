@@ -1,9 +1,8 @@
 import type { PlayerStateResponse } from "../services/playerService";
 import CardBase from "./Cards/CardBase";
 import Secret from "./Cards/Secret";
-// ¡Ya no se necesitan hooks ni servicios!
+import "./Opponent.css";
 
-// La prop sigue siendo la misma, pero el objeto 'player' es ahora más completo.
 interface OpponentProps {
   player: PlayerStateResponse;
 }
@@ -12,7 +11,6 @@ export default function Opponent({ player }: OpponentProps) {
   return (
     <div className="opponent">
       <div className="op-name">{player.name}</div>
-
       <div className="op-hand">
         {/* Mapeamos directamente desde player.cards que viene en las props */}
         {player.cards.map((card, index) => (

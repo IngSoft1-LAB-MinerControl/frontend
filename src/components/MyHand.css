@@ -1,0 +1,36 @@
+.you-hand {
+  display: flex;
+  gap: 0;
+  justify-items: center;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 12px;
+}
+
+.you-hand .card {
+  margin-left: -20px;
+  transition: margin 0.3s ease;
+  cursor: pointer;
+  &.selected {
+    transform: translateY(-20px);
+  }
+}
+
+.you-hand .card:first-child {
+  margin-left: 0;
+}
+
+.you-secrets {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+}
+
+.you-name {
+  color: #fff;
+  font-weight: 700;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  justify-self: center;
+  margin-bottom: 10px;
+}
