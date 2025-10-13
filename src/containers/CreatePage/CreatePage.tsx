@@ -42,6 +42,16 @@ export default function CreatePage() {
     try {
       setError(""); // Limpiamos error previo
       console.log({ gameName, minPlayers, maxPlayers });
+      // Obtener partidas existentes
+      const existingGames = await gameService.getGames(); // o getAvailableGames
+      const nameExists = existingGames.some(
+        (game) => game.name.toLowerCase() === gameName.trim().toLowerCase()
+      );
+
+      if (nameExists) {
+        setError("Ya existe una partida con ese nombre, elija otro.");
+        return;
+      }
 
       // Crear la partida
       const newGame = await gameService.createGame({
