@@ -19,10 +19,9 @@ export default function ListGames() {
     const wsURL = "ws://localhost:8000/ws/games/availables";
     const ws = new WebSocket(wsURL);
 
-    // cuando la conexión se establece con éxito
     ws.onopen = () => {
       console.log("Conexión WebSocket establecida para la lista de partidas.");
-      setError(""); // Limpiamos errores previos si los hubo
+      setError("");
     };
 
     ws.onmessage = (event) => {
@@ -48,19 +47,17 @@ export default function ListGames() {
 
   const handleJoin = async (game: Game) => {
     if (!playerName || !playerDate) {
-      setError("No se encontro informacion del jugador");
+      setError("No se encontró información del jugador");
       return;
     }
 
     try {
-      console.log(playerName, playerDate);
       const newPlayer = await playerService.createPlayer({
         name: playerName,
         birth_date: playerDate,
         host: false,
         game_id: game.game_id!,
       });
-      console.log("player (join):", newPlayer);
 
       navigate(destinations.lobby, { state: { game, player: newPlayer } });
     } catch (err) {
@@ -69,29 +66,52 @@ export default function ListGames() {
     }
   };
 
+  // ✅ función que define el orden deseado
+  function getOrder(status: string) {
+    if (status === "waiting players") return 1;
+    if (status === "booteable") return 2;
+    if (status === "full") return 3;
+    if (status === "in_course") return 4;
+    return 5; // por si llega un estado desconocido
+  }
+
+  // ✅ ordenamos las partidas según el estado
+  const sortedPartidas = [...partidas].sort((a, b) => {
+    return getOrder(a.status) - getOrder(b.status);
+  });
+
   return (
     <div className="list-page">
       <div className="list-container">
         <h1 className="container-title">Partidas disponibles</h1>
         <p className={`list-error-message ${error ? "active" : ""}`}>{error}</p>
+
         <ul className="game-list">
-          {partidas.map((partida) => (
-            <li key={partida.game_id} className="list-item">
-              <div className="side-info">
-                <div className="item-title">{partida.name}</div>
-                <div className="item-data">
-                  De {partida.min_players} a {partida.max_players} jugadores.
-                  Lugares disponibles:{" "}
-                  {partida.max_players - partida.players_amount}
+          {sortedPartidas.map((partida) => {
+            const isJoinable =
+              partida.status === "waiting players" ||
+              partida.status === "booteable";
+
+            return (
+              <li key={partida.game_id} className="list-item">
+                <div className="side-info">
+                  <div className="item-title">{partida.name}</div>
+                  <div className="item-data">
+                    De {partida.min_players} a {partida.max_players} jugadores.
+                    Lugares disponibles:{" "}
+                    {partida.max_players - partida.players_amount}
+                  </div>
                 </div>
-              </div>
-              <Button
-                type="button"
-                label="Unirme"
-                onClick={() => handleJoin(partida)}
-              />
-            </li>
-          ))}
+
+                <Button
+                  type="button"
+                  label="Unirme"
+                  onClick={() => handleJoin(partida)}
+                  disabled={!isJoinable}
+                />
+              </li>
+            );
+          })}
         </ul>
       </div>
     </div>
