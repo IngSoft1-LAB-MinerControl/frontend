@@ -1,6 +1,6 @@
 import "./Secret.css";
 import cardBack from "/src/assets/card_back.svg";
-import secretBaseImg from "/src/assets/secret.png";
+import secretBaseImg from "/src/assets/secret_back.svg";
 
 type CardSize = "mini" | "medium" | "large";
 
