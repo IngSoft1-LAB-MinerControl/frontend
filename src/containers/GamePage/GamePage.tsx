@@ -10,6 +10,7 @@ import Decks from "../../components/Decks";
 import You from "../../components/MyHand";
 import type { GameResponse } from "../../services/gameService";
 import type { CardResponse } from "../../services/cardService";
+import DraftPile from "../../components/DraftPile";
 
 export default function GamePage() {
   const location = useLocation();
@@ -23,6 +24,7 @@ export default function GamePage() {
   const [error, setError] = useState("");
   const [selectedCardIds, setSelectedCardIds] = useState<number[]>([]);
   const [turnActionStep, setTurnActionStep] = useState<0 | 1 | 2>(0);
+  const [draftPile, setDraftPile] = useState<CardResponse[]>([]);
 
   if (!game) {
     return (
@@ -77,6 +79,10 @@ export default function GamePage() {
             // Actualiza la última carta descartada
             console.log("SE RECIBIERON LAS CARTAS DESCARTADAS", dataContent);
             setLastDiscarded(dataContent[0]);
+            break;
+
+          case "draft_update":
+            setDraftPile(dataContent);
             break;
 
           // más casos acá. ("player_played_card", "game_over", etc.)
@@ -177,6 +183,7 @@ export default function GamePage() {
 
         <section className="area-center">
           <Decks lastDiscarded={lastDiscarded} />
+          <DraftPile cards={draftPile} />
         </section>
 
         <section className="area-bottom">

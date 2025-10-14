@@ -1,0 +1,28 @@
+.draft-pile-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.draft-pile-title {
+  margin: 0;
+  color: #fff;
+  font-weight: 600;
+  font-size: 1rem;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+.draft-pile {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.draft-placeholder {
+  width: 84px;
+  height: 124px;
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border: 1px dashed rgba(255, 255, 255, 0.3);
+}

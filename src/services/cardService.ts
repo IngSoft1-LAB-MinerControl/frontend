@@ -87,11 +87,28 @@ async function drawCard(
   return response.json();
 }
 
+async function getDraftPile(gameId: number): Promise<CardResponse[]> {
+  const response = await fetch(`${httpServerUrl}/cards/draft/${gameId}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    return [];
+  }
+
+  const data: CardResponse[] = await response.json();
+  return data;
+}
+
 const cardService = {
   getCardsByPlayer,
   discardAuto,
   drawCard,
   discardSelectedList,
+  getDraftPile,
 };
 
 export default cardService;
