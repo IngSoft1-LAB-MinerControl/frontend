@@ -5,7 +5,6 @@
   overflow-y: auto;
 }
 
-/* Fondo estético detrás de todo */
 .game-page::before {
   content: "";
   position: fixed;
@@ -15,22 +14,6 @@
   z-index: -2;
 }
 
-/* ====== Header opcional ====== */
-.game-header {
-  position: fixed;
-  top: 12px;
-  left: 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  z-index: 2;
-}
-.game-title {
-  margin: 0;
-  color: #fff;
-  font-weight: 800;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
-}
 .host-start-button {
   background: #1a1a1a;
   color: #fff;
@@ -53,11 +36,12 @@
   max-height: 100dvh; /* en lugar de min-height */
   padding: 70px 16px 16px;
   display: grid;
-  grid-template-rows: auto 1fr auto; /* TOP | MIDDLE | BOTTOM */
+  grid-template-rows: auto auto auto; /* TOP | MIDDLE | BOTTOM */
   grid-template-columns: 1fr;
   gap: 12px;
   box-sizing: border-box; /* asegura que padding cuente dentro del 100vh */
   overflow-y: auto; /* por si algo se sale */
+  align-items: center;
 }
 
 /* TOP: fila con hasta 3 oponentes */
@@ -71,163 +55,33 @@
   flex-wrap: nowrap;
   gap: 16px;
   max-width: min(1100px, 92vw);
+  align-items: center;
 }
 
-/* MIDDLE: izquierda – centro – derecha */
-.area-left,
-.area-center,
-.area-right {
-  display: grid;
+.area-center {
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-items: center;
-  grid-template-columns: 1fr;
   gap: 8px;
+}
+
+.area-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 @media (min-width: 900px) {
   .table-grid {
-    grid-template-columns: 1fr minmax(360px, 560px) 1fr; /* L | C | R */
-    grid-template-rows: auto 1fr auto; /* T | M | B */
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto; /* T | M | B */
     gap: 16px;
   }
-  .area-top {
-    grid-column: 1 / 4;
-  }
-  .area-left {
-    grid-column: 1;
-  }
+
   .area-center {
-    grid-column: 2;
-  }
-  .area-right {
-    grid-column: 3;
-  }
-  .area-bottom {
-    grid-column: 1 / 4;
-  }
-}
-
-/* BOTTOM: YO */
-.area-bottom {
-  display: grid;
-  justify-items: center;
-}
-
-/* ====== Componentes ====== */
-.opponent,
-.you {
-  display: grid;
-  justify-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  backdrop-filter: blur(2px);
-}
-
-.op-name,
-.you-name {
-  color: #fff;
-  font-weight: 700;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
-}
-
-/* Mano y secretos de oponentes (mini) */
-.op-hand,
-.op-secrets {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
-  align-items: center;
-}
-.card.mini {
-  width: 46px;
-  height: 68px;
-  object-fit: cover;
-  border-radius: 6px;
-}
-.secret.mini {
-  width: 34px;
-  height: 50px;
-  object-fit: cover;
-  border-radius: 5px;
-  opacity: 0.9;
-}
-
-/* Tu mano (grande) y secretos (medianos) */
-.you-hand,
-.you-secrets {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  align-items: center;
-}
-.card.large {
-  width: 90px;
-  height: 132px;
-  object-fit: cover;
-  border-radius: 8px;
-}
-.secret.medium {
-  width: 62px;
-  height: 92px;
-  object-fit: cover;
-  border-radius: 7px;
-  opacity: 0.95;
-}
-
-/* Mazos en el centro */
-.decks {
-  display: flex;
-  gap: 18px;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 0;
-}
-.deck img {
-  width: 84px;
-  height: 124px;
-  border-radius: 8px;
-  object-fit: cover;
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.35);
-}
-
-/* Slots vacíos (cuando haya menos de 6) */
-.empty-slot {
-  width: 220px;
-  height: 160px;
-  border: 1px dashed rgba(255, 255, 255, 0.35);
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.15);
-}
-
-/* Mensajito inline de error/validación */
-.inline-error {
-  position: fixed;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #b3261e;
-  color: #fff;
-  padding: 0.5rem 0.8rem;
-  border-radius: 10px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
-  z-index: 5;
-}
-
-/* Ajustes responsivos pequeños */
-@media (max-width: 480px) {
-  .card.large {
-    width: 72px;
-    height: 106px;
-  }
-  .secret.medium {
-    width: 54px;
-    height: 80px;
-  }
-  .deck img {
-    width: 72px;
-    height: 106px;
+    max-width: 1200px;
+    margin: 0 auto;
   }
 }

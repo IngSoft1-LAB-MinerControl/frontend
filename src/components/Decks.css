@@ -40,4 +40,26 @@
 
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
   z-index: 2; /* Para que esté por encima de la carta */
+  padding: 8px;
+  position: relative; /* Importante: da contexto para los elementos absolutos dentro */
+}
+
+.discard-preview {
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: row-reverse;
+  gap: 10px;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.discarded-card {
+  transition: transform 0.2s ease;
+}
+
+.discarded-card:hover {
+  transform: translateY(-10px);
 }

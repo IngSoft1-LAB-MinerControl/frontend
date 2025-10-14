@@ -8,7 +8,6 @@ import TurnActions from "./TurnActions";
 import Opponent from "../../components/Opponent";
 import Decks from "../../components/Decks";
 import You from "../../components/MyHand";
-import EmptySlot from "../../components/EmptySlot";
 import type { GameResponse } from "../../services/gameService";
 import type { CardResponse } from "../../services/cardService";
 
@@ -20,7 +19,8 @@ export default function GamePage() {
 
   const [players, setPlayers] = useState<PlayerStateResponse[]>([]);
   const [currentGame, setCurrentGame] = useState<GameResponse>(game);
-  const [lastDiscarded, setLastDiscarded] = useState<CardResponse | null>(null);
+  //const [lastDiscarded, setLastDiscarded] = useState<CardResponse | null>(null);
+  const [discardedCards, setDiscardedCards] = useState<CardResponse[]>([]);
   const [error, setError] = useState("");
   const [selectedCardIds, setSelectedCardIds] = useState<number[]>([]);
   const [turnActionStep, setTurnActionStep] = useState<0 | 1 | 2>(0);
@@ -45,7 +45,7 @@ export default function GamePage() {
     const ws = new WebSocket(wsURL);
 
     ws.onopen = () => {
-      console.log(`✅ Conectado al WebSocket de la partida: ${wsURL}`);
+      console.log(`Conectado al WebSocket de la partida: ${wsURL}`);
       setError("");
     };
 
@@ -77,7 +77,8 @@ export default function GamePage() {
           case "droppedCards":
             // Actualiza la última carta descartada
             console.log("SE RECIBIERON LAS CARTAS DESCARTADAS", dataContent);
-            setLastDiscarded(dataContent[0]);
+            //setLastDiscarded(dataContent[0]);
+            setDiscardedCards(dataContent);
             break;
 
           // más casos acá. ("player_played_card", "game_over", etc.)
@@ -90,14 +91,14 @@ export default function GamePage() {
     };
 
     ws.onerror = (event) => {
-      console.error("❌ Error en WebSocket:", event);
+      console.error("Error en WebSocket:", event);
       setError(
         "Error en la conexión en tiempo real. Intenta recargar la página."
       );
     };
 
     ws.onclose = () => {
-      console.log("🔌 Conexión WebSocket de la partida cerrada.");
+      console.log("Conexión WebSocket de la partida cerrada.");
     };
 
     // cerramos la conexión cuando el componente se desmonta
@@ -139,23 +140,16 @@ export default function GamePage() {
   }, [currentGame, currentPlayer]);
 
   const distribution = useMemo(() => {
-    // ... (sin cambios)
     if (!players.length)
       return {
         bottom: null as PlayerStateResponse | null,
-        top: [] as PlayerStateResponse[],
-        left: null as PlayerStateResponse | null,
-        right: null as PlayerStateResponse | null,
+        opponents: [] as PlayerStateResponse[],
       };
 
     const me = currentPlayer ?? players[0];
-    const others = players.filter((p) => p !== me);
+    const opponents = players.filter((p) => p !== me);
 
-    const top = others.slice(0, 3);
-    const left = others.slice(3, 4)[0] ?? null;
-    const right = others.slice(4, 5)[0] ?? null;
-
-    return { bottom: me, top, left, right };
+    return { bottom: me, opponents };
   }, [players, currentPlayer]);
 
   const handleTurnUpdated = useCallback((updatedGame: GameResponse | null) => {
@@ -174,37 +168,21 @@ export default function GamePage() {
 
   return (
     <div className="game-page">
-      <div className="game-table-overlay" aria-hidden="true" />
-      <header className="game-header">
-        <h1 className="game-title">{game?.name ?? "Partida"}</h1>
-      </header>
       <main className="table-grid">
         <section className="area-top">
           <div className="opponents-row">
-            {distribution.top.map((p) => (
+            {distribution.opponents.map((p) => (
               <Opponent key={p.player_id} player={p} />
             ))}
           </div>
         </section>
-        <section className="area-left">
-          {distribution.left ? (
-            <Opponent player={distribution.left} />
-          ) : (
-            <EmptySlot />
-          )}
-        </section>
+
         <section className="area-center">
           <Decks
-            lastDiscarded={lastDiscarded}
             cardsLeftCount={currentGame?.cards_left ?? null}
+            discardedCards={discardedCards}
+            isMyTurn={isMyTurn}
           />
-        </section>
-        <section className="area-right">
-          {distribution.right ? (
-            <Opponent player={distribution.right} />
-          ) : (
-            <EmptySlot />
-          )}
         </section>
         <section className="area-bottom">
           {distribution.bottom ? (
@@ -232,7 +210,6 @@ export default function GamePage() {
           )}
         </section>
       </main>
-      {error && <div className="inline-error">{error}</div>}
     </div>
   );
 }

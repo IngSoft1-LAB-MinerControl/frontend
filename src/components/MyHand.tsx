@@ -1,6 +1,9 @@
+import { useState } from "react";
 import type { PlayerStateResponse } from "../services/playerService";
-import CardBase from "./Cards/CardBase";
+import Detective from "./Cards/Detectives";
+import Event from "./Cards/Events";
 import Secret from "./Cards/Secret";
+import "./MyHand.css";
 
 interface YouProps {
   player: PlayerStateResponse;
@@ -13,6 +16,8 @@ export default function You({
   onCardsSelected,
   selectedCardIds,
 }: YouProps) {
+  const [handExpanded, setHandExpanded] = useState(false);
+
   const handleCardClick = (cardId: number) => {
     const isCurrentlySelected = selectedCardIds.includes(cardId);
     let newSelectedCards: number[];
@@ -25,10 +30,13 @@ export default function You({
     onCardsSelected(newSelectedCards);
   };
 
+  const toggleHandView = () => {
+    setHandExpanded(!handExpanded);
+  };
+
   return (
     <div className="you">
       <div className="you-name">{player.name}</div>
-
       <div className="you-secrets">
         {/* Mapeamos directamente desde player.secrets que viene en las props */}
         {player.secrets.map((secret) => (
@@ -41,26 +49,53 @@ export default function You({
           />
         ))}
       </div>
-
-      <div className="you-hand">
+      <div className={`you-hand ${handExpanded ? "expanded" : "compact"}`}>
         {player.cards.map((card) => {
           if (card.card_id === undefined) return null;
-
-          return (
-            <CardBase
+          return card.type === "detective" ? (
+            <Detective
               key={card.card_id}
               card_id={card.card_id}
               shown={true}
-              size="medium"
+              size={handExpanded ? "large" : "medium"}
               onCardClick={
                 card.card_id !== undefined
                   ? () => handleCardClick(card.card_id!)
                   : undefined
               }
               isSelected={selectedCardIds.includes(card.card_id)}
+              name={card.name}
+            />
+          ) : (
+            <Event
+              key={card.card_id}
+              card_id={card.card_id}
+              shown={true}
+              size={handExpanded ? "large" : "medium"}
+              onCardClick={
+                card.card_id !== undefined
+                  ? () => handleCardClick(card.card_id!)
+                  : undefined
+              }
+              isSelected={selectedCardIds.includes(card.card_id)}
+              name={card.name}
             />
           );
         })}
+      </div>
+
+      <div className="controls-row">
+        <button
+          className="hand-toggle-button"
+          onClick={toggleHandView}
+          title={
+            handExpanded
+              ? "Reducir el espacio de la mano"
+              : "Ver cartas de forma más clara"
+          }
+        >
+          {handExpanded ? "volver" : "ver cartas"}
+        </button>
       </div>
     </div>
   );

@@ -69,7 +69,7 @@ export default function ListGames() {
   // ✅ función que define el orden deseado
   function getOrder(status: string) {
     if (status === "waiting players") return 1;
-    if (status === "booteable") return 2;
+    if (status === "bootable") return 2;
     if (status === "full") return 3;
     if (status === "in_course") return 4;
     return 5; // por si llega un estado desconocido
@@ -90,7 +90,7 @@ export default function ListGames() {
           {sortedPartidas.map((partida) => {
             const isJoinable =
               partida.status === "waiting players" ||
-              partida.status === "booteable";
+              partida.status === "bootable";
 
             return (
               <li key={partida.game_id} className="list-item">
