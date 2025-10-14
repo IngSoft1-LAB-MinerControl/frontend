@@ -16,6 +16,7 @@ export interface GameResponse {
   max_players: number;
   players_amount: number;
   current_turn: number;
+  cards_left: number;
 }
 
 export interface GameInit {

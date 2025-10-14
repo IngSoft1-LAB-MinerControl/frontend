@@ -20,7 +20,8 @@ export default function GamePage() {
 
   const [players, setPlayers] = useState<PlayerStateResponse[]>([]);
   const [currentGame, setCurrentGame] = useState<GameResponse>(game);
-  const [lastDiscarded, setLastDiscarded] = useState<CardResponse | null>(null);
+  //const [lastDiscarded, setLastDiscarded] = useState<CardResponse | null>(null);
+  const [discardedCards, setDiscardedCards] = useState<CardResponse[]>([]);
   const [error, setError] = useState("");
   const [selectedCardIds, setSelectedCardIds] = useState<number[]>([]);
   const [turnActionStep, setTurnActionStep] = useState<0 | 1 | 2>(0);
@@ -78,7 +79,8 @@ export default function GamePage() {
           case "droppedCards":
             // Actualiza la última carta descartada
             console.log("SE RECIBIERON LAS CARTAS DESCARTADAS", dataContent);
-            setLastDiscarded(dataContent[0]);
+            //setLastDiscarded(dataContent[0]);
+            setDiscardedCards(dataContent);
             break;
 
           case "draft_update":
@@ -182,10 +184,13 @@ export default function GamePage() {
         </section>
 
         <section className="area-center">
-          <Decks lastDiscarded={lastDiscarded} />
+          <Decks
+            cardsLeftCount={currentGame?.cards_left ?? null}
+            discardedCards={discardedCards}
+            isMyTurn={isMyTurn}
+          />
           <DraftPile cards={draftPile} />
         </section>
-
         <section className="area-bottom">
           {distribution.bottom ? (
             <You
