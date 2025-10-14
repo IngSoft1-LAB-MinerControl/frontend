@@ -83,8 +83,9 @@ export default function GamePage() {
             setDiscardedCards(dataContent);
             break;
 
-          case "draft_update":
+          case "draftCards":
             setDraftPile(dataContent);
+            console.log("SE RECIBIERON LAS CARTAS DEL DRAFT", dataContent);
             break;
 
           // más casos acá. ("player_played_card", "game_over", etc.)
