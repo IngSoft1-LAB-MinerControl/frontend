@@ -23,6 +23,7 @@ export default function Decks({
 
   return (
     <div className="decks">
+      {/* Mazo para robar */}
       <div className="deck draw-deck" title="Mazo para robar">
         {cardsLeftCount !== null && cardsLeftCount >= 0 && (
           <div className="card-counter">{cardsLeftCount}</div>
@@ -30,6 +31,7 @@ export default function Decks({
         <CardBase key="draw" shown={false} size="mini" />
       </div>
 
+      {/* Mazo de descarte */}
       <div
         className="deck discard-deck"
         title="Descarte (tope visible)"
@@ -43,7 +45,6 @@ export default function Decks({
               shown={true}
               size="mini"
               name={lastDiscarded.name}
-              // quantity_set={lastDiscarded.quantity_set}
             />
           ) : (
             <Event
@@ -52,22 +53,26 @@ export default function Decks({
               shown={true}
               size="mini"
               name={lastDiscarded.name}
-              // quantity_set={lastDiscarded.quantity_set}
             />
           )
         ) : (
           <p></p>
         )}
+
+        {/* Vista previa del descarte (solo visible en mi turno) */}
+        {showDiscarded && isMyTurn && (
+          <div className="discard-preview visible">
+            {discardedCards.map((card) => (
+              <CardBase
+                key={card.card_id}
+                card_id={card.card_id}
+                shown={true}
+                size="mini"
+              />
+            ))}
+          </div>
+        )}
       </div>
-      {showDiscarded && isMyTurn && (
-        <div className="discard-preview">
-          {discardedCards.map((card) => (
-            <div key={card.card_id} className="discarded-card">
-              <CardBase card_id={card.card_id} shown={true} size="mini" />
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

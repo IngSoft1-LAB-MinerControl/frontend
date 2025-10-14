@@ -1,50 +1,72 @@
 .decks {
   display: flex;
   gap: 18px;
-  align-items: center;
-  justify-content: center;
   padding: 8px 0;
-}
-
-.deck.draw-deck {
+  justify-content: center;
+  align-items: center;
   position: relative;
 }
-/* posicion del counter*/
+
+.deck {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
 .card-counter {
-  position: relative; /* Importante: da contexto para los elementos absolutos dentro */
+  position: absolute;
+  top: -0.8rem;
+  left: -0.8rem;
 
   display: flex;
   align-items: center;
   justify-content: center;
-
-  top: 1.2rem;
-  left: -1rem;
 
   width: 1.8rem;
   height: 1.8rem;
 
   background-color: #1a1a1a;
   color: white;
-  border-radius: 50%; /* Esto lo hace un círculo */
+  border-radius: 50%;
   border: 2px solid white;
 
   font-size: 14px;
   font-weight: bold;
 
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-  z-index: 2; /* Para que esté por encima de la carta */
+  z-index: 2;
+}
+
+.deck.discard-deck {
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  margin-top: 0;
+}
+.deck.discard-deck:hover {
+  transform: scale(1.03);
 }
 
 .discard-preview {
   position: absolute;
   top: 50%;
-  left: 100%;
+  left: calc(100% + 12px);
   transform: translateY(-50%);
   display: flex;
   flex-direction: row-reverse;
-  gap: 10px;
-  z-index: 10;
-  pointer-events: auto;
+  gap: 0.8rem;
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 50;
+  min-width: 0;
+}
+
+.discard-preview.visible {
+  opacity: 1;
+  pointer-events: none;
+  transform: translateY(-50%) translateX(0);
 }
 
 .discarded-card {
