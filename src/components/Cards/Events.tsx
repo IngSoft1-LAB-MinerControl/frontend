@@ -8,12 +8,9 @@ import onemore from "/src/assets/22-event_onemore.png";
 import delayescape from "/src/assets/23-event_delayescape.png";
 import earlytrain from "/src/assets/24-event_earlytrain.png";
 import pointsuspicions from "/src/assets/25-event_pointsuspicions.png";
-<<<<<<< HEAD
 import notsofast from "/src/assets/16-Instant_notsofast.png";
 import fauxpas from "/src/assets/27-devious_fauxpas.png";
 import blackmailed from "/src/assets/26-devious_blackmailed.png";
-=======
->>>>>>> dev
 
 type CardSize = "mini" | "medium" | "large";
 
