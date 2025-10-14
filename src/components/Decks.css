@@ -4,4 +4,25 @@
   align-items: center;
   justify-content: center;
   padding: 8px;
+  position: relative; /* Importante: da contexto para los elementos absolutos dentro */
+}
+
+.discard-preview {
+  position: absolute;
+  top: 50%;
+  left: 100%; /* 👈 las mueve completamente a la izquierda del mazo */
+  transform: translateY(-50%); /* las centra verticalmente respecto al mazo */
+  display: flex;
+  flex-direction: row-reverse; /*  muestra las más nuevas cerca del mazo de descarte, exactamente a su derecha */
+  gap: 10px;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.discarded-card {
+  transition: transform 0.2s ease;
+}
+
+.discarded-card:hover {
+  transform: translateY(-10px);
 }

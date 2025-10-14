@@ -8,7 +8,6 @@ import TurnActions from "./TurnActions";
 import Opponent from "../../components/Opponent";
 import Decks from "../../components/Decks";
 import You from "../../components/MyHand";
-import EmptySlot from "../../components/EmptySlot";
 import type { GameResponse } from "../../services/gameService";
 import type { CardResponse } from "../../services/cardService";
 
@@ -20,7 +19,8 @@ export default function GamePage() {
 
   const [players, setPlayers] = useState<PlayerStateResponse[]>([]);
   const [currentGame, setCurrentGame] = useState<GameResponse>(game);
-  const [lastDiscarded, setLastDiscarded] = useState<CardResponse | null>(null);
+  //const [lastDiscarded, setLastDiscarded] = useState<CardResponse | null>(null);
+  const [discardedCards, setDiscardedCards] = useState<CardResponse[]>([]);
   const [error, setError] = useState("");
   const [selectedCardIds, setSelectedCardIds] = useState<number[]>([]);
   const [turnActionStep, setTurnActionStep] = useState<0 | 1 | 2>(0);
@@ -77,7 +77,8 @@ export default function GamePage() {
           case "droppedCards":
             // Actualiza la última carta descartada
             console.log("SE RECIBIERON LAS CARTAS DESCARTADAS", dataContent);
-            setLastDiscarded(dataContent[0]);
+            //setLastDiscarded(dataContent[0]);
+            setDiscardedCards(dataContent);
             break;
 
           // más casos acá. ("player_played_card", "game_over", etc.)
@@ -177,7 +178,7 @@ export default function GamePage() {
         </section>
 
         <section className="area-center">
-          <Decks lastDiscarded={lastDiscarded} />
+          <Decks discardedCards={discardedCards} isMyTurn={isMyTurn} />
         </section>
 
         <section className="area-bottom">
