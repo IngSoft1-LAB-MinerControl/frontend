@@ -2,6 +2,8 @@ import { useState } from "react";
 import CardBase from "./Cards/CardBase";
 import type { CardResponse } from "../services/cardService";
 import "./Decks.css";
+import Detective from "./Cards/Detectives";
+import Event from "./Cards/Events";
 
 interface DeckProps {
   discardedCards: CardResponse[]; // ahora recibimos varias cartas
@@ -26,12 +28,25 @@ export default function Decks({ discardedCards, isMyTurn }: DeckProps) {
         onClick={handleDiscardClick}
       >
         {lastDiscarded ? (
-          <CardBase
-            key={lastDiscarded.card_id}
-            card_id={lastDiscarded.card_id}
-            shown={true}
-            size="mini"
-          />
+          lastDiscarded.type === "detective" ? (
+            <Detective
+              key={lastDiscarded.card_id}
+              card_id={lastDiscarded.card_id}
+              shown={true}
+              size="mini"
+              name={lastDiscarded.name}
+              // quantity_set={lastDiscarded.quantity_set}
+            />
+          ) : (
+            <Event
+              key={lastDiscarded.card_id}
+              card_id={lastDiscarded.card_id}
+              shown={true}
+              size="mini"
+              name={lastDiscarded.name}
+              // quantity_set={lastDiscarded.quantity_set}
+            />
+          )
         ) : (
           <p></p>
         )}

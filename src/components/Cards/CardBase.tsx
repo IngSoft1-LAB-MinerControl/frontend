@@ -1,7 +1,5 @@
 import "./CardBase.css";
-import cardBack from "/src/assets/card_back.svg";
-import notSoFast from "/src/assets/not_so_fast.svg";
-
+import cardBack from "/src/assets/01-card_back.png";
 type CardSize = "mini" | "medium" | "large";
 
 export type CardBaseProps = {
@@ -27,7 +25,7 @@ export default function CardBase({
     }
   };
   // Si no hay imagen, usamos el back por defecto
-  const imgSrc = shown ? image ?? notSoFast : cardBack;
+  const imgSrc = shown ? image ?? cardBack : cardBack;
 
   return (
     <div
