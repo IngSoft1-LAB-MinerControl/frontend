@@ -39,7 +39,6 @@
   display: flex;
   flex-direction: column;
   margin: 0rem 0;
-
 }
 
 .form-label {
@@ -50,15 +49,7 @@
   margin-left: 0.1rem;
 }
 
-/* .input-field {
-  font-size: clamp(0.8rem, 1vw, 1rem);
-  border-radius: 6px;
-  margin: 0 0;
-  display: block;
-} */
-
 .error-message {
-  color: #dc2626;
   font-size: 0.8rem;
   text-align: center;
   font-weight: 500;
@@ -76,6 +67,7 @@
 }
 
 .error-message.active {
+  color: black;
   visibility: visible;
 }
 

@@ -1,9 +1,10 @@
 import "./Lobby.css";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import playerService from "../../services/playerService";
+// import playerService from "../../services/playerService";
 import type { PlayerResponse } from "../../services/playerService";
 import gameService from "../../services/gameService";
+import { httpServerUrl } from "../../services/config";
 
 function Lobby() {
   const location = useLocation();
@@ -13,58 +14,78 @@ function Lobby() {
 
   const [players, setPlayers] = useState<PlayerResponse[]>([]);
   const [error, setError] = useState<string>("");
+  const [isHost, setIsHost] = useState<boolean>(false);
 
-  // Traer jugadores de la partida
-  const fetchPlayers = async () => {
-    try {
-      if (!game?.game_id) return;
-      const jugadores = await playerService.getPlayersByGame(game.game_id);
-      setPlayers(jugadores);
-    } catch (err) {
-      console.error("Error al obtener jugadores:", err);
-    }
-  };
-
-  // Refrescar la lista cada 3 segundos
   useEffect(() => {
-    fetchPlayers();
-    const interval = setInterval(fetchPlayers, 3000);
-    return () => clearInterval(interval);
-  }, [game]);
+    if (!game?.game_id) return;
 
-  // Hook para revisar si el juego ya empezó
-  useEffect(() => {
-    const checkGameStatus = async () => {
-      if (!game?.game_id) return;
+    // CONSTRUCCIÓN DE LA URL WS
+    const wsURL = `${httpServerUrl.replace("http", "ws")}/ws/lobby/${
+      game.game_id
+    }`;
+
+    // Se crea la conexión WebSocket
+    const ws = new WebSocket(wsURL);
+
+    // La conexión se establece
+    ws.onopen = () => {
+      console.log("✅ Conectado al WebSocket del lobby:", wsURL);
+      setError("");
+    };
+
+    // Llega un mensaje del servidor
+    ws.onmessage = (event) => {
       try {
-        const updatedGame = await gameService.getGameById(game.game_id);
-        if (updatedGame.status === "in course") {
-          navigate("/game", {
-            state: { game: updatedGame, player },
-          });
+        const message = JSON.parse(event.data);
+        console.log("MSJ WS", message);
+        // Si el mensaje tiene un objeto "data" que es un string, lo parseamos también
+        // Esto es común cuando un JSON anida a otro JSON como string.
+        const dataContent =
+          typeof message.data === "string"
+            ? JSON.parse(message.data)
+            : message.data;
+
+        if (message.type === "players") {
+          const receivedPlayers: PlayerResponse[] = dataContent;
+          setPlayers(receivedPlayers);
+
+          const currentUser = receivedPlayers.find(
+            (p: PlayerResponse) => p.player_id === player.player_id
+          );
+          setIsHost(currentUser?.host ?? false);
+        } else if (message.type === "game" || message.type === "gameUpdated") {
+          const gameData = JSON.parse(message.data);
+          console.log("Datos del juego parseados:", gameData);
+
+          // iniciar
+          if (gameData.status === "in course")
+            navigate("/game", {
+              state: { game: dataContent, player },
+            });
         }
       } catch (err) {
-        console.error("Error al chequear estado del juego:", err);
+        console.error("Error procesando mensaje WS:", err);
       }
     };
 
-    const interval = setInterval(checkGameStatus, 3000);
-    return () => clearInterval(interval);
+    // Manejo de errores
+    ws.onerror = (event) => {
+      console.error("❌ Error en WebSocket:", event);
+      setError(
+        "Error en la conexión en tiempo real. Intenta recargar la página."
+      );
+    };
+
+    // cierre
+    ws.onclose = () => {
+      console.log("🔌 Conexión WebSocket cerrada.");
+    };
+
+    return () => {
+      ws.close();
+    };
   }, [game, player, navigate]);
 
-  // Detectar el jugador actual
-  const currentPlayer = players.find((p) => p.player_id === player.player_id);
-  const isHost = currentPlayer?.host ?? false;
-
-  // No renderizar hasta que ya hayan cargado los jugadores
-  if (!players.length) return <p>Cargando jugadores...</p>;
-
-  console.log("players en lobby:", players);
-  console.log("player actual:", player);
-  console.log("currentPlayer:", currentPlayer);
-  console.log("isHost:", isHost);
-
-  // Validación para iniciar partida
   const validate = () => {
     if (players.length < (game?.min_players ?? 1)) {
       setError(
@@ -74,7 +95,7 @@ function Lobby() {
       );
       return false;
     }
-    setError(""); // limpiar error
+    setError("");
     return true;
   };
 
@@ -83,19 +104,18 @@ function Lobby() {
     if (validate()) {
       try {
         await gameService.startGame(game.game_id);
-        //todos  los players entran cuando checkGameStatus detecta "in course"
+        // avisar al resto que el juego cambió de estado
       } catch (err) {
         console.error("Error iniciando el juego:", err);
       }
     }
   };
 
+  if (!players.length) return <p>Cargando jugadores...</p>;
+
   return (
     <div className="lobby-page">
-      <div className="lobby-title">
-        <h1 className="title-text1"> {game.name} </h1>
-        <h1 className="title-text2">Sala de Espera</h1>
-      </div>
+      <h1 className="lobby-title">SALA DE ESPERA</h1>
       <section className="lobby-card" aria-label="Sala de espera">
         {/* Slots de jugadores */}
         <div className="lobby-slots" aria-label="Jugadores">
@@ -129,7 +149,7 @@ function Lobby() {
             </>
           ) : (
             <p className="waiting-text">
-              Esperando a que el anfitrión inicie la partida...
+              Esperando a que el anfitrión inicie la partida ...
             </p>
           )}
         </div>

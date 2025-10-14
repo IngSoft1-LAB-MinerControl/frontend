@@ -1,38 +1,45 @@
-import { useEffect, useRef, useState } from "react";
-import type { PlayerResponse } from "../services/playerService";
-import CardBase from "./Cards/CardBase";
+import { useState } from "react";
+import type { PlayerStateResponse } from "../services/playerService";
+import Detective from "./Cards/Detectives";
+import Event from "./Cards/Events";
 import Secret from "./Cards/Secret";
-import cardService, { type CardResponse } from "../services/cardService";
-import secretService, { type SecretResponse } from "../services/secretService";
+import "./MyHand.css";
 
-export default function You({ player }: { player: PlayerResponse }) {
-  const [myCards, setMyCards] = useState<CardResponse[]>([]);
-  const [mySecrets, setMySecrets] = useState<SecretResponse[]>([]);
+interface YouProps {
+  player: PlayerStateResponse;
+  onCardsSelected: (selectedIds: number[]) => void;
+  selectedCardIds: number[];
+}
 
-  const loaded = useRef(false);
+export default function You({
+  player,
+  onCardsSelected,
+  selectedCardIds,
+}: YouProps) {
+  const [handExpanded, setHandExpanded] = useState(false);
 
-  useEffect(() => {
-    if (loaded.current) return;
-    loaded.current = true;
+  const handleCardClick = (cardId: number) => {
+    const isCurrentlySelected = selectedCardIds.includes(cardId);
+    let newSelectedCards: number[];
 
-    async function loadData() {
-      const [cards, secrets] = await Promise.all([
-        cardService.getCardsByPlayer(player.player_id),
-        secretService.getSecretsByPlayer(player.player_id),
-      ]);
-      setMyCards(cards);
-      setMySecrets(secrets);
-      console.log("Secretos cargados:", secrets); // ¡Agrega esto!
+    if (isCurrentlySelected) {
+      newSelectedCards = selectedCardIds.filter((id) => id !== cardId);
+    } else {
+      newSelectedCards = [...selectedCardIds, cardId];
     }
-    loadData();
-  }, [player.player_id]);
+    onCardsSelected(newSelectedCards);
+  };
+
+  const toggleHandView = () => {
+    setHandExpanded(!handExpanded);
+  };
 
   return (
     <div className="you">
       <div className="you-name">{player.name}</div>
-
       <div className="you-secrets">
-        {mySecrets.map((secret: SecretResponse) => (
+        {/* Mapeamos directamente desde player.secrets que viene en las props */}
+        {player.secrets.map((secret) => (
           <Secret
             key={secret.secret_id}
             secret_id={secret.secret_id}
@@ -42,16 +49,53 @@ export default function You({ player }: { player: PlayerResponse }) {
           />
         ))}
       </div>
+      <div className={`you-hand ${handExpanded ? "expanded" : "compact"}`}>
+        {player.cards.map((card) => {
+          if (card.card_id === undefined) return null;
+          return card.type === "detective" ? (
+            <Detective
+              key={card.card_id}
+              card_id={card.card_id}
+              shown={true}
+              size={handExpanded ? "large" : "medium"}
+              onCardClick={
+                card.card_id !== undefined
+                  ? () => handleCardClick(card.card_id!)
+                  : undefined
+              }
+              isSelected={selectedCardIds.includes(card.card_id)}
+              name={card.name}
+            />
+          ) : (
+            <Event
+              key={card.card_id}
+              card_id={card.card_id}
+              shown={true}
+              size={handExpanded ? "large" : "medium"}
+              onCardClick={
+                card.card_id !== undefined
+                  ? () => handleCardClick(card.card_id!)
+                  : undefined
+              }
+              isSelected={selectedCardIds.includes(card.card_id)}
+              name={card.name}
+            />
+          );
+        })}
+      </div>
 
-      <div className="you-hand">
-        {myCards.map((card: CardResponse) => (
-          <CardBase
-            key={card.card_id}
-            card_id={card.card_id}
-            shown={true}
-            size="medium"
-          />
-        ))}
+      <div className="controls-row">
+        <button
+          className="hand-toggle-button"
+          onClick={toggleHandView}
+          title={
+            handExpanded
+              ? "Reducir el espacio de la mano"
+              : "Ver cartas de forma más clara"
+          }
+        >
+          {handExpanded ? "volver" : "ver cartas"}
+        </button>
       </div>
     </div>
   );

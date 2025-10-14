@@ -1,49 +1,44 @@
-import { useEffect, useRef, useState } from "react";
-import type { PlayerResponse } from "../services/playerService";
-import secretService, { type SecretResponse } from "../services/secretService";
-import CardBase from "./Cards/CardBase";
+import type { PlayerStateResponse } from "../services/playerService";
+import Detective from "./Cards/Detectives";
+import Event from "./Cards/Events";
+
 import Secret from "./Cards/Secret";
-import cardService, { type CardResponse } from "../services/cardService";
+import "./Opponent.css";
 
-export default function Opponent({ player }: { player: PlayerResponse }) {
-  const [opCards, setOpCards] = useState<CardResponse[]>([]);
-  const [opSecrets, setOpSecrets] = useState<SecretResponse[]>([]);
+interface OpponentProps {
+  player: PlayerStateResponse;
+}
 
-  const loaded = useRef(false);
-
-  useEffect(() => {
-    if (loaded.current) return;
-    loaded.current = true;
-
-    async function loadData() {
-      const [cards, secrets] = await Promise.all([
-        cardService.getCardsByPlayer(player.player_id),
-        secretService.getSecretsByPlayer(player.player_id),
-      ]);
-      setOpCards(cards);
-      setOpSecrets(secrets);
-      console.log("Secretos cargados:", secrets); // ¡Agrega esto!
-    }
-    loadData();
-  }, [player.player_id]);
-
+export default function Opponent({ player }: OpponentProps) {
   return (
     <div className="opponent">
       <div className="op-name">{player.name}</div>
-
       <div className="op-hand">
-        {opCards.map((card: CardResponse) => (
-          <CardBase
-            key={card.card_id}
-            card_id={card.card_id}
-            shown={false}
-            size="mini"
-          />
-        ))}
+        {/* Mapeamos directamente desde player.cards que viene en las props */}
+        {player.cards.map((card, index) =>
+          card.type === "detectives" ? (
+            <Detective
+              key={`op-card-${player.player_id}-${index}`}
+              card_id={card.card_id}
+              shown={false} // Para oponentes, las cartas están boca abajo
+              size="mini"
+              name={card.name}
+            />
+          ) : (
+            <Event
+              key={`op-card-${player.player_id}-${index}`}
+              card_id={card.card_id}
+              shown={false} // Para oponentes, las cartas están boca abajo
+              size="mini"
+              name={card.name}
+            />
+          )
+        )}
       </div>
 
       <div className="op-secrets">
-        {opSecrets.map((secret: SecretResponse) => (
+        {/* Mapeamos directamente desde player.secrets que viene en las props */}
+        {player.secrets.map((secret) => (
           <Secret
             key={`op-secret-${player.player_id}-${secret.secret_id}`}
             secret_id={secret.secret_id}
