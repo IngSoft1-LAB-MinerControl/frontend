@@ -6,29 +6,22 @@
   padding: 8px 0;
 }
 
-.deck img {
-  width: 84px;
-  height: 124px;
-  border-radius: 8px;
-  object-fit: cover;
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.35);
-}
-
 .deck.draw-deck {
   position: relative;
 }
 /* posicion del counter*/
 .card-counter {
-  position: absolute;
-  top: -8px;
-  left: -8px;
+  position: relative; /* Importante: da contexto para los elementos absolutos dentro */
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  width: 28px;
-  height: 28px;
+  top: 1.2rem;
+  left: -1rem;
+
+  width: 1.8rem;
+  height: 1.8rem;
 
   background-color: #1a1a1a;
   color: white;
@@ -40,8 +33,6 @@
 
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
   z-index: 2; /* Para que esté por encima de la carta */
-  padding: 8px;
-  position: relative; /* Importante: da contexto para los elementos absolutos dentro */
 }
 
 .discard-preview {
