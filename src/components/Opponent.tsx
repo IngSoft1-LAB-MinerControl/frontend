@@ -1,7 +1,7 @@
 import type { PlayerStateResponse } from "../services/playerService";
 import Detective from "./Cards/Detectives";
 import Event from "./Cards/Events";
-
+import Set from "./Set";
 import Secret from "./Cards/Secret";
 import "./Opponent.css";
 
@@ -46,6 +46,12 @@ export default function Opponent({ player }: OpponentProps) {
             revealed={secret.revealed}
             size="mini"
           />
+        ))}
+      </div>
+
+      <div className="op-sets">
+        {player.sets.map((set) => (
+          <Set cards={set.detective} isSelected={false} />
         ))}
       </div>
     </div>
