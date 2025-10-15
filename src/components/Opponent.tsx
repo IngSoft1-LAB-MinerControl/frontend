@@ -44,6 +44,8 @@ export default function Opponent({ player }: OpponentProps) {
             secret_id={secret.secret_id}
             mine={false}
             revealed={secret.revealed}
+            murderer={secret.murderer}
+            accomplice={secret.accomplice}
             size="mini"
           />
         ))}

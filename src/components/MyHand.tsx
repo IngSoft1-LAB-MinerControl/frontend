@@ -45,6 +45,8 @@ export default function You({
             secret_id={secret.secret_id}
             mine={true}
             revealed={secret.revealed}
+            murderer={secret.murderer}
+            accomplice={secret.accomplice}
             size="medium"
           />
         ))}
