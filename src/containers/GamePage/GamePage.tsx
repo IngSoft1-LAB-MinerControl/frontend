@@ -23,6 +23,8 @@ export default function GamePage() {
   //const [lastDiscarded, setLastDiscarded] = useState<CardResponse | null>(null);
   const [discardedCards, setDiscardedCards] = useState<CardResponse[]>([]);
   const [error, setError] = useState("");
+  const [endMessage, setEndMessage] = useState<string | null>(null);
+
   const [selectedCardIds, setSelectedCardIds] = useState<number[]>([]);
   const [turnActionStep, setTurnActionStep] = useState<0 | 1 | 2>(0);
   const [draftPile, setDraftPile] = useState<CardResponse[]>([]);
@@ -51,35 +53,48 @@ export default function GamePage() {
       setError("");
     };
 
-    // Escuchamos todos los mensajes que el servidor envía para esta partida
     ws.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
         console.log("MSJ WS", message);
-        // Lógica para manejar datos que pueden ser string o ya un objeto
-        // Esta es la clave: si es un string, lo parseamos. Si no, lo usamos directamente.
+
         const dataContent =
           typeof message.data === "string"
             ? JSON.parse(message.data)
             : message.data;
-        // Usamos un switch para manejar los diferentes tipos de actualizaciones
+
         switch (message.type) {
           case "playersState":
-            // Actualiza la lista de jugadores
-            // Parseo a JSON primero de string
-            // const playersData = JSON.parse(message.data)
             setPlayers(dataContent);
             break;
 
           case "gameUpdated":
-            // Actualiza el estado completo de la partida (ej: cambio de turno)
             setCurrentGame(dataContent);
+
+            if (dataContent.status === "finished") {
+              setEndMessage((prev) => {
+                const currentPlayerState = players.find(
+                  (p) => p.player_id === player.player_id
+                );
+
+                if (!currentPlayerState) return prev;
+
+                const hasMurderSecret = currentPlayerState.secrets.some(
+                  (s) => s.murderer
+                );
+                const hasAccompliceSecret = currentPlayerState.secrets.some(
+                  (s) => s.accomplice
+                );
+
+                return hasMurderSecret || hasAccompliceSecret
+                  ? "¡Ganaste!"
+                  : "Perdiste. El asesino ganó la partida.";
+              });
+            }
             break;
 
           case "droppedCards":
-            // Actualiza la última carta descartada
             console.log("SE RECIBIERON LAS CARTAS DESCARTADAS", dataContent);
-            //setLastDiscarded(dataContent[0]);
             setDiscardedCards(dataContent);
             break;
 
@@ -88,7 +103,6 @@ export default function GamePage() {
             console.log("SE RECIBIERON LAS CARTAS DEL DRAFT", dataContent);
             break;
 
-          // más casos acá. ("player_played_card", "game_over", etc.)
           default:
             console.log("Mensaje WS recibido sin tipo conocido:", message);
         }
@@ -114,25 +128,8 @@ export default function GamePage() {
     };
   }, [game.game_id, navigate]); // Dependemos solo de game.game_id para no reconectar innecesariamente
 
-  // El resto de la lógica del componente permanece igual,
-  // ya que reacciona a los cambios de estado que ahora son actualizados por el WebSocket.
-
   const currentPlayer = players.find((p) => p.player_id === player.player_id);
   const cardCount = currentPlayer ? currentPlayer.cards.length : 0;
-
-  // DEPURACIÓN isMyTurn
-
-  // console.log("DEBUG: CÁLCULO DE TURNO ");
-  // console.log("Objeto 'player' del Lobby:", player);
-  // console.log("Objeto 'currentGame':", currentGame);
-  // console.log("Objeto 'currentPlayer' (encontrado en la lista):", currentPlayer);
-
-  // if (currentGame) {
-  //   console.log("  ➡️ Turno actual del juego (current_turn):", currentGame.current_turn);
-  // }
-  // if (currentPlayer) {
-  //   console.log("  ➡️ Mi orden de turno (turn_order):", currentPlayer.turn_order);
-  // }
 
   const isMyTurn = useMemo(() => {
     if (
@@ -217,6 +214,7 @@ export default function GamePage() {
             </div>
           )}
         </section>
+        <p>{endMessage}</p>
       </main>
     </div>
   );
