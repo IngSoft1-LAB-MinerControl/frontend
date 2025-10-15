@@ -1,3 +1,5 @@
+// DraftPile.tsx
+import { useState } from "react";
 import "./DraftPile.css";
 import type { CardResponse } from "../services/cardService";
 import Detective from "./Cards/Detectives";
@@ -16,13 +18,29 @@ export default function DraftPile({
   onCardSelect,
   isMyTurn,
 }: DraftPileProps) {
+  const [expanded, setExpanded] = useState(false);
+
+  const toggleDraftView = () => setExpanded((v) => !v);
+
   return (
     <div className="draft-pile-container">
-      <h3 className="draft-pile-title">Draft</h3>
-      <div className="draft-pile">
+      <div className={`draft-pile ${expanded ? "expanded" : "compact"}`}>
+        {cards.length > 0 && (
+          <button
+            className="draft-toggle-button inline"
+            onClick={toggleDraftView}
+            title={
+              expanded ? "Reducir el draft" : "Ver cartas del draft más claras"
+            }
+          >
+            {expanded ? "volver" : "ver draft"}
+          </button>
+        )}
+
         {cards.length > 0
           ? cards.map((card) => {
               const isSelected = card.card_id === selectedCardId;
+              const cardSize = expanded ? "large" : "mini";
               return (
                 <div
                   key={card.card_id}
@@ -35,14 +53,14 @@ export default function DraftPile({
                     <Detective
                       card_id={card.card_id}
                       shown={true}
-                      size="mini"
+                      size={cardSize}
                       name={card.name}
                     />
                   ) : (
                     <Event
                       card_id={card.card_id}
                       shown={true}
-                      size="mini"
+                      size={cardSize}
                       name={card.name}
                     />
                   )}
