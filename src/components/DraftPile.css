@@ -25,3 +25,20 @@
   background-color: rgba(0, 0, 0, 0.2);
   border: 1px dashed rgba(255, 255, 255, 0.3);
 }
+
+.draft-card-container.clickable {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.draft-card-container.clickable:hover {
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.draft-card-container.selected {
+  outline: 3px solid #ffd700;
+  border-radius: 8px;
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 8px 20px rgba(255, 215, 0, 0.5);
+}

@@ -3,6 +3,7 @@ import type { PlayerStateResponse } from "../services/playerService";
 import Detective from "./Cards/Detectives";
 import Event from "./Cards/Events";
 import Secret from "./Cards/Secret";
+import Set from "./Set.tsx";
 import "./MyHand.css";
 
 interface YouProps {
@@ -37,6 +38,11 @@ export default function You({
   return (
     <div className="you">
       <div className="you-name">{player.name}</div>
+      <div className="you-sets">
+        {player.sets.map((set) => (
+          <Set cards={set.detective} isSelected={false} />
+        ))}
+      </div>
       <div className="you-secrets">
         {/* Mapeamos directamente desde player.secrets que viene en las props */}
         {player.secrets.map((secret) => (

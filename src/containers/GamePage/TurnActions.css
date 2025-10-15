@@ -1,29 +1,58 @@
-.turn-actions {
+.turn-actions-box {
   position: fixed;
   bottom: 20px;
   right: 20px;
   z-index: 10; /* siempre visible sobre la mesa */
 }
 
+.action-step-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 1.8em;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+}
+
+.menu-indications {
+  text-wrap: wrap;
+  text-align: center;
+  width: 100%;
+  color: #fff;
+  font-weight: 600;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+}
+
 .action-button {
-  background-color: #1a1a1a;
+  background-color: transparent;
+  border-color: #fff;
+  border-width: 3px;
   color: #fff;
   padding: 0.8rem 1.4rem;
   font-size: 1rem;
   font-weight: 700;
-  border: none;
   border-radius: 10px;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0px 15px rgba(0, 0, 0, 0.3);
   transition: transform 0.1s ease, opacity 0.2s ease;
 }
 
 .action-button:hover {
   transform: translateY(-2px);
   opacity: 0.95;
+  background-color: rgba(92, 1, 1, 0.856);
+  box-shadow: 0 0px 15px rgba(0, 0, 0, 0.9);
+  border-color: #fff;
 }
 
 .action-button:active {
   transform: translateY(0);
   opacity: 0.85;
+}
+
+.action-buttons-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
