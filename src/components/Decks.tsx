@@ -20,6 +20,7 @@ export default function Decks({
   const handleDiscardClick = () => {
     setShowDiscarded((prev) => !prev);
   };
+  const previewCards = discardedCards.slice(1, 6).reverse();
 
   return (
     <div className="decks">
@@ -43,7 +44,6 @@ export default function Decks({
               shown={true}
               size="mini"
               name={lastDiscarded.name}
-              // quantity_set={lastDiscarded.quantity_set}
             />
           ) : (
             <Event
@@ -52,22 +52,36 @@ export default function Decks({
               shown={true}
               size="mini"
               name={lastDiscarded.name}
-              // quantity_set={lastDiscarded.quantity_set}
             />
           )
         ) : (
           <p></p>
         )}
+
+        {showDiscarded && isMyTurn && (
+          <div className="discard-preview visible">
+            {previewCards.map((card) =>
+              card.type === "detective" ? (
+                <Detective
+                  key={card.card_id}
+                  card_id={card.card_id}
+                  shown={true}
+                  size="mini"
+                  name={card.name}
+                />
+              ) : (
+                <Event
+                  key={card.card_id}
+                  card_id={card.card_id}
+                  shown={true}
+                  size="mini"
+                  name={card.name}
+                />
+              )
+            )}
+          </div>
+        )}
       </div>
-      {showDiscarded && isMyTurn && (
-        <div className="discard-preview">
-          {discardedCards.map((card) => (
-            <div key={card.card_id} className="discarded-card">
-              <CardBase card_id={card.card_id} shown={true} size="mini" />
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
