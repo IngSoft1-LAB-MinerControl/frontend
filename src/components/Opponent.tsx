@@ -48,6 +48,8 @@ export default function Opponent({ player }: OpponentProps) {
           />
         ))}
       </div>
+
+      <div className="op-sets">aca van los sets</div>
     </div>
   );
 }
