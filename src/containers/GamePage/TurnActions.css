@@ -5,15 +5,23 @@
   z-index: 10; /* siempre visible sobre la mesa */
 }
 
-.action-menu {
+.action-step-container {
   display: flex;
   flex-direction: column;
   gap: 15px;
   padding: 1.8em;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
 }
 
 .menu-indications {
   text-wrap: wrap;
+  text-align: center;
+  width: 100%;
+  color: #fff;
+  font-weight: 600;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
 }
 
 .action-button {
@@ -41,4 +49,10 @@
 .action-button:active {
   transform: translateY(0);
   opacity: 0.85;
+}
+
+.action-buttons-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }

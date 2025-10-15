@@ -24,8 +24,11 @@ export default function GamePage() {
   const [discardedCards, setDiscardedCards] = useState<CardResponse[]>([]);
   const [error, setError] = useState("");
   const [selectedCardIds, setSelectedCardIds] = useState<number[]>([]);
-  const [turnActionStep, setTurnActionStep] = useState<0 | 1 | 2>(0);
+  const [turnActionStep, setTurnActionStep] = useState<0 | 1 | 2 | 3 | 4>(0);
   const [draftPile, setDraftPile] = useState<CardResponse[]>([]);
+  const [selectedDraftCardId, setSelectedDraftCardId] = useState<number | null>(
+    null
+  );
 
   if (!game) {
     return (
@@ -134,6 +137,11 @@ export default function GamePage() {
   //   console.log("  ➡️ Mi orden de turno (turn_order):", currentPlayer.turn_order);
   // }
 
+  const handleDraftSelect = (cardId: number) => {
+    // Si el jugador hace clic en la misma carta, se deselecciona. Si no, se selecciona.
+    setSelectedDraftCardId((prev) => (prev === cardId ? null : cardId));
+  };
+
   const isMyTurn = useMemo(() => {
     if (
       !currentGame ||
@@ -185,7 +193,12 @@ export default function GamePage() {
         </section>
 
         <section className="area-center">
-          <DraftPile cards={draftPile} />
+          <DraftPile
+            cards={draftPile}
+            selectedCardId={selectedDraftCardId}
+            onCardSelect={handleDraftSelect}
+            isMyTurn={isMyTurn}
+          />
           <Decks
             cardsLeftCount={currentGame?.cards_left ?? null}
             discardedCards={discardedCards}
@@ -213,6 +226,8 @@ export default function GamePage() {
                 step={turnActionStep}
                 setStep={setTurnActionStep}
                 cardCount={cardCount}
+                selectedDraftCardId={selectedDraftCardId}
+                setSelectedDraftCardId={setSelectedDraftCardId}
               />
             </div>
           )}
