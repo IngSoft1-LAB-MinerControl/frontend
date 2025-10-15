@@ -187,7 +187,11 @@ export default function GamePage() {
         <section className="area-top">
           <div className="opponents-row">
             {distribution.opponents.map((p) => (
-              <Opponent key={p.player_id} player={p} />
+              <Opponent
+                key={p.player_id}
+                player={p}
+                isMyTurn={p.turn_order === currentGame?.current_turn}
+              />
             ))}
           </div>
         </section>
@@ -211,6 +215,7 @@ export default function GamePage() {
               player={distribution.bottom}
               selectedCardIds={selectedCardIds}
               onCardsSelected={setSelectedCardIds}
+              isMyTurn={isMyTurn}
             />
           ) : (
             <div className="empty-hint">Esperando jugadores…</div>
