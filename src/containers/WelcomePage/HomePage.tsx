@@ -17,7 +17,6 @@ export default function HomePage() {
   const validate = () => {
     let valid = true;
 
-    // Resetear todos los errores primero
     setError("");
     setNameError(false);
     setDateError(false);

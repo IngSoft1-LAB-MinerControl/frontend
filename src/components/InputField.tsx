@@ -8,7 +8,7 @@ type Props = {
   value: string;
   maxLength?: number;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  error: boolean;
+  error?: boolean;
 };
 
 export default function InputField({

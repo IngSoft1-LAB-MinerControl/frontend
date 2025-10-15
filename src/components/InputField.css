@@ -33,7 +33,10 @@
 
 .input-field.input-error[type="date"] {
   color: white;
-  opacity: 1;
+}
+
+.input-field.input-error[type="number"] {
+  color: white;
 }
 
 @keyframes pulseBorder {
