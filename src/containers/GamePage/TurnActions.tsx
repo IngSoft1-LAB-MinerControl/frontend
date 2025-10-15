@@ -150,7 +150,7 @@ export default function TurnActions({
           <TextType
             className="menu-indications"
             text={["Seleccione las cartas del set que desea jugar"]}
-            typingSpeed={50}
+            typingSpeed={35}
           />
           <div className="action-buttons-group">
             <button
