@@ -185,12 +185,12 @@ export default function GamePage() {
         </section>
 
         <section className="area-center">
+          <DraftPile cards={draftPile} />
           <Decks
             cardsLeftCount={currentGame?.cards_left ?? null}
             discardedCards={discardedCards}
             isMyTurn={isMyTurn}
           />
-          <DraftPile cards={draftPile} />
         </section>
         <section className="area-bottom">
           {distribution.bottom ? (

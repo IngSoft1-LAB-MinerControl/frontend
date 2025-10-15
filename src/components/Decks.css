@@ -1,15 +1,14 @@
 .decks {
   display: flex;
+  flex-direction: row;
   gap: 18px;
-  padding: 8px 0;
-  justify-content: center;
   align-items: center;
-  position: relative;
+  justify-content: center;
 }
 
 .deck {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   position: relative;
 }
