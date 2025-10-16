@@ -95,10 +95,17 @@ export default function TurnActions({
     }
     setLock(true);
     try {
-      await setService.playSet(selectedCardIds[0], selectedCardIds[1]);
-      console.log(
-        `${selectedCardIds.length} cartas descartadas. Un solo request al back.`
-      );
+      if (selectedCardIds.length == 2) {
+        await setService.playSet2(selectedCardIds[0], selectedCardIds[1]);
+        console.log(`set de ${selectedCardIds.length} cartas bajado.`);
+      } else if (selectedCardIds.length == 3) {
+        await setService.playSet3(
+          selectedCardIds[0],
+          selectedCardIds[1],
+          selectedCardIds[2]
+        );
+        console.log(`set de ${selectedCardIds.length} cartas bajado.`);
+      }
       setSelectedCardIds([]);
       setStep(2);
     } catch (err) {
