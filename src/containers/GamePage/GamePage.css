@@ -85,3 +85,9 @@
     margin: 0 auto;
   }
 }
+
+p {
+  font-family: "Poppins";
+  text-align: center;
+  color: white;
+}
