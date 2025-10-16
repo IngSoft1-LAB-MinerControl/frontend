@@ -1,4 +1,3 @@
-import { useState } from "react";
 import type { PlayerStateResponse } from "../services/playerService";
 import Detective from "./Cards/Detectives";
 import Event from "./Cards/Events";
@@ -22,14 +21,8 @@ export default function You({
   selectedCard,
   isMyTurn,
 }: YouProps) {
-  const [handExpanded, setHandExpanded] = useState(false);
-
   const handleCardClick = (card: CardResponse) => {
     onCardsSelected(card);
-  };
-
-  const toggleHandView = () => {
-    setHandExpanded(!handExpanded);
   };
 
   return (
@@ -48,12 +41,12 @@ export default function You({
               revealed={secret.revealed}
               murderer={secret.murderer}
               accomplice={secret.accomplice}
-              size="medium"
+              size="large"
             />
           ))}
         </div>
 
-        <div className={`you-hand ${handExpanded ? "expanded" : "compact"}`}>
+        <div className={`you-hand`}>
           {player.cards.map((card) => {
             if (card.card_id === undefined) return null;
 
@@ -66,7 +59,7 @@ export default function You({
                 key={card.card_id}
                 card_id={card.card_id}
                 shown={true}
-                size={handExpanded ? "large" : "medium"}
+                size={"large"}
                 onCardClick={
                   card.card_id !== undefined
                     ? () => handleCardClick(card)
@@ -80,7 +73,7 @@ export default function You({
                 key={card.card_id}
                 card_id={card.card_id}
                 shown={true}
-                size={handExpanded ? "large" : "medium"}
+                size={"large"}
                 onCardClick={
                   card.card_id !== undefined
                     ? () => handleCardClick(card)
@@ -105,20 +98,6 @@ export default function You({
             isSelected={false}
           />
         ))}
-      </div>
-
-      <div className="controls-row">
-        <button
-          className="hand-toggle-button"
-          onClick={toggleHandView}
-          title={
-            handExpanded
-              ? "Reducir el espacio de la mano"
-              : "Ver cartas de forma más clara"
-          }
-        >
-          {handExpanded ? "volver" : "ver cartas"}
-        </button>
       </div>
     </div>
   );
