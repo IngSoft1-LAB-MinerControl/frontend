@@ -3,18 +3,21 @@ import type { PlayerStateResponse } from "../services/playerService";
 import Detective from "./Cards/Detectives";
 import Event from "./Cards/Events";
 import Secret from "./Cards/Secret";
+import Set from "./Set.tsx";
 import "./MyHand.css";
 
 interface YouProps {
   player: PlayerStateResponse;
   onCardsSelected: (selectedIds: number[]) => void;
   selectedCardIds: number[];
+  isMyTurn: boolean;
 }
 
 export default function You({
   player,
   onCardsSelected,
   selectedCardIds,
+  isMyTurn,
 }: YouProps) {
   const [handExpanded, setHandExpanded] = useState(false);
 
@@ -36,7 +39,14 @@ export default function You({
 
   return (
     <div className="you">
-      <div className="you-name">{player.name}</div>
+      <div className={`you-name ${isMyTurn ? "myturn" : ""}`}>
+        {player.name}
+      </div>
+      <div className="you-sets">
+        {player.sets.map((set) => (
+          <Set cards={set.detective} isSelected={false} />
+        ))}
+      </div>
       <div className="you-secrets">
         {/* Mapeamos directamente desde player.secrets que viene en las props */}
         {player.secrets.map((secret) => (
@@ -45,6 +55,8 @@ export default function You({
             secret_id={secret.secret_id}
             mine={true}
             revealed={secret.revealed}
+            murderer={secret.murderer}
+            accomplice={secret.accomplice}
             size="medium"
           />
         ))}

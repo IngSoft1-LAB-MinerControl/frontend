@@ -9,34 +9,51 @@ export default function HomePage() {
   const [playerName, setPlayerName] = useState("");
   const [playerDate, setPlayerDate] = useState("");
   const [error, setError] = useState("");
+  const [nameError, setNameError] = useState(false);
+  const [dateError, setDateError] = useState(false);
 
   const navigate = useNavigate();
 
   const validate = () => {
-    if (!playerName.trim()) {
-      setError("Debe ingresar un nombre");
-      return false;
-    }
-    if (!playerDate) {
-      setError("Debe ingresar su fecha de nacimiento");
-      return false;
-    }
-    const birthDate = new Date(playerDate);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < birthDate.getDate())
-    ) {
-      age--;
-    }
-    if (age < 15) {
-      setError("El juego es solo para mayores de 15 años.");
-      return false;
-    }
+    let valid = true;
+
     setError("");
-    return true;
+    setNameError(false);
+    setDateError(false);
+
+    if (!playerName.trim() && !playerDate) {
+      setError("Debe ingresar un nombre y fecha de nacimiento");
+      setNameError(true);
+      setDateError(true);
+      valid = false;
+    } else if (!playerName.trim()) {
+      setError("Debe ingresar un nombre");
+      setNameError(true);
+      valid = false;
+    } else if (!playerDate) {
+      setError("Debe ingresar su fecha de nacimiento");
+      setDateError(true);
+      valid = false;
+    } else {
+      // validación de edad
+      const birthDate = new Date(playerDate);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (
+        monthDiff < 0 ||
+        (monthDiff === 0 && today.getDate() < birthDate.getDate())
+      ) {
+        age--;
+      }
+      if (age < 15) {
+        setError("El juego es solo para mayores de 15 años.");
+        setDateError(true);
+        valid = false;
+      }
+    }
+
+    return valid;
   };
 
   const handleCreate = (e: React.FormEvent) => {
@@ -53,7 +70,6 @@ export default function HomePage() {
       navigate(destinations.listarPartidas, {
         state: { playerName, playerDate },
       });
-      //Redirigimos para mostrar las partidas disponibles
     }
   };
 
@@ -71,9 +87,11 @@ export default function HomePage() {
             placeholder="Ingrese su nombre"
             value={playerName}
             maxLength={20}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setPlayerName(e.target.value)
-            }
+            onChange={(e) => {
+              setPlayerName(e.target.value);
+              if (e.target.value.trim()) setNameError(false);
+            }}
+            error={nameError}
           />
         </div>
         <div className="form-field">
@@ -85,9 +103,11 @@ export default function HomePage() {
             type="date"
             placeholder="Ingrese su fecha de nacimiento"
             value={playerDate}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setPlayerDate(e.target.value)
-            }
+            onChange={(e) => {
+              setPlayerDate(e.target.value);
+              if (e.target.value.trim()) setDateError(false);
+            }}
+            error={dateError}
           />
         </div>
 
