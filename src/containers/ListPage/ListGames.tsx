@@ -13,7 +13,7 @@ export default function ListGames() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { playerName, playerDate } = location.state || {};
+  const { playerName, playerDate, playerAvatar } = location.state || {};
 
   useEffect(() => {
     const wsURL = "ws://localhost:8000/ws/games/availables";
@@ -57,25 +57,26 @@ export default function ListGames() {
         birth_date: playerDate,
         host: false,
         game_id: game.game_id!,
+        avatar: playerAvatar,
       });
 
-      navigate(destinations.lobby, { state: { game, player: newPlayer } });
+      navigate(destinations.lobby, {
+        state: { game, player: newPlayer, playerAvatar },
+      });
     } catch (err) {
       console.error(err);
       setError("Error al unirse a la partida");
     }
   };
 
-  // ✅ función que define el orden deseado
   function getOrder(status: string) {
     if (status === "waiting players") return 1;
     if (status === "bootable") return 2;
     if (status === "full") return 3;
     if (status === "in_course") return 4;
-    return 5; // por si llega un estado desconocido
+    return 5;
   }
 
-  // ✅ ordenamos las partidas según el estado
   const sortedPartidas = [...partidas].sort((a, b) => {
     return getOrder(a.status) - getOrder(b.status);
   });

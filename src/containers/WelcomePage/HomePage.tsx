@@ -57,17 +57,32 @@ export default function HomePage() {
       setDateError(true);
       setAvatarError(true);
       valid = false;
-    } else if (!playerName.trim()) {
+    } else if (!playerName.trim() && !playerAvatar) {
+      setError("Debe ingresar un nombre y seleccionar un avatar");
+      setNameError(true);
+      setAvatarError(true);
+      valid = false;
+    } else if (!playerDate && !playerAvatar) {
+      setError("Debe ingresar su fecha de nacimiento y seleccionar un avatar");
+      setDateError(true);
+      setAvatarError(true);
+      valid = false;
+    } else if (!playerName.trim() && !playerDate) {
+      setError("Debe ingresar su  nombre y fecha de nacimiento ");
+      setNameError(true);
+      setDateError(true);
+      valid = false;
+    } else if (!playerAvatar) {
+      setError("Debe elegir un avatar");
+      setAvatarError(true);
+      valid = false;
+    } else if (!playerName) {
       setError("Debe ingresar un nombre");
       setNameError(true);
       valid = false;
     } else if (!playerDate) {
       setError("Debe ingresar su fecha de nacimiento");
       setDateError(true);
-      valid = false;
-    } else if (!playerAvatar) {
-      setError("Debe elegir un avatar");
-      setAvatarError(true);
       valid = false;
     } else {
       // validación de edad
@@ -103,7 +118,7 @@ export default function HomePage() {
   const handleList = () => {
     if (validate()) {
       navigate(destinations.listarPartidas, {
-        state: { playerName, playerDate },
+        state: { playerName, playerDate, playerAvatar },
       });
     }
   };

@@ -127,6 +127,11 @@ function Lobby() {
                   {p.host && <span className="host-badge">(HOST)</span>}
                 </div>
                 <div className="player-date">{p.birth_date}</div>
+                <div className="player-avatar">
+                  {p.avatar ? (
+                    <img src={p.avatar} alt={`${p.name} avatar`} />
+                  ) : null}
+                </div>
               </div>
             </div>
           ))}
