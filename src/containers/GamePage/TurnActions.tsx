@@ -11,29 +11,59 @@ interface TurnActionProps {
   onTurnUpdated: (updatedGame: any) => void;
   selectedCardIds: number[];
   setSelectedCardIds: (ids: number[]) => void;
-  step: 0 | 1 | 2 | 3;
-  setStep: (step: 0 | 1 | 2 | 3) => void;
+  step: 0 | 1 | 2 | 3 | 4;
+  setStep: (step: 0 | 1 | 2 | 3 | 4) => void;
   cardCount: number;
+  selectedDraftCardId: number | null;
+  setSelectedDraftCardId: (id: number | null) => void;
 }
 
 export default function TurnActions({
   gameId,
   playerId,
-  onTurnUpdated,
   selectedCardIds,
   setSelectedCardIds,
   step,
   setStep,
   cardCount,
+  selectedDraftCardId,
+  setSelectedDraftCardId,
 }: TurnActionProps) {
   const [lock, setLock] = useState(false);
+  const [discarding, setDiscarding] = useState(false);
+  const [drawing, setDrawing] = useState(false);
+
+  const handleEndTurn = async () => {
+    try {
+      await gameService.updateTurn(gameId);
+      setStep(0);
+    } catch (err) {
+      console.error("Error al finalizar el turno:", err);
+      alert("Error al finalizar turno. Intenta de nuevo.");
+    }
+  };
+
+  const handleDrawDraft = async () => {
+    if (drawing || !selectedDraftCardId) return;
+
+    setDrawing(true);
+    try {
+      await cardService.pickUpDraftCard(gameId, selectedDraftCardId, playerId);
+      setSelectedDraftCardId(null);
+      setStep(3);
+    } catch (err) {
+      console.error("Error al robar del draft:", err);
+      alert("Error al robar la carta del draft. Intenta de nuevo.");
+    } finally {
+      setDrawing(false);
+    }
+  };
 
   const handleDiscardAuto = async () => {
     if (lock) return;
     setLock(true);
     try {
       await cardService.discardAuto(playerId);
-      console.log("Carta descartada");
       setSelectedCardIds([]);
       setStep(3);
     } catch (err) {
@@ -53,9 +83,6 @@ export default function TurnActions({
     setLock(true);
     try {
       await cardService.discardSelectedList(playerId, selectedCardIds);
-      console.log(
-        `${selectedCardIds.length} cartas descartadas. Un solo request al back.`
-      );
       setSelectedCardIds([]);
       setStep(3);
     } catch (err) {
@@ -71,19 +98,8 @@ export default function TurnActions({
       await cardService.drawCard(playerId, gameId); // Robo carta
       console.log("se levanto una carta.");
     } catch (err) {
-      console.error("Error al fobar carta:", err);
+      console.error("Error al robar carta:", err);
       alert("Error al robar carta. Intenta de nuevo.");
-    }
-  };
-
-  const handleEndTurn = async () => {
-    try {
-      const updatedGame = await gameService.updateTurn(gameId);
-      onTurnUpdated(updatedGame);
-      setStep(0);
-    } catch (err) {
-      console.error("Error al finalizar el turno:", err);
-      alert("Error al rfinalizar turno. Intenta de nuevo.");
     }
   };
 
@@ -119,81 +135,100 @@ export default function TurnActions({
   return (
     <div className="turn-actions-box">
       {step === 0 && (
-        <div className="action-menu">
+        <div className="action-step-container">
           <TextType
             className="menu-indications"
-            text={["¿Qué accion desea realizar?"]}
-            typingSpeed={75}
-            pauseDuration={1500}
-            showCursor={true}
-            cursorCharacter="|"
+            text={["¿Qué acción desea realizar?"]}
+            typingSpeed={50}
           />
-          <button
-            className="action-button"
-            onClick={() => {
-              setStep(2);
-            }}
-          >
-            Saltear Turno
-          </button>
-          <button
-            className="action-button"
-            onClick={() => {
-              setStep(1);
-            }}
-          >
-            Jugar Set
-          </button>
+          <div className="action-buttons-group">
+            <button className="action-button" onClick={() => setStep(1)}>
+              Jugar Set
+            </button>
+            <button className="action-button" onClick={() => setStep(2)}>
+              Descartar / Saltear
+            </button>
+          </div>
         </div>
       )}
+
       {step === 1 && (
-        <div className="action-menu">
+        <div className="action-step-container">
           <TextType
-            text={["Seleccione el set que desea jugar"]}
-            typingSpeed={75}
-            pauseDuration={1500}
-            showCursor={true}
-            cursorCharacter="|"
+            className="menu-indications"
+            text={["Seleccione las cartas del set que desea jugar"]}
+            typingSpeed={35}
           />
-          <button className="action-button" onClick={handlePlaySet}>
-            Jugar Set
-          </button>{" "}
-          */
+          <div className="action-buttons-group">
+            <button
+              className="action-button"
+              onClick={handlePlaySet}
+              disabled={lock || selectedCardIds.length < 2}
+            >
+              Jugar Set
+            </button>
+            <button className="action-button" onClick={() => setStep(0)}>
+              Volver
+            </button>
+          </div>
         </div>
       )}
+
       {step === 2 && (
-        <div className="action-menu">
+        <div className="action-step-container">
           <TextType
-            text={["Seleccione una o más cartas"]}
-            typingSpeed={75}
-            pauseDuration={1500}
-            showCursor={true}
-            cursorCharacter="|"
+            text={["Seleccione una o más cartas para descartar"]}
+            typingSpeed={50}
           />
-          {/* <button
-            className="action-button"
-            onClick={handleDiscardAuto}
-            disabled={discarding}
-          >
-            {discarding ? "DESCARTANDO..." : "Descarte Automatico"}
-          </button> */}
-          <button
-            className="action-button"
-            onClick={handleDiscardSel}
-            disabled={lock}
-          >
-            {lock ? "descartando..." : "Descartar Seleccionadas"}
-          </button>
+          <div className="action-buttons-group">
+            <button
+              className="action-button"
+              onClick={handleDiscardSel}
+              disabled={lock || selectedCardIds.length === 0}
+            >
+              {lock ? "Descartando..." : "Descartar Selección"}
+            </button>
+            <button className="action-button" onClick={() => setStep(0)}>
+              Volver
+            </button>
+          </div>
         </div>
       )}
 
       {step === 3 && (
-        <div className="action-menu">
-          <button
-            className="action-button"
-            onClick={cardCount < 6 ? handleDraw : handleEndTurn}
-          >
-            {cardCount < 6 ? "Robar carta" : "Finalizar turno"}
+        <div className="action-step-container">
+          {cardCount < 6 ? (
+            <>
+              <h3>Elige de dónde robar</h3>
+              <div className="action-buttons-group">
+                <button
+                  className="action-button"
+                  onClick={handleDraw}
+                  disabled={drawing}
+                >
+                  Robar Mazo Principal
+                </button>
+                <button
+                  className="action-button"
+                  onClick={handleDrawDraft}
+                  disabled={drawing || !selectedDraftCardId}
+                >
+                  Robar Mazo Draft
+                </button>
+              </div>
+            </>
+          ) : (
+            <button className="action-button" onClick={handleEndTurn}>
+              Finalizar Turno
+            </button>
+          )}
+        </div>
+      )}
+
+      {step === 4 && (
+        <div className="action-step-container">
+          <button className="action-button" onClick={handleEndTurn}>
+            Finalizar Turno
           </button>
         </div>
       )}

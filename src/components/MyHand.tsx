@@ -10,12 +10,14 @@ interface YouProps {
   player: PlayerStateResponse;
   onCardsSelected: (selectedIds: number[]) => void;
   selectedCardIds: number[];
+  isMyTurn: boolean;
 }
 
 export default function You({
   player,
   onCardsSelected,
   selectedCardIds,
+  isMyTurn,
 }: YouProps) {
   const [handExpanded, setHandExpanded] = useState(false);
 
@@ -37,7 +39,9 @@ export default function You({
 
   return (
     <div className="you">
-      <div className="you-name">{player.name}</div>
+      <div className={`you-name ${isMyTurn ? "myturn" : ""}`}>
+        {player.name}
+      </div>
       <div className="you-sets">
         {player.sets.map((set) => (
           <Set cards={set.detective} isSelected={false} />
@@ -51,6 +55,8 @@ export default function You({
             secret_id={secret.secret_id}
             mine={true}
             revealed={secret.revealed}
+            murderer={secret.murderer}
+            accomplice={secret.accomplice}
             size="medium"
           />
         ))}

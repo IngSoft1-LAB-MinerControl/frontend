@@ -4,9 +4,9 @@ export interface SecretResponse {
   secret_id: number;
   player_id?: number;
   game_id: number;
+  revealed: boolean;
   murderer: boolean;
   accomplice: boolean;
-  revealed: boolean;
 }
 
 async function getSecretsByPlayer(

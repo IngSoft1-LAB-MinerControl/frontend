@@ -103,12 +103,37 @@ async function getDraftPile(gameId: number): Promise<CardResponse[]> {
   return data;
 }
 
+async function pickUpDraftCard(
+  gameId: number,
+  cardId: number,
+  playerId: number
+): Promise<CardResponse> {
+  const response = await fetch(
+    `${httpServerUrl}/cards/draft_pickup/${gameId},${cardId},${playerId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || "Error al tomar la carta del draft");
+  }
+
+  const data: CardResponse = await response.json();
+  return data;
+}
+
 const cardService = {
   getCardsByPlayer,
   discardAuto,
   drawCard,
   discardSelectedList,
   getDraftPile,
+  pickUpDraftCard,
 };
 
 export default cardService;

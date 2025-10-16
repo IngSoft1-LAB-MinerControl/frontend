@@ -29,3 +29,9 @@
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
   justify-self: center;
 }
+
+.op-name.myturn {
+  text-shadow: 0 0 10px rgb(119, 0, 0);
+  color: #ffd166;
+  text-shadow: 0 0 12px rgba(255, 209, 102, 0.75);
+}

@@ -7,12 +7,13 @@ import "./Opponent.css";
 
 interface OpponentProps {
   player: PlayerStateResponse;
+  isMyTurn: boolean;
 }
 
-export default function Opponent({ player }: OpponentProps) {
+export default function Opponent({ player, isMyTurn }: OpponentProps) {
   return (
     <div className="opponent">
-      <div className="op-name">{player.name}</div>
+      <div className={`op-name ${isMyTurn ? "myturn" : ""}`}>{player.name}</div>
       <div className="op-hand">
         {/* Mapeamos directamente desde player.cards que viene en las props */}
         {player.cards.map((card, index) =>
@@ -44,6 +45,8 @@ export default function Opponent({ player }: OpponentProps) {
             secret_id={secret.secret_id}
             mine={false}
             revealed={secret.revealed}
+            murderer={secret.murderer}
+            accomplice={secret.accomplice}
             size="mini"
           />
         ))}

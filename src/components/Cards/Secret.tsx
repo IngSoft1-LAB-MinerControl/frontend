@@ -1,6 +1,8 @@
 import "./Secret.css";
-import cardBack from "/src/assets/05-secret_back.png";
-import secretBaseImg from "/src/assets/06-secret_front.png";
+import s_murderer from "/src/assets/03-secret_murderer.png";
+import s_accomplice from "/src/assets/04-secret_accomplice.png";
+import s_back from "/src/assets/05-secret_back.png";
+import s_base from "/src/assets/06-secret_front.png";
 
 type CardSize = "mini" | "medium" | "large";
 
@@ -9,6 +11,8 @@ export type SecretBaseProps = {
   size?: CardSize;
   mine: boolean;
   revealed: boolean;
+  murderer: boolean;
+  accomplice: boolean;
 };
 
 export default function Secret({
@@ -16,29 +20,43 @@ export default function Secret({
   size = "medium",
   mine,
   revealed,
+  murderer,
+  accomplice,
 }: SecretBaseProps) {
-  let imgSrc: string;
-  let cssClass = "";
+  let imgFront, imgToDisplay: string;
+
+  if (murderer) {
+    imgFront = s_murderer;
+  } else if (accomplice) {
+    imgFront = s_accomplice;
+  } else {
+    imgFront = s_base;
+  }
 
   if (mine) {
-    imgSrc = secretBaseImg;
-    cssClass = revealed ? "normal-brightness" : "dim-secret";
+    // Si es TU secreto, siempre ves el frente (tu requisito)
+    imgToDisplay = imgFront;
   } else {
+    // Si es del oponente (!mine)
     if (revealed) {
-      imgSrc = secretBaseImg;
-      cssClass = "normal-brightness";
+      // Si está revelado, ve el frente
+      imgToDisplay = imgFront;
     } else {
-      imgSrc = cardBack;
-      cssClass = "";
+      // Si NO está revelado, ve el dorso
+      imgToDisplay = s_back;
     }
   }
 
+  const unrevealedClass = mine && !revealed ? "unrevealed" : "";
+
   return (
     <div
-      className={`card secret-${size} ${cssClass}`}
+      className={`secret secret-${size} ${
+        mine ? "mine" : ""
+      } ${unrevealedClass} `}
       data-secret-id={secret_id}
     >
-      <img src={imgSrc} alt={`secret-${secret_id}`} />
+      <img src={imgToDisplay} alt={`Secret ${secret_id}`} />
     </div>
   );
 }
