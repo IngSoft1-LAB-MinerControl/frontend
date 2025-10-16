@@ -59,12 +59,11 @@ async function playSet3(
 }
 
 async function stealSet(
-  player_id_from: number,
   player_id_to: number,
   set_id: number
 ): Promise<SetResponse> {
   const response = await fetch(
-    `${httpServerUrl}/sets/steal/${player_id_from}/${player_id_to}/${set_id}`,
+    `${httpServerUrl}/sets/steal/${player_id_to}/${set_id}`,
     {
       method: "PUT",
       headers: {

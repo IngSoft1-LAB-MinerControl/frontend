@@ -3,7 +3,9 @@ import "./TurnActions.css";
 import gameService from "../../services/gameService";
 import cardService, { type CardResponse } from "../../services/cardService";
 import TextType from "../../components/TextType";
-import setService from "../../services/setService";
+import setService, { type SetResponse } from "../../services/setService";
+import Detective from "../../components/Cards/Detectives";
+import Event from "../../components/Cards/Events";
 
 interface TurnActionProps {
   gameId: number;
@@ -16,6 +18,8 @@ interface TurnActionProps {
   cardCount: number;
   selectedCard: CardResponse | null;
   setSelectedCard: (card: CardResponse | null) => void;
+  discardedCards: CardResponse[];
+  selectedSet: SetResponse | null;
 }
 
 export default function TurnActions({
@@ -28,6 +32,8 @@ export default function TurnActions({
   cardCount,
   selectedCard,
   setSelectedCard,
+  discardedCards,
+  selectedSet,
 }: TurnActionProps) {
   const [lock, setLock] = useState(false);
   const [drawing, setDrawing] = useState(false);
@@ -59,20 +65,20 @@ export default function TurnActions({
     }
   };
 
-  const handleDiscardAuto = async () => {
-    if (lock) return;
-    setLock(true);
-    try {
-      await cardService.discardAuto(playerId);
-      setSelectedCardIds([]);
-      setStep(3);
-    } catch (err) {
-      console.error("Error al descartar carta automáticamente:", err);
-      alert("Error al descartar carta. Intenta de nuevo.");
-    } finally {
-      setLock(false);
-    }
-  };
+  // const handleDiscardAuto = async () => {
+  //   if (lock) return;
+  //   setLock(true);
+  //   try {
+  //     await cardService.discardAuto(playerId);
+  //     setSelectedCardIds([]);
+  //     setStep(3);
+  //   } catch (err) {
+  //     console.error("Error al descartar carta automáticamente:", err);
+  //     alert("Error al descartar carta. Intenta de nuevo.");
+  //   } finally {
+  //     setLock(false);
+  //   }
+  // };
 
   const handleDiscardSel = async () => {
     if (lock) return;
@@ -150,10 +156,45 @@ export default function TurnActions({
     setLock(true);
     try {
       switch (selectedCard.name) {
-        case "Another victim":
+        case "Another victim": // ANOTHER VICTIM
+          if (!selectedSet) {
+            setMessage("Seleccione un set válido");
+            setTimeout(() => setMessage(""), 3000);
+            return;
+          }
+          try {
+            await setService.stealSet(selectedSet.set_id, playerId);
+            console.log("se robo un set");
+          } catch (err) {
+            console.error("Error al robar carta:", err);
+            alert("Error al robar carta. Intenta de nuevo.");
+          }
+          break;
         // endpoint another victim
-        case "Look into the ashes":
-        // endpoint look into the ashes
+        case "Look into the ashes": // LOOK INTO THE ASHES
+          <div className="discard-preview visible">
+            {discardedCards.map((card) =>
+              card.type === "detective" ? (
+                <Detective
+                  key={card.card_id}
+                  card_id={card.card_id}
+                  shown={true}
+                  size="mini"
+                  name={card.name}
+                />
+              ) : (
+                <Event
+                  key={card.card_id}
+                  card_id={card.card_id}
+                  shown={true}
+                  size="mini"
+                  name={card.name}
+                />
+              )
+            )}
+          </div>;
+          // endpoint pick up from discard
+          break;
         default:
       }
       setMessage("");

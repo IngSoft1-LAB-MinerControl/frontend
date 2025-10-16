@@ -8,20 +8,13 @@ import Event from "./Cards/Events";
 interface DeckProps {
   discardedCards: CardResponse[];
   cardsLeftCount: number | null;
-  isMyTurn: boolean;
 }
-export default function Decks({
-  discardedCards,
-  cardsLeftCount,
-  isMyTurn,
-}: DeckProps) {
+export default function Decks({ discardedCards, cardsLeftCount }: DeckProps) {
   const [showDiscarded, setShowDiscarded] = useState(false);
   const lastDiscarded = discardedCards.length > 0 ? discardedCards[0] : null;
   const handleDiscardClick = () => {
     setShowDiscarded((prev) => !prev);
   };
-  const previewCards = discardedCards.slice(1, 6).reverse();
-
   return (
     <div className="decks">
       <div className="deck draw-deck" title="Mazo para robar">
@@ -56,30 +49,6 @@ export default function Decks({
           )
         ) : (
           <p></p>
-        )}
-
-        {showDiscarded && isMyTurn && (
-          <div className="discard-preview visible">
-            {previewCards.map((card) =>
-              card.type === "detective" ? (
-                <Detective
-                  key={card.card_id}
-                  card_id={card.card_id}
-                  shown={true}
-                  size="mini"
-                  name={card.name}
-                />
-              ) : (
-                <Event
-                  key={card.card_id}
-                  card_id={card.card_id}
-                  shown={true}
-                  size="mini"
-                  name={card.name}
-                />
-              )
-            )}
-          </div>
         )}
       </div>
     </div>

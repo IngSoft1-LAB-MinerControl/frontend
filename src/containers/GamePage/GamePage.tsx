@@ -262,7 +262,6 @@ export default function GamePage() {
           <Decks
             cardsLeftCount={currentGame?.cards_left ?? null}
             discardedCards={discardedCards}
-            isMyTurn={isMyTurn}
           />
         </section>
         <section className="area-bottom">
@@ -290,6 +289,7 @@ export default function GamePage() {
                 cardCount={cardCount}
                 selectedCard={selectedCard}
                 setSelectedCard={setSelectedCard}
+                discardedCards={discardedCards}
               />
             </div>
           )}
