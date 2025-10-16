@@ -13,8 +13,8 @@ interface TurnActionProps {
   onTurnUpdated: (updatedGame: any) => void;
   selectedCardIds: number[];
   setSelectedCardIds: (ids: number[]) => void;
-  step: 0 | 1 | 2 | 3 | 4;
-  setStep: (step: 0 | 1 | 2 | 3 | 4) => void;
+  step: 0 | 1 | 2 | 3 | 4 | 5;
+  setStep: (step: 0 | 1 | 2 | 3 | 4 | 5) => void;
   cardCount: number;
   selectedCard: CardResponse | null;
   setSelectedCard: (card: CardResponse | null) => void;
@@ -143,6 +143,34 @@ export default function TurnActions({
     }
   };
 
+  const handleStealSet = async () => {
+    if (lock) return;
+
+    setMessage("");
+    if (!selectedSet) {
+      setMessage("Debe seleccionar un set para robar.");
+      setTimeout(() => setMessage(""), 3000);
+      return;
+    }
+
+    setLock(true);
+    try {
+      // Asumimos que selectedCard sigue siendo "Another Victim" en este punto
+      await setService.stealSet(selectedSet.set_id, playerId);
+      console.log("se robo un set");
+      setMessage("");
+      setSelectedCard(null); // Deselecciona la carta de evento
+      // setSelectedSet(null); // Esto debe hacerse en el componente padre si maneja el estado
+      setStep(4); // Vuelve al paso de jugar evento/set si hay más acciones, o al paso 4/Finalizar
+    } catch (err) {
+      console.error("Error al robar set:", err);
+      setMessage("Error al robar set. Intenta de nuevo.");
+      setTimeout(() => setMessage(""), 3000);
+    } finally {
+      setLock(false);
+    }
+  };
+
   const handlePlayEvent = async () => {
     if (lock) return;
 
@@ -157,20 +185,9 @@ export default function TurnActions({
     try {
       switch (selectedCard.name) {
         case "Another victim": // ANOTHER VICTIM
-          if (!selectedSet) {
-            setMessage("Seleccione un set válido");
-            setTimeout(() => setMessage(""), 3000);
-            return;
-          }
-          try {
-            await setService.stealSet(selectedSet.set_id, playerId);
-            console.log("se robo un set");
-          } catch (err) {
-            console.error("Error al robar carta:", err);
-            alert("Error al robar carta. Intenta de nuevo.");
-          }
-          break;
-        // endpoint another victim
+          setMessage("Seleccione el set que desea robar.");
+          setStep(5); // aca funcion para el endpoint de robar
+          return;
         case "Look into the ashes": // LOOK INTO THE ASHES
           <div className="discard-preview visible">
             {discardedCards.map((card) =>
@@ -329,6 +346,34 @@ export default function TurnActions({
               Finalizar Turno
             </button>
           )}
+        </div>
+      )}
+
+      {step === 5 && (
+        <div className="action-step-container">
+          <TextType
+            className="menu-indications"
+            text={["Seleccione un set para robar"]}
+            typingSpeed={35}
+          />
+          <div className="action-buttons-group">
+            <button
+              className="action-button"
+              onClick={handleStealSet} // Llama a la nueva función
+              disabled={lock || !selectedSet} // Deshabilitado si no hay set seleccionado
+            >
+              {lock ? "Robando..." : "Robar"}
+            </button>
+            <button
+              className="action-button"
+              onClick={() => {
+                setSelectedCard(null); // Cancelar la carta de evento
+                setStep(0); // Volver al menú principal
+              }}
+            >
+              Cancelar
+            </button>
+          </div>
         </div>
       )}
     </div>

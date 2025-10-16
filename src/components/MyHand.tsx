@@ -96,7 +96,14 @@ export default function You({
 
       <div className="you-sets">
         {player.sets.map((set) => (
-          <Set cards={set.detective} isSelected={false} />
+          <Set
+            game_id={set.game_id}
+            player_id={set.player_id}
+            set_id={set.set_id}
+            name={set.name}
+            cards={set.detective}
+            isSelected={false}
+          />
         ))}
       </div>
 
