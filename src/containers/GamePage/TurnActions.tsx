@@ -32,6 +32,7 @@ export default function TurnActions({
   const [lock, setLock] = useState(false);
   const [discarding, setDiscarding] = useState(false);
   const [drawing, setDrawing] = useState(false);
+  const [message, setMessage] = useState("");
 
   const handleEndTurn = async () => {
     try {
@@ -105,8 +106,12 @@ export default function TurnActions({
 
   const handlePlaySet = async () => {
     if (lock) return;
+
+    setMessage("");
+
     if (!selectedCardIds || selectedCardIds.length < 2) {
-      alert("Seleccione un set válido");
+      setMessage("Seleccione un set válido");
+      setTimeout(() => setMessage(""), 3000);
       return;
     }
     setLock(true);
@@ -122,18 +127,21 @@ export default function TurnActions({
         );
         console.log(`set de ${selectedCardIds.length} cartas bajado.`);
       }
+      setMessage("");
       setSelectedCardIds([]);
       setStep(2);
     } catch (err) {
-      console.error("Error al jugar set:", err);
-      alert("Error al jugar set. Intenta de nuevo.");
+      setMessage("Set inválido. Elija otra combinación");
+      setTimeout(() => setMessage(""), 3000);
     } finally {
       setLock(false);
     }
   };
 
+  console.log("Mensaje actual:", message);
   return (
     <div className="turn-actions-box">
+      {message && <div className="turn-message">{message}</div>}
       {step === 0 && (
         <div className="action-step-container">
           <TextType
@@ -163,7 +171,7 @@ export default function TurnActions({
             <button
               className="action-button"
               onClick={handlePlaySet}
-              disabled={lock || selectedCardIds.length < 2}
+              disabled={lock /*|| selectedCardIds.length < 2*/}
             >
               Jugar Set
             </button>
