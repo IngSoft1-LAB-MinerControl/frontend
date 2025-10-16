@@ -74,26 +74,6 @@ export default function GamePage() {
           case "gameUpdated":
             setCurrentGame(dataContent);
 
-            if (dataContent.status === "finished") {
-              setEndMessage((prev) => {
-                const currentPlayerState = players.find(
-                  (p) => p.player_id === player.player_id
-                );
-
-                if (!currentPlayerState) return prev;
-
-                const hasMurderSecret = currentPlayerState.secrets.some(
-                  (s) => s.murderer
-                );
-                const hasAccompliceSecret = currentPlayerState.secrets.some(
-                  (s) => s.accomplice
-                );
-
-                return hasMurderSecret || hasAccompliceSecret
-                  ? "¡Ganaste!"
-                  : "Perdiste. El asesino ganó la partida.";
-              });
-            }
             break;
 
           case "droppedCards":
@@ -130,6 +110,34 @@ export default function GamePage() {
       ws.close();
     };
   }, [game.game_id, navigate]); // Dependemos solo de game.game_id para no reconectar innecesariamente
+
+  useEffect(() => {
+    if (!currentGame || players.length === 0) return;
+
+    if (currentGame.cards_left === 0) {
+      const currentPlayerState = players.find(
+        (p) => p.player_id === player.player_id
+      );
+
+      if (!currentPlayerState) {
+        setEndMessage("Perdiste. El asesino ganó la partida."); // menasje de "Error" generico por si falla
+        return;
+      }
+
+      const hasMurderSecret = currentPlayerState.secrets.some(
+        (s) => s.murderer
+      );
+      const hasAccompliceSecret = currentPlayerState.secrets.some(
+        (s) => s.accomplice
+      );
+
+      setEndMessage(
+        hasMurderSecret || hasAccompliceSecret
+          ? "¡Ganaste!"
+          : "Perdiste. El asesino ganó la partida."
+      );
+    }
+  }, [currentGame, players, player.player_id]);
 
   const currentPlayer = players.find((p) => p.player_id === player.player_id);
   const cardCount = currentPlayer ? currentPlayer.cards.length : 0;
@@ -247,8 +255,8 @@ export default function GamePage() {
               />
             </div>
           )}
+          <p>{endMessage}</p>
         </section>
-        <p>{endMessage}</p>
       </main>
     </div>
   );
