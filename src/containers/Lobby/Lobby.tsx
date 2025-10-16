@@ -115,7 +115,7 @@ function Lobby() {
 
   return (
     <div className="lobby-page">
-      <h1 className="lobby-title">SALA DE ESPERA</h1>
+      <h1 className="lobby-title">DEATH ON THE CARDS</h1>
       <section className="lobby-card" aria-label="Sala de espera">
         {/* Slots de jugadores */}
         <div className="lobby-slots" aria-label="Jugadores">
@@ -141,7 +141,7 @@ function Lobby() {
               </p>
               <button
                 type="button"
-                className="start-button"
+                className="start-button shake"
                 onClick={handleStartClick}
               >
                 Iniciar
