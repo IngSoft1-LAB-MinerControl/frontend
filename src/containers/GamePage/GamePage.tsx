@@ -28,9 +28,7 @@ export default function GamePage() {
   const [selectedCardIds, setSelectedCardIds] = useState<number[]>([]);
   const [turnActionStep, setTurnActionStep] = useState<0 | 1 | 2 | 3 | 4>(0);
   const [draftPile, setDraftPile] = useState<CardResponse[]>([]);
-  const [selectedDraftCardId, setSelectedDraftCardId] = useState<number | null>(
-    null
-  );
+  const [selectedCard, setSelectedCard] = useState<CardResponse | null>(null);
 
   if (!game) {
     return (
@@ -142,23 +140,62 @@ export default function GamePage() {
   const currentPlayer = players.find((p) => p.player_id === player.player_id);
   const cardCount = currentPlayer ? currentPlayer.cards.length : 0;
 
-  // DEPURACIÓN isMyTurn
+  // ...
+  const handleHandCardSelect = (card: CardResponse) => {
+    // Si la acción actual es Jugar Set (step 1) o Descartar (step 3), usamos multiselección (selectedCardIds)
+    if (turnActionStep === 1 || turnActionStep === 3) {
+      setSelectedCard(null); // Deseleccionar cualquier carta individualmente seleccionada previamente
 
-  // console.log("DEBUG: CÁLCULO DE TURNO ");
-  // console.log("Objeto 'player' del Lobby:", player);
-  // console.log("Objeto 'currentGame':", currentGame);
-  // console.log("Objeto 'currentPlayer' (encontrado en la lista):", currentPlayer);
+      setSelectedCardIds((prevIds) => {
+        const id = card.card_id;
+        if (prevIds.includes(id)) {
+          // Deseleccionar
+          return prevIds.filter((cid) => cid !== id);
+        } else {
+          // Seleccionar
+          return [...prevIds, id];
+        }
+      });
+    }
 
-  // if (currentGame) {
-  //   console.log("  ➡️ Turno actual del juego (current_turn):", currentGame.current_turn);
-  // }
-  // if (currentPlayer) {
-  //   console.log("  ➡️ Mi orden de turno (turn_order):", currentPlayer.turn_order);
-  // }
+    // Si la acción actual es Jugar Evento (step 2), usamos selección única (selectedCard)
+    else if (turnActionStep === 2) {
+      setSelectedCardIds([]); // Limpiar multiselección
+      // Si la carta ya está seleccionada, la deseleccionamos (ponemos null).
+      // Si no, la seleccionamos.
+      setSelectedCard((prev) => (prev?.card_id === card.card_id ? null : card));
+    }
+  };
 
-  const handleDraftSelect = (cardId: number) => {
+  useEffect(() => {
+    // -----------------------------------------------------
+    // 🔍 DEBUG: MUESTRA EL ESTADO FINAL DE LA SELECCIÓN
+    // -----------------------------------------------------
+
+    // Primero, logueamos el paso para contexto
+    console.log("Paso de Acción:", turnActionStep);
+
+    if (selectedCardIds.length > 0) {
+      console.log("Selección Múltiple (IDs):", selectedCardIds);
+    }
+
+    if (selectedCard) {
+      console.log(
+        "Selección Única (Draft/Evento):",
+        selectedCard.name,
+        `(ID: ${selectedCard.card_id})`
+      );
+    }
+
+    if (selectedCardIds.length === 0 && !selectedCard) {
+      console.log("No hay cartas seleccionadas.");
+    }
+    console.log("---");
+  }, [selectedCardIds, selectedCard, turnActionStep]);
+
+  const handleDraftSelect = (card: CardResponse) => {
     // Si el jugador hace clic en la misma carta, se deselecciona. Si no, se selecciona.
-    setSelectedDraftCardId((prev) => (prev === cardId ? null : cardId));
+    setSelectedCard((prev) => (prev === card ? null : card));
   };
 
   const isMyTurn = useMemo(() => {
@@ -218,7 +255,7 @@ export default function GamePage() {
         <section className="area-center">
           <DraftPile
             cards={draftPile}
-            selectedCardId={selectedDraftCardId}
+            selectedCard={selectedCard}
             onCardSelect={handleDraftSelect}
             isMyTurn={isMyTurn}
           />
@@ -233,8 +270,9 @@ export default function GamePage() {
             <You
               player={distribution.bottom}
               selectedCardIds={selectedCardIds}
-              onCardsSelected={setSelectedCardIds}
+              onCardsSelected={handleHandCardSelect}
               isMyTurn={isMyTurn}
+              selectedCard={selectedCard}
             />
           ) : (
             <div className="empty-hint">Esperando jugadores…</div>
@@ -250,8 +288,8 @@ export default function GamePage() {
                 step={turnActionStep}
                 setStep={setTurnActionStep}
                 cardCount={cardCount}
-                selectedDraftCardId={selectedDraftCardId}
-                setSelectedDraftCardId={setSelectedDraftCardId}
+                selectedCard={selectedCard}
+                setSelectedCard={setSelectedCard}
               />
             </div>
           )}

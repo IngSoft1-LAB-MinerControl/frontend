@@ -5,32 +5,27 @@ import Event from "./Cards/Events";
 import Secret from "./Cards/Secret";
 import Set from "./Set.tsx";
 import "./MyHand.css";
+import type { CardResponse } from "../services/cardService.ts";
 
 interface YouProps {
   player: PlayerStateResponse;
-  onCardsSelected: (selectedIds: number[]) => void;
+  onCardsSelected: (card: CardResponse) => void;
   selectedCardIds: number[];
   isMyTurn: boolean;
+  selectedCard: CardResponse | null;
 }
 
 export default function You({
   player,
   onCardsSelected,
   selectedCardIds,
+  selectedCard,
   isMyTurn,
 }: YouProps) {
   const [handExpanded, setHandExpanded] = useState(false);
 
-  const handleCardClick = (cardId: number) => {
-    const isCurrentlySelected = selectedCardIds.includes(cardId);
-    let newSelectedCards: number[];
-
-    if (isCurrentlySelected) {
-      newSelectedCards = selectedCardIds.filter((id) => id !== cardId);
-    } else {
-      newSelectedCards = [...selectedCardIds, cardId];
-    }
-    onCardsSelected(newSelectedCards);
+  const handleCardClick = (card: CardResponse) => {
+    onCardsSelected(card);
   };
 
   const toggleHandView = () => {
@@ -64,18 +59,17 @@ export default function You({
       <div className={`you-hand ${handExpanded ? "expanded" : "compact"}`}>
         {player.cards.map((card) => {
           if (card.card_id === undefined) return null;
+          const isSelected =
+            selectedCardIds.includes(card.card_id) ||
+            selectedCard?.card_id === card.card_id;
           return card.type === "detective" ? (
             <Detective
               key={card.card_id}
               card_id={card.card_id}
               shown={true}
               size={handExpanded ? "large" : "medium"}
-              onCardClick={
-                card.card_id !== undefined
-                  ? () => handleCardClick(card.card_id!)
-                  : undefined
-              }
-              isSelected={selectedCardIds.includes(card.card_id)}
+              onCardClick={() => handleCardClick(card)}
+              isSelected={isSelected}
               name={card.name}
             />
           ) : (
@@ -84,11 +78,7 @@ export default function You({
               card_id={card.card_id}
               shown={true}
               size={handExpanded ? "large" : "medium"}
-              onCardClick={
-                card.card_id !== undefined
-                  ? () => handleCardClick(card.card_id!)
-                  : undefined
-              }
+              onCardClick={() => handleCardClick(card)}
               isSelected={selectedCardIds.includes(card.card_id)}
               name={card.name}
             />

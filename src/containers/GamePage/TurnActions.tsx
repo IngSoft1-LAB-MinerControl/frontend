@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "./TurnActions.css";
 import gameService from "../../services/gameService";
-import cardService from "../../services/cardService";
+import cardService, { type CardResponse } from "../../services/cardService";
 import TextType from "../../components/TextType";
 import setService from "../../services/setService";
 
@@ -14,8 +14,8 @@ interface TurnActionProps {
   step: 0 | 1 | 2 | 3 | 4;
   setStep: (step: 0 | 1 | 2 | 3 | 4) => void;
   cardCount: number;
-  selectedDraftCardId: number | null;
-  setSelectedDraftCardId: (id: number | null) => void;
+  selectedCard: CardResponse | null;
+  setSelectedCard: (card: CardResponse | null) => void;
 }
 
 export default function TurnActions({
@@ -26,11 +26,10 @@ export default function TurnActions({
   step,
   setStep,
   cardCount,
-  selectedDraftCardId,
-  setSelectedDraftCardId,
+  selectedCard,
+  setSelectedCard,
 }: TurnActionProps) {
   const [lock, setLock] = useState(false);
-  const [discarding, setDiscarding] = useState(false);
   const [drawing, setDrawing] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -45,12 +44,12 @@ export default function TurnActions({
   };
 
   const handleDrawDraft = async () => {
-    if (drawing || !selectedDraftCardId) return;
+    if (drawing || !selectedCard) return;
 
     setDrawing(true);
     try {
-      await cardService.pickUpDraftCard(gameId, selectedDraftCardId, playerId);
-      setSelectedDraftCardId(null);
+      await cardService.pickUpDraftCard(gameId, selectedCard.card_id, playerId);
+      setSelectedCard(null);
       setStep(3);
     } catch (err) {
       console.error("Error al robar del draft:", err);
@@ -138,6 +137,36 @@ export default function TurnActions({
     }
   };
 
+  const handlePlayEvent = async () => {
+    if (lock) return;
+
+    setMessage("");
+
+    if (!selectedCard || selectedCard.type != "event") {
+      setMessage(`seleccione un evento valido. selected: ${selectedCard}.`);
+      setTimeout(() => setMessage(""), 3000);
+      return;
+    }
+    setLock(true);
+    try {
+      switch (selectedCard.name) {
+        case "Another victim":
+        // endpoint another victim
+        case "Look into the ashes":
+        // endpoint look into the ashes
+        default:
+      }
+      setMessage("");
+      setSelectedCard(null);
+      setStep(2);
+    } catch (err) {
+      setMessage("Evento inválido. Elija otro.");
+      setTimeout(() => setMessage(""), 3000);
+    } finally {
+      setLock(false);
+    }
+  };
+
   console.log("Mensaje actual:", message);
   return (
     <div className="turn-actions-box">
@@ -154,7 +183,10 @@ export default function TurnActions({
               Jugar Set
             </button>
             <button className="action-button" onClick={() => setStep(2)}>
-              Descartar / Saltear
+              Jugar Evento
+            </button>
+            <button className="action-button" onClick={() => setStep(3)}>
+              Saltear
             </button>
           </div>
         </div>
@@ -164,14 +196,14 @@ export default function TurnActions({
         <div className="action-step-container">
           <TextType
             className="menu-indications"
-            text={["Seleccione las cartas del set que desea jugar"]}
+            text={["Seleccione set"]}
             typingSpeed={35}
           />
           <div className="action-buttons-group">
             <button
               className="action-button"
               onClick={handlePlaySet}
-              disabled={lock /*|| selectedCardIds.length < 2*/}
+              disabled={lock}
             >
               Jugar Set
             </button>
@@ -185,16 +217,17 @@ export default function TurnActions({
       {step === 2 && (
         <div className="action-step-container">
           <TextType
-            text={["Seleccione una o más cartas para descartar"]}
-            typingSpeed={50}
+            className="menu-indications"
+            text={["Seleccione carta de evento"]}
+            typingSpeed={35}
           />
           <div className="action-buttons-group">
             <button
               className="action-button"
-              onClick={handleDiscardSel}
-              disabled={lock || selectedCardIds.length === 0}
+              onClick={handlePlayEvent}
+              disabled={lock}
             >
-              {lock ? "Descartando..." : "Descartar Selección"}
+              Jugar Set
             </button>
             <button className="action-button" onClick={() => setStep(0)}>
               Volver
@@ -205,9 +238,34 @@ export default function TurnActions({
 
       {step === 3 && (
         <div className="action-step-container">
+          <TextType
+            text={["Seleccione una o más cartas para descartar"]}
+            typingSpeed={50}
+          />
+          <div className="action-buttons-group">
+            <button
+              className="action-button"
+              onClick={handleDiscardSel}
+              disabled={lock}
+            >
+              {lock ? "Descartando..." : "Descartar Selección"}
+            </button>
+            <button className="action-button" onClick={() => setStep(0)}>
+              Volver
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === 4 && (
+        <div className="action-step-container">
           {cardCount < 6 ? (
             <>
-              <h3>Elige de dónde robar</h3>
+              <TextType
+                className="menu-indications"
+                text={["Elige de dónde robar"]}
+                typingSpeed={35}
+              />
               <div className="action-buttons-group">
                 <button
                   className="action-button"
@@ -219,7 +277,7 @@ export default function TurnActions({
                 <button
                   className="action-button"
                   onClick={handleDrawDraft}
-                  disabled={drawing || !selectedDraftCardId}
+                  disabled={drawing}
                 >
                   Robar Mazo Draft
                 </button>
@@ -230,14 +288,6 @@ export default function TurnActions({
               Finalizar Turno
             </button>
           )}
-        </div>
-      )}
-
-      {step === 4 && (
-        <div className="action-step-container">
-          <button className="action-button" onClick={handleEndTurn}>
-            Finalizar Turno
-          </button>
         </div>
       )}
     </div>
