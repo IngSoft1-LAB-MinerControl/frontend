@@ -84,7 +84,7 @@ export default function TurnActions({
     try {
       await cardService.discardSelectedList(playerId, selectedCardIds);
       setSelectedCardIds([]);
-      setStep(3);
+      setStep(4);
     } catch (err) {
       console.error("Error al descartar cartas seleccionadas:", err);
       alert("Error al descartar cartas seleccionadas. Intenta de nuevo.");
@@ -238,10 +238,7 @@ export default function TurnActions({
 
       {step === 3 && (
         <div className="action-step-container">
-          <TextType
-            text={["Seleccione una o más cartas para descartar"]}
-            typingSpeed={50}
-          />
+          <TextType text={["Seleccione una o mas cartas"]} typingSpeed={50} />
           <div className="action-buttons-group">
             <button
               className="action-button"
