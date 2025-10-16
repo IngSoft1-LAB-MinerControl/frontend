@@ -7,14 +7,14 @@ import Event from "./Cards/Events";
 
 interface DraftPileProps {
   cards: CardResponse[];
-  selectedCardId: number | null;
-  onCardSelect: (id: number) => void;
+  selectedCard: CardResponse | null;
+  onCardSelect: (card: CardResponse) => void;
   isMyTurn: boolean;
 }
 
 export default function DraftPile({
   cards,
-  selectedCardId,
+  selectedCard,
   onCardSelect,
   isMyTurn,
 }: DraftPileProps) {
@@ -39,7 +39,7 @@ export default function DraftPile({
 
         {cards.length > 0
           ? cards.map((card) => {
-              const isSelected = card.card_id === selectedCardId;
+              const isSelected = card.card_id === selectedCard?.card_id;
               const cardSize = expanded ? "large" : "mini";
               return (
                 <div
@@ -47,7 +47,7 @@ export default function DraftPile({
                   className={`draft-card-container ${
                     isMyTurn ? "clickable" : ""
                   } ${isSelected ? "selected" : ""}`}
-                  onClick={() => isMyTurn && onCardSelect(card.card_id)}
+                  onClick={() => isMyTurn && onCardSelect(card)}
                 >
                   {card.type === "detective" ? (
                     <Detective

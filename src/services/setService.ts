@@ -37,27 +37,6 @@ async function playSet2(c1_id: number, c2_id: number): Promise<SetResponse> {
   return response.json();
 }
 
-async function stealSet(
-  player_id_from: number,
-  player_id_to: number,
-  set_id: number
-): Promise<SetResponse> {
-  const response = await fetch(
-    `${httpServerUrl}/sets/steal/${player_id_from}/${player_id_to}/${set_id}`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  );
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || "Error al robar set");
-  }
-  return response.json();
-}
-
 async function playSet3(
   c1_id: number,
   c2_id: number,
@@ -79,11 +58,38 @@ async function playSet3(
   return response.json();
 }
 
+async function stealSet(
+  player_id_from: number,
+  player_id_to: number,
+  set_id: number
+): Promise<SetResponse> {
+  const response = await fetch(
+    `${httpServerUrl}/sets/steal/${player_id_from}/${player_id_to}/${set_id}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || "Error al robar set");
+  }
+  return response.json();
+}
+
+// async function playEvent(
+//   card_id
+// ): Promise<CardResponse> {
+
+// }
+
 const setService = {
   getSets,
-  stealSet,
   playSet2,
   playSet3,
+  stealSet,
 };
 
 export default setService;
