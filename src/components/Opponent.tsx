@@ -4,13 +4,23 @@ import Event from "./Cards/Events";
 import Set from "./Set";
 import Secret from "./Cards/Secret";
 import "./Opponent.css";
+import type { SetResponse } from "../services/setService";
 
 interface OpponentProps {
   player: PlayerStateResponse;
   isMyTurn: boolean;
+  onSetClick: (set: SetResponse | undefined) => void;
+  selectedSet: SetResponse | null;
+  isSetSelectionStep: boolean;
 }
 
-export default function Opponent({ player, isMyTurn }: OpponentProps) {
+export default function Opponent({
+  player,
+  isMyTurn,
+  onSetClick,
+  selectedSet,
+  isSetSelectionStep,
+}: OpponentProps) {
   return (
     <div className="opponent">
       <div className={`op-name ${isMyTurn ? "myturn" : ""}`}>{player.name}</div>
@@ -54,7 +64,16 @@ export default function Opponent({ player, isMyTurn }: OpponentProps) {
 
       <div className="op-sets">
         {player.sets.map((set) => (
-          <Set cards={set.detective} isSelected={false} />
+          <Set
+            key={set.set_id}
+            game_id={set.game_id}
+            player_id={set.player_id}
+            set_id={set.set_id}
+            name={set.name}
+            cards={set.detective}
+            isSelected={set.set_id == selectedSet?.set_id}
+            onSetClick={isSetSelectionStep ? onSetClick : undefined}
+          />
         ))}
       </div>
     </div>

@@ -127,6 +127,26 @@ async function pickUpDraftCard(
   return data;
 }
 
+export async function pickUpFromDiscard(
+  playerId: number,
+  cardId: number
+): Promise<void> {
+  // const url = `${httpServerUrl}/event/look_into_ashes/${playerId},${cardId}`;
+  // console.log("URL ENVIADA (PICKUP):", url);
+  const response = await fetch(
+    `${httpServerUrl}/event/look_into_ashes/${playerId},${cardId}`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(`Fallo al robar del descarte: ${errorData.detail}`);
+  }
+}
+
 const cardService = {
   getCardsByPlayer,
   discardAuto,
@@ -134,6 +154,7 @@ const cardService = {
   discardSelectedList,
   getDraftPile,
   pickUpDraftCard,
+  pickUpFromDiscard,
 };
 
 export default cardService;

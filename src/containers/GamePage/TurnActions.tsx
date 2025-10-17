@@ -3,7 +3,9 @@ import "./TurnActions.css";
 import gameService from "../../services/gameService";
 import cardService, { type CardResponse } from "../../services/cardService";
 import TextType from "../../components/TextType";
-import setService from "../../services/setService";
+import setService, { type SetResponse } from "../../services/setService";
+import Detective from "../../components/Cards/Detectives";
+import Event from "../../components/Cards/Events";
 
 interface TurnActionProps {
   gameId: number;
@@ -11,11 +13,13 @@ interface TurnActionProps {
   onTurnUpdated: (updatedGame: any) => void;
   selectedCardIds: number[];
   setSelectedCardIds: (ids: number[]) => void;
-  step: 0 | 1 | 2 | 3 | 4;
-  setStep: (step: 0 | 1 | 2 | 3 | 4) => void;
+  step: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+  setStep: (step: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7) => void;
   cardCount: number;
   selectedCard: CardResponse | null;
   setSelectedCard: (card: CardResponse | null) => void;
+  discardedCards: CardResponse[];
+  selectedSet: SetResponse | null;
 }
 
 export default function TurnActions({
@@ -28,10 +32,15 @@ export default function TurnActions({
   cardCount,
   selectedCard,
   setSelectedCard,
+  discardedCards,
+  selectedSet,
 }: TurnActionProps) {
   const [lock, setLock] = useState(false);
   const [drawing, setDrawing] = useState(false);
   const [message, setMessage] = useState("");
+  const [activeEventCard, setActiveEventCard] = useState<CardResponse | null>(
+    null
+  );
 
   const handleEndTurn = async () => {
     try {
@@ -50,7 +59,7 @@ export default function TurnActions({
     try {
       await cardService.pickUpDraftCard(gameId, selectedCard.card_id, playerId);
       setSelectedCard(null);
-      setStep(3);
+      setStep(5);
     } catch (err) {
       console.error("Error al robar del draft:", err);
       alert("Error al robar la carta del draft. Intenta de nuevo.");
@@ -59,20 +68,20 @@ export default function TurnActions({
     }
   };
 
-  const handleDiscardAuto = async () => {
-    if (lock) return;
-    setLock(true);
-    try {
-      await cardService.discardAuto(playerId);
-      setSelectedCardIds([]);
-      setStep(3);
-    } catch (err) {
-      console.error("Error al descartar carta automáticamente:", err);
-      alert("Error al descartar carta. Intenta de nuevo.");
-    } finally {
-      setLock(false);
-    }
-  };
+  // const handleDiscardAuto = async () => {
+  //   if (lock) return;
+  //   setLock(true);
+  //   try {
+  //     await cardService.discardAuto(playerId);
+  //     setSelectedCardIds([]);
+  //     setStep(3);
+  //   } catch (err) {
+  //     console.error("Error al descartar carta automáticamente:", err);
+  //     alert("Error al descartar carta. Intenta de nuevo.");
+  //   } finally {
+  //     setLock(false);
+  //   }
+  // };
 
   const handleDiscardSel = async () => {
     if (lock) return;
@@ -84,7 +93,7 @@ export default function TurnActions({
     try {
       await cardService.discardSelectedList(playerId, selectedCardIds);
       setSelectedCardIds([]);
-      setStep(4);
+      setStep(5);
     } catch (err) {
       console.error("Error al descartar cartas seleccionadas:", err);
       alert("Error al descartar cartas seleccionadas. Intenta de nuevo.");
@@ -128,7 +137,7 @@ export default function TurnActions({
       }
       setMessage("");
       setSelectedCardIds([]);
-      setStep(2);
+      setStep(4);
     } catch (err) {
       setMessage("Set inválido. Elija otra combinación");
       setTimeout(() => setMessage(""), 3000);
@@ -137,9 +146,90 @@ export default function TurnActions({
     }
   };
 
-  const handlePlayEvent = async () => {
+  const handleStealSet = async () => {
     if (lock) return;
 
+    setMessage("");
+    if (!selectedSet || !activeEventCard) {
+      setMessage("Debe seleccionar un set para robar.");
+      setTimeout(() => setMessage(""), 3000);
+      return;
+    }
+
+    setLock(true);
+    try {
+      await setService.stealSet(playerId, selectedSet.set_id);
+      console.log("se robo un set");
+      await cardService.discardSelectedList(playerId, [
+        activeEventCard.card_id,
+      ]);
+      console.log("Se descartó", activeEventCard.name);
+
+      setMessage("");
+      setSelectedCard(null);
+      setStep(4); //
+    } catch (err) {
+      console.error("Error al robar set:", err);
+      setMessage("Error al robar set. Intenta de nuevo.");
+      setTimeout(() => setMessage(""), 3000);
+    } finally {
+      setLock(false);
+    }
+  };
+
+  const handlePickUpFromDiscard = async () => {
+    if (lock) return;
+
+    setMessage("");
+    if (!selectedCard || !activeEventCard) {
+      setMessage("Debe seleccionar una carta del descarte.");
+      setTimeout(() => setMessage(""), 3000);
+      return;
+    }
+
+    setLock(true);
+    try {
+      await cardService.pickUpFromDiscard(playerId, selectedCard.card_id);
+      console.log("Se robó la carta del descarte:", selectedCard.name);
+      await cardService.discardSelectedList(playerId, [
+        activeEventCard.card_id,
+      ]);
+      console.log("Se descartó", activeEventCard.name);
+
+      setMessage("");
+      setSelectedCard(null);
+      setActiveEventCard(null);
+      setStep(4);
+    } catch (err) {
+      console.error("Error al robar del descarte:", err);
+      setMessage("Error al robar del descarte. Intenta de nuevo.");
+      setTimeout(() => setMessage(""), 3000);
+    } finally {
+      setLock(false);
+    }
+  };
+
+  const handleDiscardCardSelect = (clickedCardId: number) => {
+    // Encuentra la carta completa (puede ser null)
+    const card =
+      discardedCards.find((c) => c.card_id === clickedCardId) ?? null;
+    // Si la carta no existe en la lista de descartes, salimos.
+    if (!card) return;
+
+    let newValue: CardResponse | null;
+    // Si ya hay una carta seleccionada (this.selectedCard o la prop selectedCard)
+    if (selectedCard && selectedCard.card_id === card.card_id) {
+      // La carta clickeada es la misma: DESELECCIONAR
+      newValue = null;
+    } else {
+      // La carta clickeada es diferente o no había nada: SELECCIONAR LA NUEVA
+      newValue = card;
+    }
+    setSelectedCard(newValue);
+  };
+
+  const handlePlayEvent = async () => {
+    if (lock) return;
     setMessage("");
 
     if (!selectedCard || selectedCard.type != "event") {
@@ -147,16 +237,20 @@ export default function TurnActions({
       setTimeout(() => setMessage(""), 3000);
       return;
     }
-    setLock(true);
     try {
+      setActiveEventCard(selectedCard);
       switch (selectedCard.name) {
-        case "Another victim":
-        // endpoint another victim
-        case "Look into the ashes":
-        // endpoint look into the ashes
+        case "Another Victim": // ANOTHER VICTIM
+          setStep(6); // aca funcion para el endpoint de robar
+          return;
+        case "Look into the ashes": // LOOK INTO THE ASHES
+          setStep(7);
+          return;
+          break;
         default:
       }
       setMessage("");
+      setActiveEventCard(null);
       setSelectedCard(null);
       setStep(2);
     } catch (err) {
@@ -171,7 +265,7 @@ export default function TurnActions({
   return (
     <div className="turn-actions-box">
       {message && <div className="turn-message">{message}</div>}
-      {step === 0 && (
+      {step === 0 && ( // ELEGIR ACCION
         <div className="action-step-container">
           <TextType
             className="menu-indications"
@@ -192,7 +286,7 @@ export default function TurnActions({
         </div>
       )}
 
-      {step === 1 && (
+      {step === 1 && ( // JUGAR SET
         <div className="action-step-container">
           <TextType
             className="menu-indications"
@@ -214,7 +308,7 @@ export default function TurnActions({
         </div>
       )}
 
-      {step === 2 && (
+      {step === 2 && ( // JUGAR EVENTO
         <div className="action-step-container">
           <TextType
             className="menu-indications"
@@ -227,7 +321,7 @@ export default function TurnActions({
               onClick={handlePlayEvent}
               disabled={lock}
             >
-              Jugar Set
+              Jugar Evento
             </button>
             <button className="action-button" onClick={() => setStep(0)}>
               Volver
@@ -236,7 +330,7 @@ export default function TurnActions({
         </div>
       )}
 
-      {step === 3 && (
+      {step === 3 && ( // DESCARTE IF SALTEAR TURNO
         <div className="action-step-container">
           <TextType text={["Seleccione una o mas cartas"]} typingSpeed={50} />
           <div className="action-buttons-group">
@@ -254,7 +348,25 @@ export default function TurnActions({
         </div>
       )}
 
-      {step === 4 && (
+      {step === 4 && ( // DESCARTE IF SET/EVENTO
+        <div className="action-step-container">
+          <TextType text={["Seleccione una o mas cartas"]} typingSpeed={50} />
+          <div className="action-buttons-group">
+            <button
+              className="action-button"
+              onClick={handleDiscardSel}
+              disabled={lock}
+            >
+              {lock ? "Descartando..." : "Descartar Selección"}
+            </button>
+            <button className="action-button" onClick={() => setStep(5)}>
+              No Descartar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === 5 && ( // REPONER Y FINALIZAR TURNO
         <div className="action-step-container">
           {cardCount < 6 ? (
             <>
@@ -285,6 +397,87 @@ export default function TurnActions({
               Finalizar Turno
             </button>
           )}
+        </div>
+      )}
+
+      {step === 6 && ( // EVENTO: ANOTHER VICTIM
+        <div className="action-step-container">
+          <TextType
+            className="menu-indications"
+            text={["Seleccione un set para robar"]}
+            typingSpeed={35}
+          />
+          <div className="action-buttons-group">
+            <button
+              className="action-button"
+              onClick={handleStealSet} // Llama a la nueva función
+              disabled={lock || !selectedSet} // Deshabilitado si no hay set seleccionado
+            >
+              {lock ? "Robando..." : "Robar"}
+            </button>
+            <button
+              className="action-button"
+              onClick={() => {
+                setSelectedCard(null); // Cancelar la carta de evento
+                setStep(0); // Volver al menú principal
+              }}
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === 7 && ( // EVENTO: LOOK INTO THE ASHES
+        <div className="action-step-container">
+          <TextType
+            className="menu-inducations"
+            text={["Seleccione la carta a robar."]}
+            typingSpeed={35}
+          />
+          <div className="discard-preview visible">
+            {discardedCards.map((card) =>
+              card.type === "detective" ? (
+                <Detective
+                  key={card.card_id}
+                  card_id={card.card_id}
+                  shown={true}
+                  size="medium"
+                  name={card.name}
+                  onCardClick={() => handleDiscardCardSelect(card.card_id)}
+                  isSelected={selectedCard?.card_id === card.card_id}
+                />
+              ) : (
+                <Event
+                  key={card.card_id}
+                  card_id={card.card_id}
+                  shown={true}
+                  size="medium"
+                  name={card.name}
+                  onCardClick={() => handleDiscardCardSelect(card.card_id)}
+                  isSelected={selectedCard?.card_id === card.card_id}
+                />
+              )
+            )}
+          </div>
+          <div className="action-buttons-group">
+            <button
+              className="action-button"
+              onClick={handlePickUpFromDiscard}
+              disabled={lock || !selectedCard}
+            >
+              {lock ? "Robando..." : "Robar Carta"}
+            </button>
+            <button
+              className="action-button"
+              onClick={() => {
+                setSelectedCard(null);
+                setStep(0); // Volver al menú principal
+              }}
+            >
+              Cancelar
+            </button>
+          </div>
         </div>
       )}
     </div>
