@@ -17,7 +17,7 @@ export default function CreatePage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { playerName, playerDate } = location.state || {};
+  const { playerName, playerDate, playerAvatar } = location.state || {};
 
   const validate = () => {
     let valid = true;
@@ -72,9 +72,10 @@ export default function CreatePage() {
       // Crear el jugador host
       const newPlayer = await playerService.createPlayer({
         name: playerName,
-        birth_date: playerDate, //new Date(initialDate).toISOString().split("T")[0],
+        birth_date: playerDate,
         host: true,
         game_id: newGame.game_id,
+        avatar: playerAvatar,
       });
       console.log("newPlayer (create):", newPlayer);
 
