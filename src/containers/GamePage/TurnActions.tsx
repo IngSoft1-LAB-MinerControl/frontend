@@ -13,8 +13,8 @@ interface TurnActionProps {
   onTurnUpdated: (updatedGame: any) => void;
   selectedCardIds: number[];
   setSelectedCardIds: (ids: number[]) => void;
-  step: 0 | 1 | 2 | 3 | 4 | 5 | 6;
-  setStep: (step: 0 | 1 | 2 | 3 | 4 | 5 | 6) => void;
+  step: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+  setStep: (step: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7) => void;
   cardCount: number;
   selectedCard: CardResponse | null;
   setSelectedCard: (card: CardResponse | null) => void;
@@ -38,6 +38,9 @@ export default function TurnActions({
   const [lock, setLock] = useState(false);
   const [drawing, setDrawing] = useState(false);
   const [message, setMessage] = useState("");
+  const [activeEventCard, setActiveEventCard] = useState<CardResponse | null>(
+    null
+  );
 
   const handleEndTurn = async () => {
     try {
@@ -56,7 +59,7 @@ export default function TurnActions({
     try {
       await cardService.pickUpDraftCard(gameId, selectedCard.card_id, playerId);
       setSelectedCard(null);
-      setStep(4);
+      setStep(5);
     } catch (err) {
       console.error("Error al robar del draft:", err);
       alert("Error al robar la carta del draft. Intenta de nuevo.");
@@ -90,7 +93,7 @@ export default function TurnActions({
     try {
       await cardService.discardSelectedList(playerId, selectedCardIds);
       setSelectedCardIds([]);
-      setStep(4);
+      setStep(5);
     } catch (err) {
       console.error("Error al descartar cartas seleccionadas:", err);
       alert("Error al descartar cartas seleccionadas. Intenta de nuevo.");
@@ -134,7 +137,7 @@ export default function TurnActions({
       }
       setMessage("");
       setSelectedCardIds([]);
-      setStep(3);
+      setStep(4);
     } catch (err) {
       setMessage("Set inválido. Elija otra combinación");
       setTimeout(() => setMessage(""), 3000);
@@ -147,7 +150,7 @@ export default function TurnActions({
     if (lock) return;
 
     setMessage("");
-    if (!selectedSet) {
+    if (!selectedSet || !activeEventCard) {
       setMessage("Debe seleccionar un set para robar.");
       setTimeout(() => setMessage(""), 3000);
       return;
@@ -155,13 +158,16 @@ export default function TurnActions({
 
     setLock(true);
     try {
-      // Asumimos que selectedCard sigue siendo "Another Victim" en este punto
-      await setService.stealSet(selectedSet.set_id, playerId);
+      await setService.stealSet(playerId, selectedSet.set_id);
       console.log("se robo un set");
+      await cardService.discardSelectedList(playerId, [
+        activeEventCard.card_id,
+      ]);
+      console.log("Se descartó", activeEventCard.name);
+
       setMessage("");
-      setSelectedCard(null); // Deselecciona la carta de evento
-      // setSelectedSet(null); // Esto debe hacerse en el componente padre si maneja el estado
-      setStep(4); // Vuelve al paso de jugar evento/set si hay más acciones, o al paso 4/Finalizar
+      setSelectedCard(null);
+      setStep(4); //
     } catch (err) {
       console.error("Error al robar set:", err);
       setMessage("Error al robar set. Intenta de nuevo.");
@@ -175,7 +181,7 @@ export default function TurnActions({
     if (lock) return;
 
     setMessage("");
-    if (!selectedCard) {
+    if (!selectedCard || !activeEventCard) {
       setMessage("Debe seleccionar una carta del descarte.");
       setTimeout(() => setMessage(""), 3000);
       return;
@@ -185,9 +191,15 @@ export default function TurnActions({
     try {
       await cardService.pickUpFromDiscard(playerId, selectedCard.card_id);
       console.log("Se robó la carta del descarte:", selectedCard.name);
+      await cardService.discardSelectedList(playerId, [
+        activeEventCard.card_id,
+      ]);
+      console.log("Se descartó", activeEventCard.name);
+
       setMessage("");
-      setSelectedCard(null); // Deselecciona la carta robada
-      setStep(4); // Vuelve a la fase de reposición/finalización
+      setSelectedCard(null);
+      setActiveEventCard(null);
+      setStep(4);
     } catch (err) {
       console.error("Error al robar del descarte:", err);
       setMessage("Error al robar del descarte. Intenta de nuevo.");
@@ -226,17 +238,19 @@ export default function TurnActions({
       return;
     }
     try {
+      setActiveEventCard(selectedCard);
       switch (selectedCard.name) {
         case "Another Victim": // ANOTHER VICTIM
-          setStep(5); // aca funcion para el endpoint de robar
+          setStep(6); // aca funcion para el endpoint de robar
           return;
         case "Look into the ashes": // LOOK INTO THE ASHES
-          setStep(6);
+          setStep(7);
           return;
           break;
         default:
       }
       setMessage("");
+      setActiveEventCard(null);
       setSelectedCard(null);
       setStep(2);
     } catch (err) {
@@ -251,7 +265,7 @@ export default function TurnActions({
   return (
     <div className="turn-actions-box">
       {message && <div className="turn-message">{message}</div>}
-      {step === 0 && (
+      {step === 0 && ( // ELEGIR ACCION
         <div className="action-step-container">
           <TextType
             className="menu-indications"
@@ -272,7 +286,7 @@ export default function TurnActions({
         </div>
       )}
 
-      {step === 1 && (
+      {step === 1 && ( // JUGAR SET
         <div className="action-step-container">
           <TextType
             className="menu-indications"
@@ -294,7 +308,7 @@ export default function TurnActions({
         </div>
       )}
 
-      {step === 2 && (
+      {step === 2 && ( // JUGAR EVENTO
         <div className="action-step-container">
           <TextType
             className="menu-indications"
@@ -316,7 +330,7 @@ export default function TurnActions({
         </div>
       )}
 
-      {step === 3 && (
+      {step === 3 && ( // DESCARTE IF SALTEAR TURNO
         <div className="action-step-container">
           <TextType text={["Seleccione una o mas cartas"]} typingSpeed={50} />
           <div className="action-buttons-group">
@@ -334,7 +348,25 @@ export default function TurnActions({
         </div>
       )}
 
-      {step === 4 && (
+      {step === 4 && ( // DESCARTE IF SET/EVENTO
+        <div className="action-step-container">
+          <TextType text={["Seleccione una o mas cartas"]} typingSpeed={50} />
+          <div className="action-buttons-group">
+            <button
+              className="action-button"
+              onClick={handleDiscardSel}
+              disabled={lock}
+            >
+              {lock ? "Descartando..." : "Descartar Selección"}
+            </button>
+            <button className="action-button" onClick={() => setStep(5)}>
+              No Descartar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === 5 && ( // REPONER Y FINALIZAR TURNO
         <div className="action-step-container">
           {cardCount < 6 ? (
             <>
@@ -368,7 +400,7 @@ export default function TurnActions({
         </div>
       )}
 
-      {step === 5 && (
+      {step === 6 && ( // EVENTO: ANOTHER VICTIM
         <div className="action-step-container">
           <TextType
             className="menu-indications"
@@ -396,7 +428,7 @@ export default function TurnActions({
         </div>
       )}
 
-      {step === 6 && (
+      {step === 7 && ( // EVENTO: LOOK INTO THE ASHES
         <div className="action-step-container">
           <TextType
             className="menu-inducations"

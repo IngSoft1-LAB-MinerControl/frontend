@@ -28,7 +28,7 @@ export default function GamePage() {
 
   const [selectedCardIds, setSelectedCardIds] = useState<number[]>([]);
   const [turnActionStep, setTurnActionStep] = useState<
-    0 | 1 | 2 | 3 | 4 | 5 | 6
+    0 | 1 | 2 | 3 | 4 | 5 | 6 | 7
   >(0);
   const [draftPile, setDraftPile] = useState<CardResponse[]>([]);
   const [selectedCard, setSelectedCard] = useState<CardResponse | null>(null);
@@ -154,7 +154,7 @@ export default function GamePage() {
 
   const handleHandCardSelect = (card: CardResponse) => {
     // Si la acción actual es Jugar Set (step 1) o Descartar (step 3), usamos multiselección (selectedCardIds)
-    if (turnActionStep === 1 || turnActionStep === 3) {
+    if (turnActionStep === 1 || turnActionStep === 3 || turnActionStep === 4) {
       setSelectedCard(null); // Deseleccionar cualquier carta individualmente seleccionada previamente
 
       setSelectedCardIds((prevIds) => {
@@ -255,7 +255,7 @@ export default function GamePage() {
                 isMyTurn={p.turn_order === currentGame?.current_turn}
                 onSetClick={handleSetSelect}
                 selectedSet={selectedSet}
-                isSetSelectionStep={turnActionStep === 5}
+                isSetSelectionStep={turnActionStep === 6}
               />
             ))}
           </div>

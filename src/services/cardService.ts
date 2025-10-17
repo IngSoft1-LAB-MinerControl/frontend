@@ -131,10 +131,10 @@ export async function pickUpFromDiscard(
   playerId: number,
   cardId: number
 ): Promise<void> {
-  const url = `${httpServerUrl}/event/look_into_ashes/${playerId}/${cardId}`;
-  console.log("URL ENVIADA (PICKUP):", url);
+  // const url = `${httpServerUrl}/event/look_into_ashes/${playerId},${cardId}`;
+  // console.log("URL ENVIADA (PICKUP):", url);
   const response = await fetch(
-    `${httpServerUrl}/event/look_into_ashes/${playerId}/${cardId}`,
+    `${httpServerUrl}/event/look_into_ashes/${playerId},${cardId}`,
     {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
