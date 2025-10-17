@@ -68,7 +68,7 @@ export default function HomePage() {
       setAvatarError(true);
       valid = false;
     } else if (!playerName.trim() && !playerDate) {
-      setError("Debe ingresar su  nombre y fecha de nacimiento ");
+      setError("Debe ingresar su nombre y fecha de nacimiento");
       setNameError(true);
       setDateError(true);
       valid = false;
@@ -170,12 +170,15 @@ export default function HomePage() {
           {/* Acá metemos el avatar del jugador */}
           <div className="form-fields-right">
             <div className="form-field">
-              <label className="form-label">Avatar</label>
+              <label htmlFor="avatar" className="form-label">
+                Avatar
+              </label>
               <div
                 className={`avatar-selector ${avatarError ? "error" : ""}`}
                 ref={menuRef}
               >
                 <button
+                  id="avatar"
                   type="button"
                   className="avatar-current"
                   onClick={() => setOpen((o) => !o)}
