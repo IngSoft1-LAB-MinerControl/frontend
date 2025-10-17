@@ -13,8 +13,8 @@ interface TurnActionProps {
   onTurnUpdated: (updatedGame: any) => void;
   selectedCardIds: number[];
   setSelectedCardIds: (ids: number[]) => void;
-  step: 0 | 1 | 2 | 3 | 4 | 5;
-  setStep: (step: 0 | 1 | 2 | 3 | 4 | 5) => void;
+  step: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+  setStep: (step: 0 | 1 | 2 | 3 | 4 | 5 | 6) => void;
   cardCount: number;
   selectedCard: CardResponse | null;
   setSelectedCard: (card: CardResponse | null) => void;
@@ -56,7 +56,7 @@ export default function TurnActions({
     try {
       await cardService.pickUpDraftCard(gameId, selectedCard.card_id, playerId);
       setSelectedCard(null);
-      setStep(3);
+      setStep(4);
     } catch (err) {
       console.error("Error al robar del draft:", err);
       alert("Error al robar la carta del draft. Intenta de nuevo.");
@@ -134,7 +134,7 @@ export default function TurnActions({
       }
       setMessage("");
       setSelectedCardIds([]);
-      setStep(2);
+      setStep(3);
     } catch (err) {
       setMessage("Set inválido. Elija otra combinación");
       setTimeout(() => setMessage(""), 3000);
@@ -171,9 +171,53 @@ export default function TurnActions({
     }
   };
 
-  const handlePlayEvent = async () => {
+  const handlePickUpFromDiscard = async () => {
     if (lock) return;
 
+    setMessage("");
+    if (!selectedCard) {
+      setMessage("Debe seleccionar una carta del descarte.");
+      setTimeout(() => setMessage(""), 3000);
+      return;
+    }
+
+    setLock(true);
+    try {
+      await cardService.pickUpFromDiscard(playerId, selectedCard.card_id);
+      console.log("Se robó la carta del descarte:", selectedCard.name);
+      setMessage("");
+      setSelectedCard(null); // Deselecciona la carta robada
+      setStep(4); // Vuelve a la fase de reposición/finalización
+    } catch (err) {
+      console.error("Error al robar del descarte:", err);
+      setMessage("Error al robar del descarte. Intenta de nuevo.");
+      setTimeout(() => setMessage(""), 3000);
+    } finally {
+      setLock(false);
+    }
+  };
+
+  const handleDiscardCardSelect = (clickedCardId: number) => {
+    // Encuentra la carta completa (puede ser null)
+    const card =
+      discardedCards.find((c) => c.card_id === clickedCardId) ?? null;
+    // Si la carta no existe en la lista de descartes, salimos.
+    if (!card) return;
+
+    let newValue: CardResponse | null;
+    // Si ya hay una carta seleccionada (this.selectedCard o la prop selectedCard)
+    if (selectedCard && selectedCard.card_id === card.card_id) {
+      // La carta clickeada es la misma: DESELECCIONAR
+      newValue = null;
+    } else {
+      // La carta clickeada es diferente o no había nada: SELECCIONAR LA NUEVA
+      newValue = card;
+    }
+    setSelectedCard(newValue);
+  };
+
+  const handlePlayEvent = async () => {
+    if (lock) return;
     setMessage("");
 
     if (!selectedCard || selectedCard.type != "event") {
@@ -181,36 +225,14 @@ export default function TurnActions({
       setTimeout(() => setMessage(""), 3000);
       return;
     }
-    setLock(true);
     try {
       switch (selectedCard.name) {
-        case "Another victim": // ANOTHER VICTIM
-          setMessage("Seleccione el set que desea robar.");
+        case "Another Victim": // ANOTHER VICTIM
           setStep(5); // aca funcion para el endpoint de robar
           return;
         case "Look into the ashes": // LOOK INTO THE ASHES
-          <div className="discard-preview visible">
-            {discardedCards.map((card) =>
-              card.type === "detective" ? (
-                <Detective
-                  key={card.card_id}
-                  card_id={card.card_id}
-                  shown={true}
-                  size="mini"
-                  name={card.name}
-                />
-              ) : (
-                <Event
-                  key={card.card_id}
-                  card_id={card.card_id}
-                  shown={true}
-                  size="mini"
-                  name={card.name}
-                />
-              )
-            )}
-          </div>;
-          // endpoint pick up from discard
+          setStep(6);
+          return;
           break;
         default:
       }
@@ -285,7 +307,7 @@ export default function TurnActions({
               onClick={handlePlayEvent}
               disabled={lock}
             >
-              Jugar Set
+              Jugar Evento
             </button>
             <button className="action-button" onClick={() => setStep(0)}>
               Volver
@@ -365,6 +387,59 @@ export default function TurnActions({
               className="action-button"
               onClick={() => {
                 setSelectedCard(null); // Cancelar la carta de evento
+                setStep(0); // Volver al menú principal
+              }}
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === 6 && (
+        <div className="action-step-container">
+          <TextType
+            className="menu-inducations"
+            text={["Seleccione la carta a robar."]}
+            typingSpeed={35}
+          />
+          <div className="discard-preview visible">
+            {discardedCards.map((card) =>
+              card.type === "detective" ? (
+                <Detective
+                  key={card.card_id}
+                  card_id={card.card_id}
+                  shown={true}
+                  size="medium"
+                  name={card.name}
+                  onCardClick={() => handleDiscardCardSelect(card.card_id)}
+                  isSelected={selectedCard?.card_id === card.card_id}
+                />
+              ) : (
+                <Event
+                  key={card.card_id}
+                  card_id={card.card_id}
+                  shown={true}
+                  size="medium"
+                  name={card.name}
+                  onCardClick={() => handleDiscardCardSelect(card.card_id)}
+                  isSelected={selectedCard?.card_id === card.card_id}
+                />
+              )
+            )}
+          </div>
+          <div className="action-buttons-group">
+            <button
+              className="action-button"
+              onClick={handlePickUpFromDiscard}
+              disabled={lock || !selectedCard}
+            >
+              {lock ? "Robando..." : "Robar Carta"}
+            </button>
+            <button
+              className="action-button"
+              onClick={() => {
+                setSelectedCard(null);
                 setStep(0); // Volver al menú principal
               }}
             >

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import CardBase from "./Cards/CardBase";
 import type { CardResponse } from "../services/cardService";
 import "./Decks.css";
@@ -10,32 +9,24 @@ interface DeckProps {
   cardsLeftCount: number | null;
 }
 export default function Decks({ discardedCards, cardsLeftCount }: DeckProps) {
-  const [showDiscarded, setShowDiscarded] = useState(false);
   const lastDiscarded = discardedCards.length > 0 ? discardedCards[0] : null;
-  const handleDiscardClick = () => {
-    setShowDiscarded((prev) => !prev);
-  };
   return (
     <div className="decks">
       <div className="deck draw-deck" title="Mazo para robar">
         {cardsLeftCount !== null && cardsLeftCount >= 0 && (
           <div className="card-counter">{cardsLeftCount}</div>
         )}
-        <CardBase key="draw" shown={false} size="mini" />
+        <CardBase key="draw" shown={false} size="medium" />
       </div>
 
-      <div
-        className="deck discard-deck"
-        title="Descarte (tope visible)"
-        onClick={handleDiscardClick}
-      >
+      <div className="deck discard-deck" title="Descarte (tope visible)">
         {lastDiscarded ? (
           lastDiscarded.type === "detective" ? (
             <Detective
               key={lastDiscarded.card_id}
               card_id={lastDiscarded.card_id}
               shown={true}
-              size="mini"
+              size="medium"
               name={lastDiscarded.name}
             />
           ) : (
@@ -43,7 +34,7 @@ export default function Decks({ discardedCards, cardsLeftCount }: DeckProps) {
               key={lastDiscarded.card_id}
               card_id={lastDiscarded.card_id}
               shown={true}
-              size="mini"
+              size="medium"
               name={lastDiscarded.name}
             />
           )

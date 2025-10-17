@@ -27,9 +27,9 @@ export default function GamePage() {
   const [endMessage, setEndMessage] = useState<string | null>(null);
 
   const [selectedCardIds, setSelectedCardIds] = useState<number[]>([]);
-  const [turnActionStep, setTurnActionStep] = useState<0 | 1 | 2 | 3 | 4 | 5>(
-    0
-  );
+  const [turnActionStep, setTurnActionStep] = useState<
+    0 | 1 | 2 | 3 | 4 | 5 | 6
+  >(0);
   const [draftPile, setDraftPile] = useState<CardResponse[]>([]);
   const [selectedCard, setSelectedCard] = useState<CardResponse | null>(null);
   const [selectedSet, setSelectedSet] = useState<SetResponse | null>(null);
@@ -179,11 +179,6 @@ export default function GamePage() {
   };
 
   useEffect(() => {
-    // -----------------------------------------------------
-    // 🔍 DEBUG: MUESTRA EL ESTADO FINAL DE LA SELECCIÓN
-    // -----------------------------------------------------
-
-    // Primero, logueamos el paso para contexto
     console.log("Paso de Acción:", turnActionStep);
 
     if (selectedCardIds.length > 0) {

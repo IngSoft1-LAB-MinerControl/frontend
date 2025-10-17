@@ -59,11 +59,11 @@ async function playSet3(
 }
 
 async function stealSet(
-  player_id_to: number,
+  player_id: number,
   set_id: number
 ): Promise<SetResponse> {
   const response = await fetch(
-    `${httpServerUrl}/sets/steal/${player_id_to}/${set_id}`,
+    `${httpServerUrl}/sets/steal/${player_id}/${set_id}`,
     {
       method: "PUT",
       headers: {
@@ -77,12 +77,6 @@ async function stealSet(
   }
   return response.json();
 }
-
-// async function playEvent(
-//   card_id
-// ): Promise<CardResponse> {
-
-// }
 
 const setService = {
   getSets,
