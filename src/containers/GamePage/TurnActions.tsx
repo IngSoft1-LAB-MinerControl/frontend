@@ -251,8 +251,8 @@ export default function TurnActions({
       }
       setMessage("");
       setActiveEventCard(null);
-      setSelectedCard(null);
       setStep(2);
+      setSelectedCard(null);
     } catch (err) {
       setMessage("Evento inválido. Elija otro.");
       setTimeout(() => setMessage(""), 3000);
@@ -274,7 +274,7 @@ export default function TurnActions({
           />
           <div className="action-buttons-group">
             <button className="action-button" onClick={() => setStep(1)}>
-              Jugar Set
+              Bajar Set
             </button>
             <button className="action-button" onClick={() => setStep(2)}>
               Jugar Evento
@@ -321,7 +321,7 @@ export default function TurnActions({
               onClick={handlePlayEvent}
               disabled={lock}
             >
-              Jugar Evento
+              Jugar Evento Seleccionado
             </button>
             <button className="action-button" onClick={() => setStep(0)}>
               Volver
