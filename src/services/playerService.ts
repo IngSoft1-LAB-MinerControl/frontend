@@ -8,6 +8,7 @@ export interface Player {
   host: boolean;
   game_id: number;
   birth_date: string;
+  avatar: string;
 }
 
 export interface PlayerResponse {
@@ -17,6 +18,7 @@ export interface PlayerResponse {
   game_id: number;
   birth_date: string;
   turn_order?: number;
+  avatar: string;
 }
 export interface PlayerStateResponse {
   player_id: number;
