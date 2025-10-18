@@ -5,6 +5,7 @@ import Secret from "./Cards/Secret";
 import Set from "./Set.tsx";
 import "./MyHand.css";
 import type { CardResponse } from "../services/cardService.ts";
+import type { SecretResponse } from "../services/secretService.ts";
 
 interface YouProps {
   player: PlayerStateResponse;
@@ -12,6 +13,9 @@ interface YouProps {
   selectedCardIds: number[];
   isMyTurn: boolean;
   selectedCard: CardResponse | null;
+  onSecretClick: (secret: SecretResponse) => void;
+  selectedSecret: SecretResponse | null;
+  isSecretSelectionStep: boolean;
 }
 
 export default function You({
@@ -20,6 +24,9 @@ export default function You({
   selectedCardIds,
   selectedCard,
   isMyTurn,
+  onSecretClick,
+  selectedSecret,
+  isSecretSelectionStep,
 }: YouProps) {
   const handleCardClick = (card: CardResponse) => {
     onCardsSelected(card);
@@ -33,17 +40,23 @@ export default function You({
 
       <div className="player-cards-container">
         <div className="you-secrets">
-          {player.secrets.map((secret) => (
-            <Secret
-              key={secret.secret_id}
-              secret_id={secret.secret_id}
-              mine={true}
-              revealed={secret.revealed}
-              murderer={secret.murderer}
-              accomplice={secret.accomplice}
-              size="large"
-            />
-          ))}
+          {player.secrets.map((secret) => {
+            const isClickable =
+              isMyTurn && isSecretSelectionStep && secret.revealed;
+            return (
+              <Secret
+                key={secret.secret_id}
+                secret_id={secret.secret_id}
+                mine={true}
+                revealed={secret.revealed}
+                murderer={secret.murderer}
+                accomplice={secret.accomplice}
+                size="large"
+                isSelected={secret.secret_id == selectedSecret?.secret_id}
+                onClick={isClickable ? () => onSecretClick(secret) : undefined}
+              />
+            );
+          })}
         </div>
 
         <div className={`you-hand`}>

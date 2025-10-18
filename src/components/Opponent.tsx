@@ -5,6 +5,7 @@ import Set from "./Set";
 import Secret from "./Cards/Secret";
 import "./Opponent.css";
 import type { SetResponse } from "../services/setService";
+import type { SecretResponse } from "../services/secretService";
 
 interface OpponentProps {
   player: PlayerStateResponse;
@@ -12,6 +13,9 @@ interface OpponentProps {
   onSetClick: (set: SetResponse | undefined) => void;
   selectedSet: SetResponse | null;
   isSetSelectionStep: boolean;
+  onSecretClick: (secret: SecretResponse) => void;
+  selectedSecret: SecretResponse | null;
+  isSecretSelectionStep: boolean;
 }
 
 export default function Opponent({
@@ -20,7 +24,28 @@ export default function Opponent({
   onSetClick,
   selectedSet,
   isSetSelectionStep,
+  onSecretClick,
+  selectedSecret,
+  isSecretSelectionStep,
 }: OpponentProps) {
+  const isSecretClickable = (secret: SecretResponse): boolean => {
+    if (!isSecretSelectionStep) return false;
+
+    // Si el paso es REVELAR, solo secretos no revelados son cliqueables
+    if (isSecretSelectionStep && !secret.revealed) {
+      // Asumimos que "reveal_secret" es el único paso donde !secret.revealed es válido en oponentes.
+      return true;
+    }
+
+    // Si el paso es OCULTAR, solo secretos revelados son cliqueables
+    if (isSecretSelectionStep && secret.revealed) {
+      // Asumimos que "hide_secret" es el único paso donde secret.revealed es válido en oponentes.
+      return true;
+    }
+
+    return false;
+  };
+
   return (
     <div className="opponent">
       <div className={`op-name ${isMyTurn ? "myturn" : ""}`}>{player.name}</div>
@@ -58,6 +83,12 @@ export default function Opponent({
             murderer={secret.murderer}
             accomplice={secret.accomplice}
             size="mini"
+            isSelected={secret.secret_id === selectedSecret?.secret_id}
+            onClick={
+              isSecretClickable(secret)
+                ? () => onSecretClick(secret)
+                : undefined
+            }
           />
         ))}
       </div>

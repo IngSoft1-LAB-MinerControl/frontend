@@ -30,7 +30,7 @@ export interface PlayerStateResponse {
   sets: SetResponse[];
 }
 
-async function createPlayer(player: Player): Promise<PlayerResponse> {
+async function createPlayer(player: Player): Promise<PlayerStateResponse> {
   const response = await fetch(`${httpServerUrl}/players`, {
     method: "POST",
     headers: {
@@ -39,10 +39,12 @@ async function createPlayer(player: Player): Promise<PlayerResponse> {
     body: JSON.stringify(player),
   });
 
-  const data: PlayerResponse = await response.json();
+  const data: PlayerStateResponse = await response.json();
   return data;
 }
-async function getPlayersByGame(gameId: number): Promise<PlayerResponse[]> {
+async function getPlayersByGame(
+  gameId: number
+): Promise<PlayerStateResponse[]> {
   const response = await fetch(`${httpServerUrl}/lobby/players/${gameId}`, {
     method: "GET",
     headers: {
@@ -50,7 +52,7 @@ async function getPlayersByGame(gameId: number): Promise<PlayerResponse[]> {
     },
   });
 
-  const data: PlayerResponse[] = await response.json();
+  const data: PlayerStateResponse[] = await response.json();
   return data;
 }
 
