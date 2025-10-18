@@ -4,7 +4,7 @@ export interface SecretResponse {
   secret_id: number;
   player_id?: number;
   game_id: number;
-  revealed: boolean;
+  revelated: boolean;
   murderer: boolean;
   accomplice: boolean;
 }
@@ -25,7 +25,7 @@ async function getSecretsByPlayer(
 
 async function revealSecret(secret_id: number): Promise<SecretResponse> {
   const response = await fetch(`${httpServerUrl}/secrets/reveal/${secret_id}`, {
-    method: "GET",
+    method: "PUT",
     headers: {
       "Content-Type": "application/json",
     },
@@ -36,7 +36,7 @@ async function revealSecret(secret_id: number): Promise<SecretResponse> {
 
 async function hideSecret(secret_id: number): Promise<SecretResponse> {
   const response = await fetch(`${httpServerUrl}/secrets/hide/${secret_id}`, {
-    method: "GET",
+    method: "PUT",
     headers: {
       "Content-Type": "application/json",
     },
@@ -52,7 +52,7 @@ async function stealSecret(
   const response = await fetch(
     `${httpServerUrl}/secrets/steal/${secret_id},${player_id}`,
     {
-      method: "GET",
+      method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },

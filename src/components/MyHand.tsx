@@ -42,13 +42,13 @@ export default function You({
         <div className="you-secrets">
           {player.secrets.map((secret) => {
             const isClickable =
-              isMyTurn && isSecretSelectionStep && secret.revealed;
+              isMyTurn && isSecretSelectionStep && secret.revelated;
             return (
               <Secret
                 key={secret.secret_id}
                 secret_id={secret.secret_id}
                 mine={true}
-                revealed={secret.revealed}
+                revealed={secret.revelated}
                 murderer={secret.murderer}
                 accomplice={secret.accomplice}
                 size="large"

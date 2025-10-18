@@ -32,13 +32,13 @@ export default function Opponent({
     if (!isSecretSelectionStep) return false;
 
     // Si el paso es REVELAR, solo secretos no revelados son cliqueables
-    if (isSecretSelectionStep && !secret.revealed) {
+    if (isSecretSelectionStep && !secret.revelated) {
       // Asumimos que "reveal_secret" es el único paso donde !secret.revealed es válido en oponentes.
       return true;
     }
 
     // Si el paso es OCULTAR, solo secretos revelados son cliqueables
-    if (isSecretSelectionStep && secret.revealed) {
+    if (isSecretSelectionStep && secret.revelated) {
       // Asumimos que "hide_secret" es el único paso donde secret.revealed es válido en oponentes.
       return true;
     }
@@ -79,7 +79,7 @@ export default function Opponent({
             key={`op-secret-${player.player_id}-${secret.secret_id}`}
             secret_id={secret.secret_id}
             mine={false}
-            revealed={secret.revealed}
+            revealed={secret.revelated}
             murderer={secret.murderer}
             accomplice={secret.accomplice}
             size="mini"
