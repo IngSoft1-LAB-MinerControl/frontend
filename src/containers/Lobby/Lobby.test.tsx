@@ -26,7 +26,6 @@ vi.mock("react-router-dom", async () => {
   };
 });
 
-// ✅ Mock de WebSocket
 class MockWebSocket {
   static instances: MockWebSocket[] = [];
   url: string;
