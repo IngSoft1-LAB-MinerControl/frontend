@@ -6,6 +6,21 @@ import TextType from "../../components/TextType";
 import setService, { type SetResponse } from "../../services/setService";
 import Detective from "../../components/Cards/Detectives";
 import Event from "../../components/Cards/Events";
+import type { SecretResponse } from "../../services/secretService";
+import secretService from "../../services/secretService";
+
+export type Steps =
+  | "start"
+  | "p_set"
+  | "p_event"
+  | "discard_skip"
+  | "discard_op"
+  | "draw"
+  | "another_victim"
+  | "look_into_the_ashes"
+  | "set_actions"
+  | "reveal_secret"
+  | "hide_secret";
 
 interface TurnActionProps {
   gameId: number;
@@ -13,13 +28,15 @@ interface TurnActionProps {
   onTurnUpdated: (updatedGame: any) => void;
   selectedCardIds: number[];
   setSelectedCardIds: (ids: number[]) => void;
-  step: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
-  setStep: (step: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7) => void;
+  step: Steps;
+  setStep: (step: Steps) => void;
   cardCount: number;
   selectedCard: CardResponse | null;
   setSelectedCard: (card: CardResponse | null) => void;
   discardedCards: CardResponse[];
   selectedSet: SetResponse | null;
+  selectedSecret: SecretResponse | null;
+  setSelectedSecret: (secret: SecretResponse | null) => void;
 }
 
 export default function TurnActions({
@@ -34,6 +51,8 @@ export default function TurnActions({
   setSelectedCard,
   discardedCards,
   selectedSet,
+  selectedSecret,
+  setSelectedSecret,
 }: TurnActionProps) {
   const [lock, setLock] = useState(false);
   const [drawing, setDrawing] = useState(false);
@@ -45,7 +64,7 @@ export default function TurnActions({
   const handleEndTurn = async () => {
     try {
       await gameService.updateTurn(gameId);
-      setStep(0);
+      setStep("start");
     } catch (err) {
       console.error("Error al finalizar el turno:", err);
       alert("Error al finalizar turno. Intenta de nuevo.");
@@ -59,7 +78,7 @@ export default function TurnActions({
     try {
       await cardService.pickUpDraftCard(gameId, selectedCard.card_id, playerId);
       setSelectedCard(null);
-      setStep(5);
+      setStep("draw");
     } catch (err) {
       console.error("Error al robar del draft:", err);
       alert("Error al robar la carta del draft. Intenta de nuevo.");
@@ -93,7 +112,7 @@ export default function TurnActions({
     try {
       await cardService.discardSelectedList(playerId, selectedCardIds);
       setSelectedCardIds([]);
-      setStep(5);
+      setStep("draw");
     } catch (err) {
       console.error("Error al descartar cartas seleccionadas:", err);
       alert("Error al descartar cartas seleccionadas. Intenta de nuevo.");
@@ -137,9 +156,10 @@ export default function TurnActions({
       }
       setMessage("");
       setSelectedCardIds([]);
-      setStep(4);
+
+      setStep("set_actions");
     } catch (err) {
-      setMessage("Set inválido. Elija otra combinación");
+      setMessage("Set inválido. Elija otra combinacigón");
       setTimeout(() => setMessage(""), 3000);
     } finally {
       setLock(false);
@@ -167,7 +187,7 @@ export default function TurnActions({
 
       setMessage("");
       setSelectedCard(null);
-      setStep(4); //
+      setStep("discard_op"); //
     } catch (err) {
       console.error("Error al robar set:", err);
       setMessage("Error al robar set. Intenta de nuevo.");
@@ -199,7 +219,7 @@ export default function TurnActions({
       setMessage("");
       setSelectedCard(null);
       setActiveEventCard(null);
-      setStep(4);
+      setStep("discard_op");
     } catch (err) {
       console.error("Error al robar del descarte:", err);
       setMessage("Error al robar del descarte. Intenta de nuevo.");
@@ -240,21 +260,75 @@ export default function TurnActions({
     try {
       setActiveEventCard(selectedCard);
       switch (selectedCard.name) {
-        case "Another Victim": // ANOTHER VICTIM
-          setStep(6); // aca funcion para el endpoint de robar
+        case "Another Victim":
+          setStep("another_victim");
           return;
-        case "Look into the ashes": // LOOK INTO THE ASHES
-          setStep(7);
+        case "Look into the ashes":
+          setStep("look_into_the_ashes");
           return;
-          break;
         default:
       }
       setMessage("");
       setActiveEventCard(null);
-      setStep(2);
+      setStep("discard_op");
       setSelectedCard(null);
     } catch (err) {
       setMessage("Evento inválido. Elija otro.");
+      setTimeout(() => setMessage(""), 3000);
+    } finally {
+      setLock(false);
+    }
+  };
+
+  const handleRevealSecret = async () => {
+    if (lock) return;
+    setMessage("");
+
+    if (selectedSecret === null) {
+      setMessage("Debe seleccionar un secreto para revelar.");
+      setTimeout(() => setMessage(""), 3000);
+      return;
+    }
+
+    setLock(true);
+    try {
+      await secretService.revealSecret(selectedSecret.secret_id); // Call your secret service function
+      console.log(`Se reveló el secreto con ID: ${selectedSecret.secret_id}`);
+
+      setMessage("");
+      setSelectedSecret(null);
+      // Transition to the standard discard step after action
+      setStep("discard_op");
+    } catch (err) {
+      console.error("Error al revelar secreto:", err);
+      setMessage("Error al revelar secreto. Intenta de nuevo.");
+      setTimeout(() => setMessage(""), 3000);
+    } finally {
+      setLock(false);
+    }
+  };
+
+  const handleHideSecret = async () => {
+    if (lock) return;
+    setMessage("");
+
+    if (selectedSecret === null) {
+      setMessage("Debe seleccionar un secreto para revelar.");
+      setTimeout(() => setMessage(""), 3000);
+      return;
+    }
+
+    setLock(true);
+    try {
+      await secretService.hideSecret(selectedSecret.secret_id); // Call your secret service function
+      console.log(`Se oculto el secreto con ID: ${selectedSecret.secret_id}`);
+
+      setMessage("");
+      setSelectedSecret(null);
+      setStep("discard_op");
+    } catch (err) {
+      console.error("Error al ocultar secreto:", err);
+      setMessage("Error al ocultar secreto. Intenta de nuevo.");
       setTimeout(() => setMessage(""), 3000);
     } finally {
       setLock(false);
@@ -265,7 +339,7 @@ export default function TurnActions({
   return (
     <div className="turn-actions-box">
       {message && <div className="turn-message">{message}</div>}
-      {step === 0 && ( // ELEGIR ACCION
+      {step === "start" && ( // ELEGIR ACCION
         <div className="action-step-container">
           <TextType
             className="menu-indications"
@@ -273,20 +347,26 @@ export default function TurnActions({
             typingSpeed={50}
           />
           <div className="action-buttons-group">
-            <button className="action-button" onClick={() => setStep(1)}>
-              Bajar Set
+            <button className="action-button" onClick={() => setStep("p_set")}>
+              Jugar Set
             </button>
-            <button className="action-button" onClick={() => setStep(2)}>
+            <button
+              className="action-button"
+              onClick={() => setStep("p_event")}
+            >
               Jugar Evento
             </button>
-            <button className="action-button" onClick={() => setStep(3)}>
+            <button
+              className="action-button"
+              onClick={() => setStep("discard_skip")}
+            >
               Saltear
             </button>
           </div>
         </div>
       )}
 
-      {step === 1 && ( // JUGAR SET
+      {step === "p_set" && ( // JUGAR SET
         <div className="action-step-container">
           <TextType
             className="menu-indications"
@@ -301,14 +381,14 @@ export default function TurnActions({
             >
               Jugar Set
             </button>
-            <button className="action-button" onClick={() => setStep(0)}>
+            <button className="action-button" onClick={() => setStep("start")}>
               Volver
             </button>
           </div>
         </div>
       )}
 
-      {step === 2 && ( // JUGAR EVENTO
+      {step === "p_event" && ( // JUGAR EVENTO
         <div className="action-step-container">
           <TextType
             className="menu-indications"
@@ -323,14 +403,14 @@ export default function TurnActions({
             >
               Jugar Evento Seleccionado
             </button>
-            <button className="action-button" onClick={() => setStep(0)}>
+            <button className="action-button" onClick={() => setStep("start")}>
               Volver
             </button>
           </div>
         </div>
       )}
 
-      {step === 3 && ( // DESCARTE IF SALTEAR TURNO
+      {step === "discard_skip" && ( // DESCARTE IF SALTEAR TURNO
         <div className="action-step-container">
           <TextType text={["Seleccione una o mas cartas"]} typingSpeed={50} />
           <div className="action-buttons-group">
@@ -341,14 +421,14 @@ export default function TurnActions({
             >
               {lock ? "Descartando..." : "Descartar Selección"}
             </button>
-            <button className="action-button" onClick={() => setStep(0)}>
+            <button className="action-button" onClick={() => setStep("start")}>
               Volver
             </button>
           </div>
         </div>
       )}
 
-      {step === 4 && ( // DESCARTE IF SET/EVENTO
+      {step === "discard_op" && ( // DESCARTE IF SET/EVENTO
         <div className="action-step-container">
           <TextType text={["Seleccione una o mas cartas"]} typingSpeed={50} />
           <div className="action-buttons-group">
@@ -359,14 +439,14 @@ export default function TurnActions({
             >
               {lock ? "Descartando..." : "Descartar Selección"}
             </button>
-            <button className="action-button" onClick={() => setStep(5)}>
+            <button className="action-button" onClick={() => setStep("draw")}>
               No Descartar
             </button>
           </div>
         </div>
       )}
 
-      {step === 5 && ( // REPONER Y FINALIZAR TURNO
+      {step === "draw" && ( // REPONER Y FINALIZAR TURNO
         <div className="action-step-container">
           {cardCount < 6 ? (
             <>
@@ -400,7 +480,7 @@ export default function TurnActions({
         </div>
       )}
 
-      {step === 6 && ( // EVENTO: ANOTHER VICTIM
+      {step === "another_victim" && ( // EVENTO: ANOTHER VICTIM
         <div className="action-step-container">
           <TextType
             className="menu-indications"
@@ -419,7 +499,7 @@ export default function TurnActions({
               className="action-button"
               onClick={() => {
                 setSelectedCard(null); // Cancelar la carta de evento
-                setStep(0); // Volver al menú principal
+                setStep("start"); // Volver al menú principal
               }}
             >
               Cancelar
@@ -428,7 +508,7 @@ export default function TurnActions({
         </div>
       )}
 
-      {step === 7 && ( // EVENTO: LOOK INTO THE ASHES
+      {step === "look_into_the_ashes" && ( // EVENTO: LOOK INTO THE ASHES
         <div className="action-step-container">
           <TextType
             className="menu-inducations"
@@ -472,10 +552,86 @@ export default function TurnActions({
               className="action-button"
               onClick={() => {
                 setSelectedCard(null);
-                setStep(0); // Volver al menú principal
+                setStep("start"); // Volver al menú principal
               }}
             >
               Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === "reveal_secret" && ( // REVEAL SECRET
+        <div className="action-step-container">
+          <TextType
+            className="menu-indications"
+            text={["Seleccione un secreto para revelar"]}
+            typingSpeed={35}
+          />
+          <div className="action-buttons-group">
+            <button
+              className="action-button"
+              onClick={handleRevealSecret} // Llama a la nueva función
+              disabled={lock || !selectedSecret} // Deshabilitado si no hay set seleccionado
+            >
+              {lock ? "Revelando..." : "Revelar"}
+            </button>
+            <button
+              className="action-button"
+              onClick={() => {
+                setSelectedSecret(null); // Cancelar la carta de evento
+                setStep("start"); // Volver al menú principal
+              }}
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === "hide_secret" && ( // HIDE SECRET
+        <div className="action-step-container">
+          <TextType
+            className="menu-indications"
+            text={["Seleccione un secreto para ocultar"]}
+            typingSpeed={35}
+          />
+          <div className="action-buttons-group">
+            <button
+              className="action-button"
+              onClick={handleHideSecret} // Llama a la nueva función
+              disabled={lock || !selectedSecret} // Deshabilitado si no hay set seleccionado
+            >
+              {lock ? "Ocultando..." : "Ocultar"}
+            </button>
+            <button
+              className="action-button"
+              onClick={() => {
+                setSelectedSecret(null); // Cancelar la carta de evento
+                setStep("set_actions"); // Volver al menú principal
+              }}
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === "set_actions" && ( // OPTIONS PLAY SET
+        <div className="action-step-container">
+          <TextType text={["Seleccione una acción"]} typingSpeed={50} />
+          <div className="action-buttons-group">
+            <button
+              className="action-button"
+              onClick={() => setStep("reveal_secret")}
+            >
+              Revelar secreto
+            </button>
+            <button
+              className="action-button"
+              onClick={() => setStep("hide_secret")}
+            >
+              Ocultar secreto
             </button>
           </div>
         </div>

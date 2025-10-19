@@ -12,6 +12,8 @@ import type { GameResponse } from "../../services/gameService";
 import type { CardResponse } from "../../services/cardService";
 import DraftPile from "../../components/DraftPile";
 import type { SetResponse } from "../../services/setService";
+import type { Steps } from "./TurnActions";
+import type { SecretResponse } from "../../services/secretService";
 
 export default function GamePage() {
   const location = useLocation();
@@ -27,12 +29,14 @@ export default function GamePage() {
   const [endMessage, setEndMessage] = useState<string | null>(null);
 
   const [selectedCardIds, setSelectedCardIds] = useState<number[]>([]);
-  const [turnActionStep, setTurnActionStep] = useState<
-    0 | 1 | 2 | 3 | 4 | 5 | 6 | 7
-  >(0);
   const [draftPile, setDraftPile] = useState<CardResponse[]>([]);
   const [selectedCard, setSelectedCard] = useState<CardResponse | null>(null);
   const [selectedSet, setSelectedSet] = useState<SetResponse | null>(null);
+  const [selectedSecret, setSelectedSecret] = useState<SecretResponse | null>(
+    null
+  );
+
+  const [turnActionStep, setTurnActionStep] = useState<Steps>("start");
 
   if (!game) {
     return (
@@ -153,8 +157,12 @@ export default function GamePage() {
   };
 
   const handleHandCardSelect = (card: CardResponse) => {
-    // Si la acción actual es Jugar Set (step 1) o Descartar (step 3), usamos multiselección (selectedCardIds)
-    if (turnActionStep === 1 || turnActionStep === 3 || turnActionStep === 4) {
+    // seleccion multiple si es set o descarte
+    if (
+      turnActionStep === "p_set" ||
+      turnActionStep === "discard_op" ||
+      turnActionStep === "discard_skip"
+    ) {
       setSelectedCard(null); // Deseleccionar cualquier carta individualmente seleccionada previamente
 
       setSelectedCardIds((prevIds) => {
@@ -169,12 +177,24 @@ export default function GamePage() {
       });
     }
 
-    // Si la acción actual es Jugar Evento (step 2), usamos selección única (selectedCard)
-    else if (turnActionStep === 2) {
+    // seleccion unica si es jugar evento
+    else if (turnActionStep === "p_event") {
       setSelectedCardIds([]); // Limpiar multiselección
       // Si la carta ya está seleccionada, la deseleccionamos (ponemos null).
       // Si no, la seleccionamos.
       setSelectedCard((prev) => (prev?.card_id === card.card_id ? null : card));
+    }
+  };
+
+  const handleSecretSelect = (secret: SecretResponse | undefined) => {
+    if (
+      selectedSecret &&
+      secret &&
+      selectedSecret.secret_id === secret.secret_id
+    ) {
+      setSelectedSet(null);
+    } else {
+      setSelectedSecret(secret ?? null);
     }
   };
 
@@ -238,7 +258,7 @@ export default function GamePage() {
   useEffect(() => {
     // Si no es mi turno, aseguramos que las acciones no se muestren
     if (!isMyTurn) {
-      setTurnActionStep(0); // Reiniciar el estado de acciones
+      setTurnActionStep("start"); // Reiniciar el estado de acciones
       return;
     }
   }, [isMyTurn, turnActionStep]);
@@ -255,7 +275,13 @@ export default function GamePage() {
                 isMyTurn={p.turn_order === currentGame?.current_turn}
                 onSetClick={handleSetSelect}
                 selectedSet={selectedSet}
-                isSetSelectionStep={turnActionStep === 6}
+                isSetSelectionStep={turnActionStep === "another_victim"}
+                onSecretClick={handleSecretSelect}
+                selectedSecret={selectedSecret}
+                isSecretSelectionStep={
+                  turnActionStep === "reveal_secret" ||
+                  turnActionStep === "hide_secret"
+                }
               />
             ))}
           </div>
@@ -281,6 +307,12 @@ export default function GamePage() {
               onCardsSelected={handleHandCardSelect}
               isMyTurn={isMyTurn}
               selectedCard={selectedCard}
+              onSecretClick={handleSecretSelect}
+              selectedSecret={selectedSecret}
+              isSecretSelectionStep={
+                turnActionStep === "reveal_secret" ||
+                turnActionStep === "hide_secret"
+              }
             />
           ) : (
             <div className="empty-hint">Esperando jugadores…</div>
@@ -300,6 +332,8 @@ export default function GamePage() {
                 setSelectedCard={setSelectedCard}
                 discardedCards={discardedCards}
                 selectedSet={selectedSet}
+                selectedSecret={selectedSecret}
+                setSelectedSecret={setSelectedSecret}
               />
             </div>
           )}

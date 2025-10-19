@@ -13,6 +13,8 @@ export type SecretBaseProps = {
   revealed: boolean;
   murderer: boolean;
   accomplice: boolean;
+  isSelected: boolean;
+  onClick?: () => void;
 };
 
 export default function Secret({
@@ -22,6 +24,8 @@ export default function Secret({
   revealed,
   murderer,
   accomplice,
+  isSelected,
+  onClick,
 }: SecretBaseProps) {
   let imgFront, imgToDisplay: string;
 
@@ -48,13 +52,14 @@ export default function Secret({
   }
 
   const unrevealedClass = mine && !revealed ? "unrevealed" : "";
-
+  const clickableClass = onClick ? "clickable" : "";
   return (
     <div
       className={`secret secret-${size} ${
         mine ? "mine" : ""
-      } ${unrevealedClass} `}
+      } ${unrevealedClass} ${isSelected ? "selected" : ""} ${clickableClass}`}
       data-secret-id={secret_id}
+      onClick={onClick}
     >
       <img src={imgToDisplay} alt={`Secret ${secret_id}`} />
     </div>
