@@ -516,29 +516,31 @@ export default function TurnActions({
             typingSpeed={35}
           />
           <div className="discard-preview visible">
-            {discardedCards.map((card) =>
-              card.type === "detective" ? (
-                <Detective
-                  key={card.card_id}
-                  card_id={card.card_id}
-                  shown={true}
-                  size="medium"
-                  name={card.name}
-                  onCardClick={() => handleDiscardCardSelect(card.card_id)}
-                  isSelected={selectedCard?.card_id === card.card_id}
-                />
-              ) : (
-                <Event
-                  key={card.card_id}
-                  card_id={card.card_id}
-                  shown={true}
-                  size="medium"
-                  name={card.name}
-                  onCardClick={() => handleDiscardCardSelect(card.card_id)}
-                  isSelected={selectedCard?.card_id === card.card_id}
-                />
-              )
-            )}
+            {discardedCards.map((card) => (
+              <div
+                key={card.card_id}
+                className={`card-container ${
+                  selectedCard?.card_id === card.card_id ? "isSelected" : ""
+                }`}
+                onClick={() => handleDiscardCardSelect(card.card_id)}
+              >
+                {card.type === "detective" ? (
+                  <Detective
+                    card_id={card.card_id}
+                    shown={true}
+                    size="medium"
+                    name={card.name}
+                  />
+                ) : (
+                  <Event
+                    card_id={card.card_id}
+                    shown={true}
+                    size="medium"
+                    name={card.name}
+                  />
+                )}
+              </div>
+            ))}
           </div>
           <div className="action-buttons-group">
             <button

@@ -69,38 +69,24 @@
   align-items: center;
   margin-left: 4rem;
   margin-right: 4rem;
-  /* Espacio extra para asegurar que el box-shadow de la selección no se corte */
   padding: 5px;
 }
 
-/* ------------------------------------------------ */
-/* ✨ ESTILOS AÑADIDOS PARA LA SELECCIÓN DE SECRETOS */
-/* ------------------------------------------------ */
-
-/* Hace que el secreto sea visualmente interactivo */
 .you-secrets .secret.clickable {
   cursor: pointer;
 }
 
-/* Estilo para el hover en secretos interactivos (para dar feedback al usuario) */
 .you-secrets .secret.clickable:hover:not(.selected) {
-  box-shadow: 0 0 5px 2px rgba(255, 221, 0, 0.7); /* Borde amarillo suave */
+  box-shadow: 0 0 5px 2px rgba(255, 221, 0, 0.7);
 }
 
-/* Estilo que se aplica cuando el secreto ha sido seleccionado */
 .you-secrets .secret.selected {
-  /* Define un borde y sombra de color distintivo para indicar la selección */
-  --selection-color: #00ff00; /* Puedes definir una variable CSS para el color de selección */
-
+  --selection-color: #00ff00;
   box-shadow: 0 0 12px 6px var(--selection-color);
   border: 3px solid var(--selection-color);
   transform: scale(1.05);
   transition: all 0.2s ease-in-out;
 }
-
-/* ------------------------------------------------ */
-/* ESTILOS DE TEXTO Y CONTROLES EXISTENTES */
-/* ------------------------------------------------ */
 
 .you-name {
   color: #fff;
@@ -136,4 +122,13 @@
   background-color: transparent;
   backdrop-filter: blur(6px);
   border-color: #fff;
+}
+
+.you-sets {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
 }
