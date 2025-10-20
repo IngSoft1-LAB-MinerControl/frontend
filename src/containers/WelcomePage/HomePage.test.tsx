@@ -7,7 +7,6 @@ import { MemoryRouter } from "react-router-dom";
 import HomePage from "./HomePage";
 import destinations from "../../navigation/destinations";
 
-// Mock de useNavigate para espiar la navegación
 const mockedNavigate = vi.fn();
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual<any>("react-router-dom");
