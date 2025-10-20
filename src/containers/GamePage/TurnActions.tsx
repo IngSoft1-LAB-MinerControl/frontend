@@ -289,7 +289,7 @@ export default function TurnActions({
     setMessage("");
 
     if (selectedSecret === null) {
-      setMessage("Debe seleccionar un secreto para revelar.");
+      setMessage("Debe seleccionar un secreto para ocultar.");
       setTimeout(() => setMessage(""), 3000);
       return;
     }

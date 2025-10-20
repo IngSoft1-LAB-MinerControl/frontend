@@ -5,19 +5,6 @@ import { MemoryRouter } from "react-router-dom";
 import userEvent from "@testing-library/user-event";
 import GamePage from "./GamePage";
 
-// vi.mock("./TurnActions", () => ({
-//   default: () => <div data-testid="turn-actions"></div>,
-// }));
-// vi.mock("../../components/Opponent", () => ({
-//   default: ({ player }: any) => (
-//     <div data-testid={`opponent-${player.player_id}`}>{player.name}</div>
-//   ),
-// }));
-// vi.mock("../../components/MyHand", () => ({
-//   default: ({ player }: any) => <div data-testid="my-hand">{player.name}</div>,
-// }));
-
-// Mock de los componentes de cartas/sets/secretos para que sean botones simples
 vi.mock("../../components/Cards/Detectives", () => ({
   default: ({ name, onCardClick, isSelected }: any) => (
     // Usamos un div clickeable, que es más fiel al componente real

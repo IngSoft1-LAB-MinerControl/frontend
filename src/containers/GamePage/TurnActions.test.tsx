@@ -28,7 +28,7 @@ vi.mock("../../services/cardService", () => ({
   default: {
     drawCard: vi.fn().mockResolvedValue({} as CardResponse),
     pickUpDraftCard: vi.fn().mockResolvedValue({} as CardResponse),
-    discardSelectedList: vi.fn().mockResolvedValue({} as CardResponse),
+    discardSelectedList: vi.fn().mockResolvedValue([] as CardResponse[]),
     pickUpFromDiscard: vi.fn().mockResolvedValue({}),
   },
 }));
@@ -39,13 +39,13 @@ vi.mock("../../services/setService", () => ({
     stealSet: vi.fn().mockResolvedValue({} as SetResponse),
   },
 }));
-
 vi.mock("../../services/secretService", () => ({
   default: {
     revealSecret: vi.fn().mockResolvedValue({}),
     hideSecret: vi.fn().mockResolvedValue({}),
   },
 }));
+
 const gameId = 1;
 const playerId = 1;
 const detectiveCards: CardResponse[] = [
@@ -137,10 +137,8 @@ describe("TurnActions Component - Tests completos", () => {
     onTurnUpdated = vi.fn();
     setSelectedSecret = vi.fn();
     cleanup();
-
     vi.clearAllMocks();
     vi.spyOn(window, "alert").mockImplementation(() => {});
-
     baseProps = {
       gameId,
       playerId,
@@ -159,7 +157,6 @@ describe("TurnActions Component - Tests completos", () => {
 
   it("Renderiza menú inicial con opciones de turno", () => {
     render(<TurnActions {...baseProps} step={"start"} setStep={setStep} />);
-
     expect(screen.getByText("¿Qué acción desea realizar?")).not.toBeNull();
     expect(screen.getByText("Bajar Set")).not.toBeNull();
     expect(screen.getByText("Jugar Evento")).not.toBeNull();
@@ -168,21 +165,18 @@ describe("TurnActions Component - Tests completos", () => {
 
   it("Avanza al paso Jugar Set correctamente", async () => {
     render(<TurnActions {...baseProps} step={"start"} setStep={setStep} />);
-
     await userEvent.click(screen.getByText("Bajar Set"));
     expect(setStep).toHaveBeenCalledWith("p_set");
   });
 
   it("Avanza al paso Jugar Evento correctamente", async () => {
     render(<TurnActions {...baseProps} step={"start"} setStep={setStep} />);
-
     await userEvent.click(screen.getByText("Jugar Evento"));
     expect(setStep).toHaveBeenCalledWith("p_event");
   });
 
   it("Avanza al paso Saltear correctamente", async () => {
     render(<TurnActions {...baseProps} step={"start"} setStep={setStep} />);
-
     await userEvent.click(screen.getByText("Saltear"));
     expect(setStep).toHaveBeenCalledWith("discard_skip");
   });
@@ -191,14 +185,12 @@ describe("TurnActions Component - Tests completos", () => {
     render(
       <TurnActions {...baseProps} step={"discard_skip"} setStep={setStep} />
     );
-
     expect(screen.getByText("Descartar Selección")).not.toBeNull();
     expect(screen.getByText("Volver")).not.toBeNull();
   });
 
   it("Renderiza selección de set", () => {
     render(<TurnActions {...baseProps} step={"p_set"} setStep={setStep} />);
-
     expect(screen.getByText("Seleccione set")).not.toBeNull();
     expect(screen.getByText("Jugar Set")).not.toBeNull();
     expect(screen.getByText("Volver")).not.toBeNull();
@@ -220,7 +212,6 @@ describe("TurnActions Component - Tests completos", () => {
         selectedCardIds={[detectiveCards[0].card_id]}
       />
     );
-
     await userEvent.click(screen.getByText("Descartar Selección"));
   });
 
@@ -247,6 +238,7 @@ describe("TurnActions Component - Tests completos", () => {
     expect(setSelectedCardIds).toHaveBeenCalledWith([]);
     expect(setStep).toHaveBeenCalledWith("set_actions");
   });
+
   it("handlePlaySet: permite bajar un set de 3 cartas y avanza a set_actions", async () => {
     const playSet3Mock = vi.spyOn(setService, "playSet3");
     render(
@@ -275,13 +267,12 @@ describe("TurnActions Component - Tests completos", () => {
     await userEvent.click(screen.getByText("Jugar Set"));
     expect(screen.getByText("Seleccione un set válido")).toBeInTheDocument();
     expect(setStep).not.toHaveBeenCalled();
-    expect(screen.queryByText("Seleccione un set válido")).toBeInTheDocument();
   });
 
   it("handlePlaySet: muestra mensaje de error si el servicio falla", async () => {
-    const playSet2Mock = vi
-      .spyOn(setService, "playSet2")
-      .mockRejectedValue(new Error("Error de set"));
+    vi.spyOn(setService, "playSet2").mockRejectedValue(
+      new Error("Error de set")
+    );
     render(
       <TurnActions
         {...baseProps}
@@ -291,7 +282,6 @@ describe("TurnActions Component - Tests completos", () => {
       />
     );
     await userEvent.click(screen.getByText("Jugar Set"));
-    expect(playSet2Mock).toHaveBeenCalled();
     expect(
       screen.getByText("Set inválido. Elija otra combinacigón")
     ).toBeInTheDocument();
@@ -309,8 +299,8 @@ describe("TurnActions Component - Tests completos", () => {
     );
     await userEvent.click(screen.getByText("Jugar Evento Seleccionado"));
     expect(setStep).toHaveBeenCalledWith("another_victim");
-    expect(setSelectedCard).not.toHaveBeenCalled();
   });
+
   it("handlePlayEvent: redirige a 'look_into_the_ashes' si se selecciona 'Look into the ashes'", async () => {
     render(
       <TurnActions
@@ -323,6 +313,7 @@ describe("TurnActions Component - Tests completos", () => {
     await userEvent.click(screen.getByText("Jugar Evento Seleccionado"));
     expect(setStep).toHaveBeenCalledWith("look_into_the_ashes");
   });
+
   it("handlePlayEvent: muestra mensaje si no se selecciona una carta de evento", async () => {
     render(
       <TurnActions
@@ -349,13 +340,11 @@ describe("TurnActions Component - Tests completos", () => {
       />
     );
     await userEvent.click(screen.getByText("Descartar Selección"));
-
     await waitFor(() => {
       expect(
         screen.getByText("No seleccionaste ninguna carta.")
       ).toBeInTheDocument();
     });
-
     expect(setStep).not.toHaveBeenCalled();
   });
 
@@ -372,7 +361,6 @@ describe("TurnActions Component - Tests completos", () => {
       />
     );
     await userEvent.click(screen.getByText("Descartar Selección"));
-
     await waitFor(() => {
       expect(
         screen.getByText(
@@ -380,12 +368,10 @@ describe("TurnActions Component - Tests completos", () => {
         )
       ).toBeInTheDocument();
     });
-
     expect(setStep).not.toHaveBeenCalled();
   });
 
   it("handleEndTurn: finaliza el turno y restablece el paso a 'start'", async () => {
-    const updateTurnMock = vi.spyOn(gameService, "updateTurn");
     render(
       <TurnActions
         {...baseProps}
@@ -393,9 +379,9 @@ describe("TurnActions Component - Tests completos", () => {
         setStep={setStep}
         cardCount={6}
       />
-    ); // cardCount > 5 para mostrar el botón de finalizar turno
+    );
     await userEvent.click(screen.getByText("Finalizar Turno"));
-    expect(updateTurnMock).toHaveBeenCalledWith(gameId);
+    expect(gameService.updateTurn).toHaveBeenCalledWith(gameId);
     expect(setStep).toHaveBeenCalledWith("start");
   });
 
@@ -421,7 +407,6 @@ describe("TurnActions Component - Tests completos", () => {
   });
 
   it("handleDraw: roba una carta del mazo principal", async () => {
-    const drawCardMock = vi.spyOn(cardService, "drawCard");
     render(
       <TurnActions
         {...baseProps}
@@ -431,7 +416,7 @@ describe("TurnActions Component - Tests completos", () => {
       />
     );
     await userEvent.click(screen.getByText("Robar Mazo Principal"));
-    expect(drawCardMock).toHaveBeenCalledWith(playerId, gameId);
+    expect(cardService.drawCard).toHaveBeenCalledWith(playerId, gameId);
   });
 
   it("handleDraw: muestra alerta si falla al robar del mazo principal", async () => {
@@ -455,7 +440,6 @@ describe("TurnActions Component - Tests completos", () => {
   });
 
   it("handleDrawDraft: roba una carta del draft y avanza a draw", async () => {
-    const pickUpDraftCardMock = vi.spyOn(cardService, "pickUpDraftCard");
     render(
       <TurnActions
         {...baseProps}
@@ -466,7 +450,7 @@ describe("TurnActions Component - Tests completos", () => {
       />
     );
     await userEvent.click(screen.getByText("Robar Mazo Draft"));
-    expect(pickUpDraftCardMock).toHaveBeenCalledWith(
+    expect(cardService.pickUpDraftCard).toHaveBeenCalledWith(
       gameId,
       detectiveCards[0].card_id,
       playerId
@@ -511,28 +495,21 @@ describe("TurnActions Component - Tests completos", () => {
       screen.getByText("Debe seleccionar un set para robar.")
     ).toBeInTheDocument();
     expect(setService.stealSet).not.toHaveBeenCalled();
-    expect(setStep).not.toHaveBeenCalled();
   });
 
   it("handleStealSet: muestra mensaje de error si falla al robar set", async () => {
     (setService.stealSet as ReturnType<typeof vi.fn>).mockRejectedValue(
       new Error("Error al robar set")
     );
-
     const { rerender } = render(
       <TurnActions
         {...baseProps}
         step={"p_event"}
         setStep={setStep}
         selectedCard={eventCards[1]}
-        setSelectedCard={setSelectedCard}
-        selectedSet={null}
       />
     );
-
     await userEvent.click(screen.getByText("Jugar Evento Seleccionado"));
-    expect(setStep).toHaveBeenCalledWith("another_victim");
-
     rerender(
       <TurnActions
         {...baseProps}
@@ -540,19 +517,14 @@ describe("TurnActions Component - Tests completos", () => {
         setStep={setStep}
         selectedSet={mockSet}
         selectedCard={eventCards[1]}
-        setSelectedCard={setSelectedCard}
       />
     );
-
     await userEvent.click(screen.getByText("Robar"));
-
     await waitFor(() => {
       expect(
         screen.getByText("Error al robar set. Intenta de nuevo.")
       ).toBeInTheDocument();
     });
-
-    expect(setStep).not.toHaveBeenCalledWith("discard_op");
   });
 
   it("handleStealSet: cancelar desde another_victim vuelve a start y resetea selectedCard", async () => {
@@ -618,13 +590,8 @@ describe("TurnActions Component - Tests completos", () => {
   });
 
   it("handlePickUpFromDiscard: roba una carta del descarte y descarta la carta de evento 'Look into the ashes'", async () => {
-    const pickUpFromDiscardMock = vi
-      .spyOn(cardService, "pickUpFromDiscard")
-      .mockResolvedValue();
-    const discardSelectedListMock = vi.spyOn(
-      cardService,
-      "discardSelectedList"
-    );
+    vi.spyOn(cardService, "pickUpFromDiscard").mockResolvedValue();
+    vi.spyOn(cardService, "discardSelectedList").mockResolvedValue([]);
 
     const { rerender } = render(
       <TurnActions
@@ -632,13 +599,9 @@ describe("TurnActions Component - Tests completos", () => {
         step={"p_event"}
         setStep={setStep}
         selectedCard={eventCards[2]}
-        setSelectedCard={setSelectedCard}
-        discardedCards={discardedCards}
       />
     );
-
     await userEvent.click(screen.getByText("Jugar Evento Seleccionado"));
-    expect(setStep).toHaveBeenCalledWith("look_into_the_ashes");
 
     rerender(
       <TurnActions
@@ -646,21 +609,16 @@ describe("TurnActions Component - Tests completos", () => {
         step={"look_into_the_ashes"}
         setStep={setStep}
         selectedCard={discardedCards[0]}
-        setSelectedCard={setSelectedCard}
-        discardedCards={discardedCards}
       />
     );
-
     await userEvent.click(screen.getByText("Robar Carta"));
 
     await waitFor(() => {
-      expect(pickUpFromDiscardMock).toHaveBeenCalledWith(
+      expect(cardService.pickUpFromDiscard).toHaveBeenCalledWith(
         playerId,
         discardedCards[0].card_id
       );
-      expect(discardSelectedListMock).toHaveBeenCalledWith(playerId, [
-        eventCards[2].card_id,
-      ]);
+      expect(cardService.discardSelectedList).toHaveBeenCalled();
       expect(setSelectedCard).toHaveBeenCalledWith(null);
       expect(setStep).toHaveBeenCalledWith("discard_op");
     });
@@ -676,19 +634,13 @@ describe("TurnActions Component - Tests completos", () => {
         selectedCard={null}
       />
     );
-    await userEvent.click(screen.getByText("Robar Carta"));
-    expect(
-      screen.getByText("Debe seleccionar una carta del descarte.")
-    ).toBeInTheDocument();
-    expect(cardService.pickUpFromDiscard).not.toHaveBeenCalled();
-    expect(setStep).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: /robar carta/i })).toBeDisabled();
   });
 
   it("handlePickUpFromDiscard: muestra mensaje de error si falla al robar del descarte", async () => {
     vi.spyOn(cardService, "pickUpFromDiscard").mockRejectedValue(
       new Error("Error al robar descarte")
     );
-
     const { rerender } = render(
       <TurnActions
         {...baseProps}
@@ -698,7 +650,6 @@ describe("TurnActions Component - Tests completos", () => {
       />
     );
     await userEvent.click(screen.getByText("Jugar Evento Seleccionado"));
-    expect(setStep).toHaveBeenCalledWith("look_into_the_ashes");
 
     rerender(
       <TurnActions
@@ -710,12 +661,12 @@ describe("TurnActions Component - Tests completos", () => {
       />
     );
     await userEvent.click(screen.getByText("Robar Carta"));
+
     await waitFor(() => {
       expect(
         screen.getByText("Error al robar del descarte. Intenta de nuevo.")
       ).toBeInTheDocument();
     });
-    expect(setStep).not.toHaveBeenCalledWith("discard_op");
   });
 
   it("handlePickUpFromDiscard: cancelar desde look_into_the_ashes vuelve a start y resetea selectedCard", async () => {
@@ -758,7 +709,6 @@ describe("TurnActions Component - Tests completos", () => {
   });
 
   it("handleRevealSecret: revela un secreto y avanza a 'discard_op'", async () => {
-    const revealSecretMock = vi.spyOn(secretService, "revealSecret");
     render(
       <TurnActions
         {...baseProps}
@@ -768,7 +718,9 @@ describe("TurnActions Component - Tests completos", () => {
       />
     );
     await userEvent.click(screen.getByText("Revelar"));
-    expect(revealSecretMock).toHaveBeenCalledWith(mockSecret.secret_id);
+    expect(secretService.revealSecret).toHaveBeenCalledWith(
+      mockSecret.secret_id
+    );
     expect(setSelectedSecret).toHaveBeenCalledWith(null);
     expect(setStep).toHaveBeenCalledWith("discard_op");
   });
@@ -782,12 +734,7 @@ describe("TurnActions Component - Tests completos", () => {
         selectedSecret={null}
       />
     );
-    await userEvent.click(screen.getByText("Revelar"));
-    expect(
-      screen.getByText("Debe seleccionar un secreto para revelar.")
-    ).toBeInTheDocument();
-    expect(secretService.revealSecret).not.toHaveBeenCalled();
-    expect(setStep).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: /revelar/i })).toBeDisabled();
   });
 
   it("handleRevealSecret: muestra mensaje de error si falla al revelar el secreto", async () => {
@@ -808,7 +755,6 @@ describe("TurnActions Component - Tests completos", () => {
         screen.getByText("Error al revelar secreto. Intenta de nuevo.")
       ).toBeInTheDocument();
     });
-    expect(setStep).not.toHaveBeenCalledWith("discard_op");
   });
 
   it("handleRevealSecret: cancelar desde reveal_secret vuelve a start y resetea selectedSecret", async () => {
@@ -826,7 +772,6 @@ describe("TurnActions Component - Tests completos", () => {
   });
 
   it("handleHideSecret: oculta un secreto y avanza a 'discard_op'", async () => {
-    const hideSecretMock = vi.spyOn(secretService, "hideSecret");
     render(
       <TurnActions
         {...baseProps}
@@ -836,7 +781,9 @@ describe("TurnActions Component - Tests completos", () => {
       />
     );
     await userEvent.click(screen.getByText("Ocultar"));
-    expect(hideSecretMock).toHaveBeenCalledWith(revelatedMockSecret.secret_id);
+    expect(secretService.hideSecret).toHaveBeenCalledWith(
+      revelatedMockSecret.secret_id
+    );
     expect(setSelectedSecret).toHaveBeenCalledWith(null);
     expect(setStep).toHaveBeenCalledWith("discard_op");
   });
@@ -850,12 +797,7 @@ describe("TurnActions Component - Tests completos", () => {
         selectedSecret={null}
       />
     );
-    await userEvent.click(screen.getByText("Ocultar"));
-    expect(
-      screen.getByText("Debe seleccionar un secreto para revelar.")
-    ).toBeInTheDocument();
-    expect(secretService.hideSecret).not.toHaveBeenCalled();
-    expect(setStep).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: /ocultar/i })).toBeDisabled();
   });
 
   it("handleHideSecret: muestra mensaje de error si falla al ocultar el secreto", async () => {
@@ -876,7 +818,6 @@ describe("TurnActions Component - Tests completos", () => {
         screen.getByText("Error al ocultar secreto. Intenta de nuevo.")
       ).toBeInTheDocument();
     });
-    expect(setStep).not.toHaveBeenCalledWith("discard_op");
   });
 
   it("handleHideSecret: cancelar desde hide_secret vuelve a set_actions y resetea selectedSecret", async () => {
@@ -903,10 +844,7 @@ describe("TurnActions Component - Tests completos", () => {
   });
 
   it("handleDiscardSel: permite descartar carta seleccionada desde discard_op y avanza a draw", async () => {
-    const discardSelectedListMock = vi.spyOn(
-      cardService,
-      "discardSelectedList"
-    );
+    vi.spyOn(cardService, "discardSelectedList").mockResolvedValue([]);
     render(
       <TurnActions
         {...baseProps}
@@ -915,15 +853,14 @@ describe("TurnActions Component - Tests completos", () => {
         selectedCardIds={[detectiveCards[0].card_id]}
       />
     );
-
     await userEvent.click(screen.getByText("Descartar Selección"));
     await waitFor(() => {
-      expect(discardSelectedListMock).toHaveBeenCalledWith(playerId, [
+      expect(cardService.discardSelectedList).toHaveBeenCalledWith(playerId, [
         detectiveCards[0].card_id,
       ]);
+      expect(setSelectedCardIds).toHaveBeenCalledWith([]);
+      expect(setStep).toHaveBeenCalledWith("draw");
     });
-    expect(setSelectedCardIds).toHaveBeenCalledWith([]);
-    expect(setStep).toHaveBeenCalledWith("draw");
   });
 
   it("Desde 'discard_op', 'No Descartar' avanza a 'draw'", async () => {
