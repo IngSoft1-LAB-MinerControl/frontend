@@ -52,7 +52,7 @@ export default function Opponent({
       <div className="op-hand">
         {/* Mapeamos directamente desde player.cards que viene en las props */}
         {player.cards.map((card, index) =>
-          card.type === "detectives" ? (
+          card.type === "detective" ? (
             <Detective
               key={`op-card-${player.player_id}-${index}`}
               card_id={card.card_id}

@@ -24,7 +24,6 @@ export default function Set({
 }: SetProps) {
   const handleClick = () => {
     if (onSetClick) {
-      // 👈 Reconstruimos el objeto SetResponse para enviarlo
       const setResponse: SetResponse = {
         game_id: game_id,
         player_id: player_id,
@@ -39,6 +38,9 @@ export default function Set({
     <div
       className={`set ${isSelected ? "selected" : "table"}`}
       onClick={handleClick}
+      set-data={`set-${set_id}`}
+      role="button"
+      aria-label={`Set ${name}`}
     >
       {cards.map((card) => (
         <Detective

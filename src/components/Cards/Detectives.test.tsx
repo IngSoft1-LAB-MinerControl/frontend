@@ -1,39 +1,68 @@
-// src/components/Cards/Detectives.test.tsx
-
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi } from "vitest";
 import Detective from "./Detectives";
 
-vi.mock("/src/assets/01-card_back.png", () => ({
-  default: "card_back.png", // Devuelve un string simple
-}));
+// mock imagenes
+vi.mock("/src/assets/01-card_back.png", () => ({ default: "card_back.png" }));
 vi.mock("/src/assets/07-detective_poirot.png", () => ({
-  default: "poirot.png", // Devuelve un string simple
+  default: "poirot.png",
+}));
+vi.mock("/src/assets/08-detective_marple.png", () => ({
+  default: "marple.png",
+}));
+vi.mock("/src/assets/09-detective_satterthwaite.png", () => ({
+  default: "satterthwaite.png",
+}));
+vi.mock("/src/assets/10-detective_pyne.png", () => ({ default: "pyne.png" }));
+vi.mock("/src/assets/11-detective_brent.png", () => ({ default: "brent.png" }));
+vi.mock("/src/assets/12-detective_tommyberesford.png", () => ({
+  default: "tommy.png",
+}));
+vi.mock("/src/assets/13-detective_tuppenceberesford.png", () => ({
+  default: "tuppence.png",
+}));
+vi.mock("/src/assets/14-detective_quin.png", () => ({ default: "quin.png" }));
+vi.mock("/src/assets/15-detective_oliver.png", () => ({
+  default: "oliver.png",
 }));
 
 describe("Detective Component", () => {
-  // Renderizado carta boca arriba
-  it("debería renderizar la imagen correcta del detective cuando se muestra", () => {
-    render(<Detective name="Hercule Poirot" card_id={101} shown={true} />);
+  const detectives = [
+    { name: "Hercule Poirot", imgSrc: "poirot.png" },
+    { name: "Miss Marple", imgSrc: "marple.png" },
+    { name: "Mr Satterthwaite", imgSrc: "satterthwaite.png" },
+    { name: "Parker Pyne", imgSrc: "pyne.png" },
+    { name: "Lady Eileen 'Bundle' Brent", imgSrc: "brent.png" },
+    { name: "Tommy Beresford", imgSrc: "tommy.png" },
+    { name: "Tuppence Beresford", imgSrc: "tuppence.png" },
+    { name: "Harley Quin Wildcard", imgSrc: "quin.png" },
+    { name: "Adriane Oliver", imgSrc: "oliver.png" },
+  ];
 
-    const img = screen.getByRole("img");
-    // alt text correcto
-    expect(img).toHaveAttribute("alt", "card-101");
-    // imagen
-    expect(img).toHaveAttribute("src", "poirot.png");
+  // case: detectives
+  detectives.forEach((detective) => {
+    it(`debería renderizar la imagen correcta para ${detective.name}`, () => {
+      render(<Detective name={detective.name} card_id={1} shown={true} />);
+      const img = screen.getByRole("img");
+      expect(img).toHaveAttribute("src", detective.imgSrc);
+    });
   });
 
-  // Renderizado carta boca abajo
-  it("debería renderizar el reverso de la carta cuando está oculta", () => {
-    render(<Detective name="Hercule Poirot" card_id={101} shown={false} />);
-
+  // case: default
+  it("debería renderizar el reverso si el nombre no coincide (default case)", () => {
+    render(<Detective name="Nombre Desconocido" card_id={1} shown={true} />);
     const img = screen.getByRole("img");
-    // imagen
     expect(img).toHaveAttribute("src", "card_back.png");
   });
 
-  // Estado visual 'seleccionado'
+  // funcionalidad
+  it("debería renderizar el reverso de la carta cuando está oculta", () => {
+    render(<Detective name="Hercule Poirot" card_id={101} shown={false} />);
+    const img = screen.getByRole("img");
+    expect(img).toHaveAttribute("src", "card_back.png");
+  });
+
   it("debería aplicar la clase 'selected' cuando la prop isSelected es true", () => {
     render(
       <Detective
@@ -43,44 +72,29 @@ describe("Detective Component", () => {
         isSelected={true}
       />
     );
-
-    // El elemento clickeable es el div que contiene la imagen
     const cardContainer = screen.getByRole("img").parentElement;
     expect(cardContainer).toHaveClass("selected");
   });
 
-  // Interacción del usuario
   it("debería llamar a la función onCardClick con el ID correcto al hacer clic", async () => {
     const handleClick = vi.fn();
-    const cardId = 101;
-
     render(
       <Detective
         name="Hercule Poirot"
-        card_id={cardId}
+        card_id={101}
         shown={true}
         onCardClick={handleClick}
       />
     );
-
     const cardContainer = screen.getByRole("img").parentElement;
-    await userEvent.click(cardContainer!); // click div
-
-    // La función fue llamada una vez
+    await userEvent.click(cardContainer!);
     expect(handleClick).toHaveBeenCalledTimes(1);
-    // argumento correcto (card_id)
-    expect(handleClick).toHaveBeenCalledWith(cardId);
+    expect(handleClick).toHaveBeenCalledWith(101);
   });
 
-  // Caso borde: no hay funcion de click
   it("no debería fallar si se hace clic pero no se proporciona onCardClick", async () => {
     render(<Detective name="Hercule Poirot" card_id={101} shown={true} />);
-
     const cardContainer = screen.getByRole("img").parentElement;
-
-    // clicK no lanza error
-    const clickAction = async () => await userEvent.click(cardContainer!);
-
-    await expect(clickAction()).resolves.not.toThrow();
+    await expect(userEvent.click(cardContainer!)).resolves.not.toThrow();
   });
 });
