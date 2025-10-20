@@ -27,6 +27,7 @@ export default function GamePage() {
   const [discardedCards, setDiscardedCards] = useState<CardResponse[]>([]);
   const [error, setError] = useState("");
   const [endMessage, setEndMessage] = useState<string | null>(null);
+  const [isGameOver, setIsGameOver] = useState(false);
 
   const [selectedCardIds, setSelectedCardIds] = useState<number[]>([]);
   const [draftPile, setDraftPile] = useState<CardResponse[]>([]);
@@ -120,7 +121,7 @@ export default function GamePage() {
   useEffect(() => {
     if (!currentGame || players.length === 0) return;
 
-    if (currentGame.cards_left === 0) {
+    if (currentGame.status === "finished") {
       const currentPlayerState = players.find(
         (p) => p.player_id === player.player_id
       );
@@ -142,6 +143,7 @@ export default function GamePage() {
           ? "¡Ganaste!"
           : "Perdiste. El asesino ganó la partida."
       );
+      setIsGameOver(true);
     }
   }, [currentGame, players, player.player_id]);
 
@@ -262,6 +264,15 @@ export default function GamePage() {
       return;
     }
   }, [isMyTurn, turnActionStep]);
+
+  if (isGameOver) {
+    return (
+      <div className="game-page end-screen">
+        <h1>{endMessage}</h1>
+        <p>Fin de la partida</p>
+      </div>
+    );
+  }
 
   return (
     <div className="game-page">
