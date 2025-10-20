@@ -8,7 +8,6 @@ import playerService from "../../services/playerService";
 import { act } from "@testing-library/react";
 import { Routes, Route } from "react-router-dom";
 
-// --- Mock WebSocket ---
 class MockWebSocket {
   static instances: MockWebSocket[] = [];
   url: string;
@@ -29,14 +28,12 @@ class MockWebSocket {
 
 vi.stubGlobal("WebSocket", MockWebSocket);
 
-// --- MOCK playerService ---
 vi.mock("../../services/playerService", () => ({
   default: {
     createPlayer: vi.fn(),
   },
 }));
 
-// --- MOCK useNavigate ---
 const navigateMock = vi.fn();
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual("react-router-dom");
@@ -126,7 +123,6 @@ describe("ListGames", () => {
 
     const ws = MockWebSocket.instances[0];
 
-    // Simular mensaje WebSocket con partida joinable
     await act(async () => {
       ws.onopen?.();
       ws.onmessage?.({

@@ -348,7 +348,7 @@ export default function TurnActions({
           />
           <div className="action-buttons-group">
             <button className="action-button" onClick={() => setStep("p_set")}>
-              Jugar Set
+              Bajar Set
             </button>
             <button
               className="action-button"

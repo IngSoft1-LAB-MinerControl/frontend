@@ -6,14 +6,12 @@ import { MemoryRouter } from "react-router-dom";
 import Lobby from "./Lobby";
 import gameService from "../../services/gameService";
 
-// ✅ Mock de servicios
 vi.mock("../../services/gameService", () => ({
   default: {
     startGame: vi.fn(),
   },
 }));
 
-// ✅ Mock de React Router DOM
 const mockNavigate = vi.fn();
 let mockLocationState: any = {};
 
