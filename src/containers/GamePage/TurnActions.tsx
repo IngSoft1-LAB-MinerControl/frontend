@@ -131,6 +131,7 @@ export default function TurnActions({
       console.log("se levanto una carta.");
     } catch (err) {
       console.error("Error al robar carta:", err);
+      alert("Error al robar carta. Intenta de nuevo.");
     }
   };
 

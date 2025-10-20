@@ -72,7 +72,7 @@ export default function ListGames() {
   function getOrder(status: string) {
     if (status === "waiting players") return 1;
     if (status === "bootable") return 2;
-    if (status === "Full") return 3;
+    if (status === "full") return 3;
     if (status === "in course") return 4;
     return 5;
   }
@@ -87,7 +87,7 @@ export default function ListGames() {
         return "En espera ";
       case "bootable":
         return "En espera";
-      case "Full":
+      case "full":
         return "En espera";
       case "in course":
         return "En curso";
