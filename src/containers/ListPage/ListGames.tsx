@@ -72,14 +72,31 @@ export default function ListGames() {
   function getOrder(status: string) {
     if (status === "waiting players") return 1;
     if (status === "bootable") return 2;
-    if (status === "full") return 3;
-    if (status === "in_course") return 4;
+    if (status === "Full") return 3;
+    if (status === "in course") return 4;
     return 5;
   }
 
   const sortedPartidas = [...partidas].sort((a, b) => {
     return getOrder(a.status) - getOrder(b.status);
   });
+
+  function getStatusMessage(status: string) {
+    switch (status) {
+      case "waiting players":
+        return "En espera ";
+      case "bootable":
+        return "En espera";
+      case "Full":
+        return "En espera";
+      case "in course":
+        return "En curso";
+      case "finished":
+        return "Finalizada";
+      default:
+        return "";
+    }
+  }
 
   return (
     <div className="list-page">
@@ -100,7 +117,15 @@ export default function ListGames() {
                   <div className="item-data">
                     De {partida.min_players} a {partida.max_players} jugadores.
                     Lugares disponibles:{" "}
-                    {partida.max_players - partida.players_amount}
+                    {partida.max_players - partida.players_amount} <br />
+                    <span
+                      className={`status-message ${partida.status.replace(
+                        " ",
+                        "-"
+                      )}`}
+                    >
+                      {getStatusMessage(partida.status)}
+                    </span>
                   </div>
                 </div>
 

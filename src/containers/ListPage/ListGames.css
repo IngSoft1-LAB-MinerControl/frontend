@@ -25,7 +25,7 @@
   box-shadow: 0rem 0rem 1rem 0.2rem rgba(41, 3, 3, 0.5);
   box-sizing: border-box;
   backdrop-filter: blur(30px) brightness(115%);
-  overflow: hidden;
+  overflow-y: auto;
   padding-top: 0.2rem;
 }
 
@@ -86,4 +86,21 @@
   min-width: 100px;
   margin-left: 1rem;
   margin-right: 0.5rem;
+}
+
+.status-message {
+  font-weight: bold;
+}
+
+.status-message.waiting-players,
+.status-message.bootable,
+.status-message.Full {
+  color: #023d1b;
+}
+
+.status-message.in-course {
+  color: #ff4500;
+}
+.status-message.finished {
+  color: #e74c3c;
 }
