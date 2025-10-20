@@ -138,11 +138,19 @@ export default function GamePage() {
         (s) => s.accomplice
       );
 
-      setEndMessage(
-        hasMurderSecret || hasAccompliceSecret
-          ? "¡Ganaste!"
-          : "Perdiste. El asesino ganó la partida."
-      );
+      if (currentGame.cards_left === 0) {
+        setEndMessage(
+          hasMurderSecret || hasAccompliceSecret
+            ? "¡Ganaste!"
+            : "Perdiste. El asesino ganó la partida."
+        );
+      } else {
+        setEndMessage(
+          hasMurderSecret || hasAccompliceSecret
+            ? "¡Perdiste! !Tu identidad ha sido revelada!"
+            : "!Ganaste! !Descubriste al asesino!"
+        );
+      }
       setIsGameOver(true);
     }
   }, [currentGame, players, player.player_id]);
