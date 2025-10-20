@@ -276,18 +276,7 @@ export default function GamePage() {
   if (isGameOver) {
     return (
       <div className="game-page end-screen">
-        <figure>
-          <h1>{endMessage}</h1>
-          <h1>{endMessage}</h1>
-          <h1>{endMessage}</h1>
-          <h1>{endMessage}</h1>
-          <h1>{endMessage}</h1>
-          <h1>{endMessage}</h1>
-          <h1>{endMessage}</h1>
-          <h1>{endMessage}</h1>
-          <h1>{endMessage}</h1>
-          <h1>{endMessage}</h1>
-        </figure>
+        <h1>{endMessage}</h1>
       </div>
     );
   }
