@@ -1,7 +1,7 @@
 import type { CardResponse } from "../services/cardService";
 import type { SetResponse } from "../services/setService";
 import Detective from "./Cards/Detectives";
-import "./Sets.css";
+import "./Set.css";
 
 interface SetProps {
   game_id: number;

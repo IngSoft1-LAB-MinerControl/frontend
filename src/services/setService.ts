@@ -10,7 +10,7 @@ export interface SetResponse {
 }
 
 async function getSets(player_id: number): Promise<SetResponse[]> {
-  const response = await fetch(`${httpServerUrl}/sets/list/${player_id}}"`, {
+  const response = await fetch(`${httpServerUrl}/sets/list/${player_id}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
