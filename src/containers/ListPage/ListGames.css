@@ -55,6 +55,24 @@
   border-bottom: 1px solid black;
 }
 
+.list-item .custom-button {
+  background-color: rgb(224, 8, 8);
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.2 ease-in-out;
+}
+
+.list-item .custom-button:hover {
+  background-color: #b12e21;
+}
+
+.list-item .custom-button:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
 .list-item:last-child {
   border-bottom: none;
 }
