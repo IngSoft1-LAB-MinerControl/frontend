@@ -147,7 +147,7 @@ export default function GamePage() {
       } else {
         setEndMessage(
           hasMurderSecret || hasAccompliceSecret
-            ? "¡Perdiste! !Tu identidad ha sido revelada!"
+            ? "¡Perdiste! !Te descubrieron!"
             : "!Ganaste! !Descubriste al asesino!"
         );
       }
@@ -276,8 +276,18 @@ export default function GamePage() {
   if (isGameOver) {
     return (
       <div className="game-page end-screen">
-        <h1>{endMessage}</h1>
-        <p>Fin de la partida</p>
+        <figure>
+          <h1>{endMessage}</h1>
+          <h1>{endMessage}</h1>
+          <h1>{endMessage}</h1>
+          <h1>{endMessage}</h1>
+          <h1>{endMessage}</h1>
+          <h1>{endMessage}</h1>
+          <h1>{endMessage}</h1>
+          <h1>{endMessage}</h1>
+          <h1>{endMessage}</h1>
+          <h1>{endMessage}</h1>
+        </figure>
       </div>
     );
   }
