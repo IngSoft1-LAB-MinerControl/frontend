@@ -130,7 +130,7 @@ figure {
   }
 }
 
-h1 {
+.game-page.end-screen h1 {
   display: block;
   width: 100%;
   padding: 40px;
