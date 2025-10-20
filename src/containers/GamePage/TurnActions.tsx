@@ -67,7 +67,8 @@ export default function TurnActions({
       setStep("start");
     } catch (err) {
       console.error("Error al finalizar el turno:", err);
-      alert("Error al finalizar turno. Intenta de nuevo.");
+      //alert("Error al finalizar turno. Intenta de nuevo.");
+      setMessage("Error al finalizar turno. Intenta de nuevo.");
     }
   };
 
@@ -105,7 +106,9 @@ export default function TurnActions({
   const handleDiscardSel = async () => {
     if (lock) return;
     if (!selectedCardIds || selectedCardIds.length === 0) {
-      alert("No seleccionaste ninguna carta.");
+      //alert("No seleccionaste ninguna carta.");
+      setMessage("No seleccionaste ninguna carta.");
+
       return;
     }
     setLock(true);
@@ -115,7 +118,8 @@ export default function TurnActions({
       setStep("draw");
     } catch (err) {
       console.error("Error al descartar cartas seleccionadas:", err);
-      alert("Error al descartar cartas seleccionadas. Intenta de nuevo.");
+      //alert("Error al descartar cartas seleccionadas. Intenta de nuevo.");
+      setMessage("Error al descartar cartas seleccionadas. Intenta de nuevo.");
     } finally {
       setLock(false);
     }
