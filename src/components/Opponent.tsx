@@ -16,6 +16,9 @@ interface OpponentProps {
   onSecretClick: (secret: SecretResponse) => void;
   selectedSecret: SecretResponse | null;
   isSecretSelectionStep: boolean;
+  onClick?: () => void;
+  isSelected: boolean;
+  selectable: boolean;
 }
 
 export default function Opponent({
@@ -27,6 +30,9 @@ export default function Opponent({
   onSecretClick,
   selectedSecret,
   isSecretSelectionStep,
+  onClick,
+  isSelected = false,
+  selectable = false,
 }: OpponentProps) {
   const isSecretClickable = (secret: SecretResponse): boolean => {
     if (!isSecretSelectionStep) return false;
@@ -48,7 +54,14 @@ export default function Opponent({
 
   return (
     <div className="opponent">
-      <div className={`op-name ${isMyTurn ? "myturn" : ""}`}>{player.name}</div>
+      <div
+        className={`op-name ${isMyTurn ? "myturn" : ""} ${
+          isSelected ? "selected" : ""
+        } ${selectable ? "selectable" : ""}`}
+        onClick={selectable ? onClick : undefined}
+      >
+        {player.name}
+      </div>
       <div className="op-hand">
         {/* Mapeamos directamente desde player.cards que viene en las props */}
         {player.cards.map((card, index) =>

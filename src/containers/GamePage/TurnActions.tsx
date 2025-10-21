@@ -20,7 +20,8 @@ export type Steps =
   | "look_into_the_ashes"
   | "set_actions"
   | "reveal_secret"
-  | "hide_secret";
+  | "hide_secret"
+  | "select_player";
 
 interface TurnActionProps {
   gameId: number;
@@ -367,6 +368,16 @@ export default function TurnActions({
               Saltear
             </button>
           </div>
+        </div>
+      )}
+
+      {step === "select_player" && (
+        <div className="action-step-container">
+          <TextType
+            className="menu-indications"
+            text={["Seleccione un jugador"]}
+            typingSpeed={35}
+          />
         </div>
       )}
 

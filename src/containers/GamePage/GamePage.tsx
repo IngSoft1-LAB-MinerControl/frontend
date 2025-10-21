@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./GamePage.css";
-import type { PlayerStateResponse } from "../../services/playerService";
+import type {
+  PlayerResponse,
+  PlayerStateResponse,
+} from "../../services/playerService";
 import { httpServerUrl } from "../../services/config"; // Importar la URL base
 
 import TurnActions from "./TurnActions";
@@ -36,6 +39,8 @@ export default function GamePage() {
   const [selectedSecret, setSelectedSecret] = useState<SecretResponse | null>(
     null
   );
+  const [selectedTargetPlayer, setSelectedTargetPlayer] =
+    useState<PlayerStateResponse | null>(null);
 
   const [turnActionStep, setTurnActionStep] = useState<Steps>("start");
 
@@ -208,6 +213,11 @@ export default function GamePage() {
     }
   };
 
+  const handleSelectPlayer = (targetPlayerId: PlayerStateResponse) => {
+    setSelectedTargetPlayer(targetPlayerId);
+    console.log("Jugador seleccionado:", targetPlayerId);
+  };
+
   useEffect(() => {
     console.log("Paso de Acción:", turnActionStep);
 
@@ -300,6 +310,13 @@ export default function GamePage() {
                   turnActionStep === "reveal_secret" ||
                   turnActionStep === "hide_secret"
                 }
+                onClick={() => {
+                  if (turnActionStep === "select_player") {
+                    handleSelectPlayer(p);
+                  }
+                }}
+                selectable={turnActionStep === "select_player"}
+                isSelected={selectedTargetPlayer === p}
               />
             ))}
           </div>

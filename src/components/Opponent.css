@@ -1,3 +1,11 @@
+.op-name.selectable {
+  cursor: pointer;
+}
+
+.op-name.selected {
+  text-decoration: underline;
+}
+
 .op-hand {
   display: flex;
   gap: 0;
