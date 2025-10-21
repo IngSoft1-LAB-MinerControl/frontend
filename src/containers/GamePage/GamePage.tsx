@@ -213,9 +213,13 @@ export default function GamePage() {
     }
   };
 
-  const handleSelectPlayer = (targetPlayerId: PlayerStateResponse) => {
-    setSelectedTargetPlayer(targetPlayerId);
-    console.log("Jugador seleccionado:", targetPlayerId);
+  const handleSelectPlayer = (targetPlayer: PlayerStateResponse) => {
+    if (selectedTargetPlayer?.player_id === targetPlayer.player_id) {
+      setSelectedTargetPlayer(null);
+    } else {
+      setSelectedTargetPlayer(targetPlayer);
+    }
+    console.log("Jugador seleccionado:", targetPlayer);
   };
 
   useEffect(() => {
@@ -311,12 +315,18 @@ export default function GamePage() {
                   turnActionStep === "hide_secret"
                 }
                 onClick={() => {
-                  if (turnActionStep === "select_player") {
+                  if (
+                    turnActionStep === "cards_off_the_table" ||
+                    turnActionStep === "select_player"
+                  ) {
                     handleSelectPlayer(p);
                   }
                 }}
-                selectable={turnActionStep === "select_player"}
-                isSelected={selectedTargetPlayer === p}
+                selectable={
+                  turnActionStep === "cards_off_the_table" ||
+                  turnActionStep === "select_player"
+                }
+                isSelected={selectedTargetPlayer?.player_id === p.player_id}
               />
             ))}
           </div>
@@ -357,6 +367,7 @@ export default function GamePage() {
               <TurnActions
                 gameId={currentGame.game_id}
                 playerId={player.player_id}
+                players={players}
                 onTurnUpdated={handleTurnUpdated}
                 selectedCardIds={selectedCardIds}
                 setSelectedCardIds={setSelectedCardIds}
@@ -369,6 +380,8 @@ export default function GamePage() {
                 selectedSet={selectedSet}
                 selectedSecret={selectedSecret}
                 setSelectedSecret={setSelectedSecret}
+                selectedTargetPlayer={selectedTargetPlayer}
+                setSelectedTargetPlayer={setSelectedTargetPlayer}
               />
             </div>
           )}

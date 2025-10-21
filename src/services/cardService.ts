@@ -147,6 +147,24 @@ export async function pickUpFromDiscard(
   }
 }
 
+async function cardsOffTheTable(playerId: number) {
+  const response = await fetch(
+    `${httpServerUrl}/event/cards_off_table/${playerId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Error al ejecutar Cards Off The Table");
+  }
+
+  return await response.json();
+}
+
 const cardService = {
   getCardsByPlayer,
   discardAuto,
@@ -155,6 +173,7 @@ const cardService = {
   getDraftPile,
   pickUpDraftCard,
   pickUpFromDiscard,
+  cardsOffTheTable,
 };
 
 export default cardService;

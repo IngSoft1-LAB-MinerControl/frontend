@@ -8,6 +8,7 @@ import Detective from "../../components/Cards/Detectives";
 import Event from "../../components/Cards/Events";
 import type { SecretResponse } from "../../services/secretService";
 import secretService from "../../services/secretService";
+import { type PlayerStateResponse } from "../../services/playerService";
 
 export type Steps =
   | "start"
@@ -21,9 +22,11 @@ export type Steps =
   | "set_actions"
   | "reveal_secret"
   | "hide_secret"
+  | "cards_off_the_table"
   | "select_player";
 
 interface TurnActionProps {
+  players: PlayerStateResponse[];
   gameId: number;
   playerId: number;
   onTurnUpdated: (updatedGame: any) => void;
@@ -38,11 +41,14 @@ interface TurnActionProps {
   selectedSet: SetResponse | null;
   selectedSecret: SecretResponse | null;
   setSelectedSecret: (secret: SecretResponse | null) => void;
+  selectedTargetPlayer: PlayerStateResponse | null;
+  setSelectedTargetPlayer: (p: PlayerStateResponse | null) => void;
 }
 
 export default function TurnActions({
   gameId,
   playerId,
+  players,
   selectedCardIds,
   setSelectedCardIds,
   step,
@@ -54,6 +60,8 @@ export default function TurnActions({
   selectedSet,
   selectedSecret,
   setSelectedSecret,
+  selectedTargetPlayer,
+  setSelectedTargetPlayer,
 }: TurnActionProps) {
   const [lock, setLock] = useState(false);
   const [drawing, setDrawing] = useState(false);
@@ -271,6 +279,9 @@ export default function TurnActions({
         case "Look into the ashes":
           setStep("look_into_the_ashes");
           return;
+        case "Cards off the table":
+          setStep("cards_off_the_table");
+          return;
         default:
       }
       setMessage("");
@@ -340,7 +351,36 @@ export default function TurnActions({
     }
   };
 
-  console.log("Mensaje actual:", message);
+  const handleCardsOffTheTable = async (targetPlayerId: number) => {
+    if (lock || !activeEventCard) return;
+    setLock(true);
+    setMessage(""); // Limpia mensajes anteriores antes de ejecutar
+
+    try {
+      const res = await cardService.cardsOffTheTable(targetPlayerId);
+      console.log("Respuesta de cardsOffTheTable:", res);
+
+      await cardService.discardSelectedList(playerId, [
+        activeEventCard.card_id,
+      ]);
+      console.log("Se descartó", activeEventCard.name);
+
+      setMessage("Cartas 'Not So Fast' eliminadas correctamente.");
+    } catch (err) {
+      console.error("Error al ejecutar Cards Off The Table:", err);
+      const errorMessage =
+        (err as any).response?.data?.message ||
+        (err as Error).message ||
+        "Error desconocido al ejecutar el evento.";
+      setMessage(`Error: ${errorMessage}`);
+    } finally {
+      setSelectedTargetPlayer(null);
+      setActiveEventCard(null);
+      setLock(false);
+      setStep("discard_op");
+    }
+  };
+
   return (
     <div className="turn-actions-box">
       {message && <div className="turn-message">{message}</div>}
@@ -368,16 +408,6 @@ export default function TurnActions({
               Saltear
             </button>
           </div>
-        </div>
-      )}
-
-      {step === "select_player" && (
-        <div className="action-step-container">
-          <TextType
-            className="menu-indications"
-            text={["Seleccione un jugador"]}
-            typingSpeed={35}
-          />
         </div>
       )}
 
@@ -492,6 +522,43 @@ export default function TurnActions({
               Finalizar Turno
             </button>
           )}
+        </div>
+      )}
+      {step === "cards_off_the_table" && (
+        <div className="action-step-container">
+          <TextType
+            className="menu-indications"
+            text={[
+              "Seleccione un jugador para descartar sus cartas 'Not So Fast'",
+            ]}
+            typingSpeed={35}
+          />
+          <div className="action-buttons-group">
+            <button
+              className="action-button"
+              onClick={async () => {
+                if (!selectedTargetPlayer) {
+                  setMessage("Debe seleccionar un jugador.");
+                  setTimeout(() => setMessage(""), 3000); // Limpiar mensaje después de 3 segundos
+                  return;
+                }
+                await handleCardsOffTheTable(selectedTargetPlayer.player_id);
+              }}
+              disabled={!selectedTargetPlayer || lock} // Botón habilitado solo si hay un jugador seleccionado
+            >
+              Ejecutar Evento
+            </button>
+            <button
+              className="action-button"
+              onClick={() => {
+                setSelectedTargetPlayer(null); // Limpiar la selección
+                setActiveEventCard(null); // Limpiar la carta de evento (importante si el usuario cancela)
+                setStep("start"); // Volver al menú principal
+              }}
+            >
+              Cancelar
+            </button>
+          </div>
         </div>
       )}
 
