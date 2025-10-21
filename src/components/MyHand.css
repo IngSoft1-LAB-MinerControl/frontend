@@ -63,6 +63,13 @@
   margin-right: 0;
 }
 
+.you-main-area {
+  display: flex;
+  flex-direction: column; /* Apila los sets y la mano verticalmente */
+  align-items: center; /* Centra los sets y la mano horizontalmente */
+  gap: 15px; /* Añade un espacio entre los sets y la mano */
+}
+
 .you-secrets {
   display: flex;
   gap: 10px;

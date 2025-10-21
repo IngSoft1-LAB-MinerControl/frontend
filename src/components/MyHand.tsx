@@ -58,59 +58,59 @@ export default function You({
             );
           })}
         </div>
-
-        <div className={`you-hand`}>
-          {player.cards.map((card) => {
-            if (card.card_id === undefined) return null;
-
-            const isSelected =
-              selectedCardIds.includes(card.card_id) ||
-              selectedCard?.card_id === card.card_id;
-
-            return card.type === "detective" ? (
-              <Detective
-                key={card.card_id}
-                card_id={card.card_id}
-                shown={true}
-                size={"large"}
-                onCardClick={
-                  card.card_id !== undefined
-                    ? () => handleCardClick(card)
-                    : undefined
-                }
-                isSelected={isSelected}
-                name={card.name}
+        <div className="you-main-area">
+          <div className="you-sets">
+            {player.sets.map((set) => (
+              <Set
+                game_id={set.game_id}
+                player_id={set.player_id}
+                set_id={set.set_id}
+                name={set.name}
+                cards={set.detective}
+                isSelected={false}
               />
-            ) : (
-              <Event
-                key={card.card_id}
-                card_id={card.card_id}
-                shown={true}
-                size={"large"}
-                onCardClick={
-                  card.card_id !== undefined
-                    ? () => handleCardClick(card)
-                    : undefined
-                }
-                isSelected={isSelected}
-                name={card.name}
-              />
-            );
-          })}
+            ))}
+          </div>
+          <div className={`you-hand`}>
+            {player.cards.map((card) => {
+              if (card.card_id === undefined) return null;
+
+              const isSelected =
+                selectedCardIds.includes(card.card_id) ||
+                selectedCard?.card_id === card.card_id;
+
+              return card.type === "detective" ? (
+                <Detective
+                  key={card.card_id}
+                  card_id={card.card_id}
+                  shown={true}
+                  size={"large"}
+                  onCardClick={
+                    card.card_id !== undefined
+                      ? () => handleCardClick(card)
+                      : undefined
+                  }
+                  isSelected={isSelected}
+                  name={card.name}
+                />
+              ) : (
+                <Event
+                  key={card.card_id}
+                  card_id={card.card_id}
+                  shown={true}
+                  size={"large"}
+                  onCardClick={
+                    card.card_id !== undefined
+                      ? () => handleCardClick(card)
+                      : undefined
+                  }
+                  isSelected={isSelected}
+                  name={card.name}
+                />
+              );
+            })}
+          </div>
         </div>
-      </div>
-
-      <div className="you-sets">
-        {player.sets.map((set) => (
-          <Set
-            game_id={set.game_id}
-            player_id={set.player_id}
-            set_id={set.set_id}
-            name={set.name}
-            cards={set.detective}
-            isSelected={false}
-          />
-        ))}
       </div>
     </div>
   );
