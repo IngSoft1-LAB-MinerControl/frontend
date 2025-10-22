@@ -23,8 +23,8 @@ export type Steps =
   | "reveal_secret"
   | "hide_secret"
   | "cards_off_the_table"
-  | "and_then_there_was_one_more"
-  | "select_player";
+  | "and_then_there_was_one_more";
+// | "select_player";
 
 interface TurnActionProps {
   players: PlayerStateResponse[];

@@ -62,6 +62,7 @@ export default function Opponent({
       >
         {player.name}
       </div>
+
       <div className="op-hand">
         {/* Mapeamos directamente desde player.cards que viene en las props */}
         {player.cards.map((card, index) =>

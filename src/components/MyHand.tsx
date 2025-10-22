@@ -16,6 +16,9 @@ interface YouProps {
   onSecretClick: (secret: SecretResponse) => void;
   selectedSecret: SecretResponse | null;
   isSecretSelectionStep: boolean;
+  onClick?: () => void;
+  isSelected: boolean;
+  selectable: boolean;
 }
 
 export default function You({
@@ -27,6 +30,9 @@ export default function You({
   onSecretClick,
   selectedSecret,
   isSecretSelectionStep,
+  onClick,
+  isSelected = false,
+  selectable = false,
 }: YouProps) {
   const handleCardClick = (card: CardResponse) => {
     onCardsSelected(card);
@@ -34,7 +40,12 @@ export default function You({
 
   return (
     <div className="you">
-      <div className={`you-name ${isMyTurn ? "myturn" : ""}`}>
+      <div
+        className={`you-name ${isMyTurn ? "myturn" : ""} ${
+          isSelected ? "selected" : ""
+        } ${selectable ? "selectable" : ""}`}
+        onClick={selectable ? onClick : undefined}
+      >
         {player.name}
       </div>
 

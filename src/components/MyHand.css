@@ -9,6 +9,14 @@
   gap: 10px;
 }
 
+.you-name.selectable {
+  cursor: pointer;
+}
+
+.you-name.selected {
+  text-decoration: underline;
+}
+
 .player-cards-container {
   display: flex;
   flex-direction: row;
