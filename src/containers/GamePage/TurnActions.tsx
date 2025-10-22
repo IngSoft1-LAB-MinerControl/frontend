@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type Dispatch, type SetStateAction } from "react";
 import "./TurnActions.css";
 import gameService from "../../services/gameService";
 import cardService, { type CardResponse } from "../../services/cardService";
@@ -23,7 +23,8 @@ export type Steps =
   | "reveal_secret"
   | "hide_secret"
   | "cards_off_the_table"
-  | "and_then_there_was_one_more";
+  | "and_then_there_was_one_more"
+  | "delay_escape_selection";
 // | "select_player";
 
 interface TurnActionProps {
@@ -44,6 +45,8 @@ interface TurnActionProps {
   setSelectedSecret: (secret: SecretResponse | null) => void;
   selectedTargetPlayer: PlayerStateResponse | null;
   setSelectedTargetPlayer: (p: PlayerStateResponse | null) => void;
+  selectedDiscardIds: number[];
+  setSelectedDiscardIds: Dispatch<SetStateAction<number[]>>; //anotacion mia (uli) (no la saquen porque no entiendo dispatch ;))useState<number[]>() en GamePage devuelve un setter con tipo Dispatch<SetStateAction<number[]>>, que acepta tanto un number[] como una función prev => newArr.
 }
 
 export default function TurnActions({
@@ -63,6 +66,8 @@ export default function TurnActions({
   setSelectedSecret,
   selectedTargetPlayer,
   setSelectedTargetPlayer,
+  selectedDiscardIds,
+  setSelectedDiscardIds,
 }: TurnActionProps) {
   const [lock, setLock] = useState(false);
   const [drawing, setDrawing] = useState(false);
@@ -249,17 +254,69 @@ export default function TurnActions({
       discardedCards.find((c) => c.card_id === clickedCardId) ?? null;
     // Si la carta no existe en la lista de descartes, salimos.
     if (!card) return;
-
-    let newValue: CardResponse | null;
-    // Si ya hay una carta seleccionada (this.selectedCard o la prop selectedCard)
-    if (selectedCard && selectedCard.card_id === card.card_id) {
-      // La carta clickeada es la misma: DESELECCIONAR
-      newValue = null;
-    } else {
-      // La carta clickeada es diferente o no había nada: SELECCIONAR LA NUEVA
-      newValue = card;
+    if (step == "delay_escape_selection") {
+      setSelectedDiscardIds((prevIds: number[]) => {
+        if (prevIds.includes(clickedCardId)) {
+          return prevIds.filter((id) => id !== clickedCardId);
+        } else if (prevIds.length < 5) {
+          return [...prevIds, clickedCardId];
+        }
+        return prevIds;
+      });
+      setSelectedCard(null);
+    } else if (step == "look_into_the_ashes") {
+      let newValue: CardResponse | null;
+      // Si ya hay una carta seleccionada (this.selectedCard o la prop selectedCard)
+      if (selectedCard && selectedCard.card_id === card.card_id) {
+        // La carta clickeada es la misma: DESELECCIONAR
+        newValue = null;
+      } else {
+        // La carta clickeada es diferente o no había nada: SELECCIONAR LA NUEVA
+        newValue = card;
+      }
+      setSelectedCard(newValue);
+      setSelectedDiscardIds([]);
     }
-    setSelectedCard(newValue);
+  };
+
+  const handleDelayEscape = async () => {
+    if (lock || !activeEventCard) return;
+    if (
+      !selectedDiscardIds ||
+      selectedDiscardIds.length === 0 ||
+      selectedDiscardIds.length > 5
+    ) {
+      setMessage("Debes seleccionar entre 1 y 5 cartas del descarte.");
+      setTimeout(() => setMessage(""), 3000);
+      return;
+    }
+
+    setLock(true);
+    setMessage("Devolviendo cartas al mazo...");
+
+    try {
+      await cardService.delayEscape(
+        playerId,
+        selectedDiscardIds,
+        activeEventCard.card_id
+      );
+      setMessage("¡Cartas devueltas al mazo! Evento retirado.");
+      setTimeout(() => setMessage(""), 2000); // Mensaje de éxito corto
+    } catch (err) {
+      console.error("Error en Delay Escape:", err);
+      setMessage(
+        err instanceof Error
+          ? err.message
+          : "Error desconocido al ejecutar Delay Escape."
+      );
+      // No reseteamos el mensaje con timeout para que el error permanezca visible
+    } finally {
+      setSelectedDiscardIds([]);
+      setActiveEventCard(null);
+      setSelectedCard(null); // Limpia selección única por si acaso
+      setStep("discard_op"); // Ir a descarte opcional
+      setLock(false);
+    }
   };
 
   const handlePlayEvent = async () => {
@@ -286,8 +343,19 @@ export default function TurnActions({
         case "And then there was one more...":
           setStep("and_then_there_was_one_more");
           return;
+        case "Delay the murderer's escape!":
+          setStep("delay_escape_selection");
+          return;
         default:
+          if (activeEventCard) {
+            // descarto evento generico si no tiene accion especial
+            await cardService.discardSelectedList(playerId, [
+              activeEventCard.card_id,
+            ]);
+            console.log("Evento genérico descartado:", activeEventCard.name);
+          }
       }
+
       setMessage("");
       setActiveEventCard(null);
       setStep("discard_op");
@@ -843,6 +911,67 @@ export default function TurnActions({
               onClick={() => setStep("hide_secret")}
             >
               Ocultar secreto
+            </button>
+          </div>
+        </div>
+      )}
+      {step === "delay_escape_selection" && (
+        <div className="action-step-container">
+          <TextType
+            className="menu-indications"
+            text={[
+              "Selecciona hasta 5 cartas del descarte para devolver al mazo.",
+            ]}
+            typingSpeed={35}
+          />
+          <div className="discard-preview visible">
+            {discardedCards.map((card) => (
+              <div
+                key={card.card_id}
+                className={`card-container ${
+                  selectedDiscardIds.includes(card.card_id) ? "isSelected" : ""
+                }`}
+                onClick={() => handleDiscardCardSelect(card.card_id)}
+              >
+                {card.type === "detective" ? (
+                  <Detective
+                    card_id={card.card_id}
+                    shown={true}
+                    size="medium"
+                    name={card.name}
+                  />
+                ) : (
+                  <Event
+                    card_id={card.card_id}
+                    shown={true}
+                    size="medium"
+                    name={card.name}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="action-buttons-group">
+            <button
+              className="action-button"
+              onClick={handleDelayEscape}
+              disabled={lock || selectedDiscardIds.length === 0}
+            >
+              {lock
+                ? "Procesando..."
+                : `Devolver ${selectedDiscardIds.length} Cartas`}
+            </button>
+            <button
+              className="action-button"
+              onClick={() => {
+                setSelectedDiscardIds([]);
+                setActiveEventCard(null);
+                setSelectedCard(null);
+                setStep("start");
+              }}
+              disabled={lock}
+            >
+              Cancelar
             </button>
           </div>
         </div>

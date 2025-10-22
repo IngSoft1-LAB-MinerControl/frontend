@@ -187,6 +187,31 @@ async function AndThenThereWasOneMore(
   return await response.json();
 }
 
+async function delayEscape(
+  playerId: number,
+  cardIds: number[],
+  eventCardId: number
+): Promise<any> {
+  const response = await fetch(
+    `${httpServerUrl}/event/delay_escape/${playerId},${eventCardId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        card_ids_to_return: cardIds,
+        event_card_id: eventCardId,
+      }),
+    }
+  );
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || "Error al ejecutar Delay Escape");
+  }
+  return await response.json();
+}
+
 const cardService = {
   getCardsByPlayer,
   discardAuto,
@@ -197,6 +222,7 @@ const cardService = {
   pickUpFromDiscard,
   cardsOffTheTable,
   AndThenThereWasOneMore,
+  delayEscape,
 };
 
 export default cardService;
