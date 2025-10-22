@@ -312,19 +312,22 @@ export default function GamePage() {
                 selectedSecret={selectedSecret}
                 isSecretSelectionStep={
                   turnActionStep === "reveal_secret" ||
-                  turnActionStep === "hide_secret"
+                  turnActionStep === "hide_secret" ||
+                  turnActionStep === "and_then_there_was_one_more"
                 }
                 onClick={() => {
                   if (
                     turnActionStep === "cards_off_the_table" ||
-                    turnActionStep === "select_player"
+                    turnActionStep === "select_player" ||
+                    turnActionStep === "and_then_there_was_one_more"
                   ) {
                     handleSelectPlayer(p);
                   }
                 }}
                 selectable={
                   turnActionStep === "cards_off_the_table" ||
-                  turnActionStep === "select_player"
+                  turnActionStep === "select_player" ||
+                  turnActionStep === "and_then_there_was_one_more"
                 }
                 isSelected={selectedTargetPlayer?.player_id === p.player_id}
               />

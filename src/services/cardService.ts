@@ -165,6 +165,28 @@ async function cardsOffTheTable(playerId: number) {
   return await response.json();
 }
 
+async function AndThenThereWasOneMore(
+  newSecretPlayerId: number,
+  secretId: number
+) {
+  const response = await fetch(
+    `${httpServerUrl}/event/one_more/${newSecretPlayerId},${secretId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || "Error al ejecutar One More Event");
+  }
+
+  return await response.json();
+}
+
 const cardService = {
   getCardsByPlayer,
   discardAuto,
@@ -174,6 +196,7 @@ const cardService = {
   pickUpDraftCard,
   pickUpFromDiscard,
   cardsOffTheTable,
+  AndThenThereWasOneMore,
 };
 
 export default cardService;

@@ -23,6 +23,7 @@ export type Steps =
   | "reveal_secret"
   | "hide_secret"
   | "cards_off_the_table"
+  | "and_then_there_was_one_more"
   | "select_player";
 
 interface TurnActionProps {
@@ -282,6 +283,9 @@ export default function TurnActions({
         case "Cards off the table":
           setStep("cards_off_the_table");
           return;
+        case "And then there was one more...":
+          setStep("and_then_there_was_one_more");
+          return;
         default:
       }
       setMessage("");
@@ -377,6 +381,51 @@ export default function TurnActions({
       setSelectedTargetPlayer(null);
       setActiveEventCard(null);
       setLock(false);
+      setStep("discard_op");
+    }
+  };
+
+  const handleAndThenThereWasOneMore = async () => {
+    if (!selectedSecret) {
+      setMessage("Debe seleccionar un secreto.");
+      setTimeout(() => setMessage(""), 3000);
+      return;
+    }
+    if (!selectedSecret.revelated) {
+      setMessage("Solo puede ocultar secretos revelados.");
+      setTimeout(() => setMessage(""), 3000);
+      return;
+    }
+
+    try {
+      await cardService.AndThenThereWasOneMore(
+        selectedTargetPlayer!.player_id,
+        selectedSecret.secret_id
+      );
+
+      console.log(
+        `Evento 'And Then There Was One More' ejecutado. Jugador ${
+          selectedTargetPlayer!.player_id
+        } recibe secreto ${selectedSecret.secret_id}.`
+      );
+
+      if (activeEventCard) {
+        await cardService.discardSelectedList(playerId, [
+          activeEventCard.card_id,
+        ]);
+        console.log(`Evento '${activeEventCard.name}' descartado.`);
+      }
+
+      setMessage("Evento ejecutado exitosamente.");
+      setTimeout(() => setMessage(""), 2000);
+    } catch (err) {
+      console.error("Error al ejecutar evento:", err);
+      setMessage("Error al ejecutar el evento.");
+      setTimeout(() => setMessage(""), 3000);
+    } finally {
+      setSelectedSecret(null);
+      setSelectedTargetPlayer(null);
+      setActiveEventCard(null);
       setStep("discard_op");
     }
   };
@@ -524,6 +573,84 @@ export default function TurnActions({
           )}
         </div>
       )}
+
+      {step === "and_then_there_was_one_more" && (
+        <div className="action-step-container">
+          <TextType
+            key={selectedTargetPlayer ? "secret" : "player"}
+            className="menu-indications"
+            text={
+              selectedTargetPlayer
+                ? ["Seleccione un secreto revelado para ocultar."]
+                : ["Clickee el nombre de un jugador que recibirá el secreto."]
+            }
+            typingSpeed={35}
+          />
+
+          <div className="action-buttons-group">
+            {!selectedTargetPlayer ? (
+              <>
+                <button
+                  className="action-button"
+                  disabled={!selectedTargetPlayer}
+                  onClick={() => {
+                    if (!selectedTargetPlayer) {
+                      setMessage("Debe seleccionar un jugador.");
+                      setTimeout(() => setMessage(""), 3000);
+                    }
+                  }}
+                >
+                  Avanzar
+                </button>
+                <button
+                  className="action-button"
+                  onClick={() => {
+                    setSelectedTargetPlayer(null);
+                    setActiveEventCard(null);
+                    setStep("start");
+                  }}
+                >
+                  Cancelar
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  className="action-button"
+                  onClick={async () => {
+                    if (!selectedSecret) {
+                      setMessage("Debe seleccionar un secreto.");
+                      setTimeout(() => setMessage(""), 3000);
+                      return;
+                    }
+                    if (!selectedSecret.revelated) {
+                      setMessage("Solo puede ocultar secretos revelados.");
+                      setTimeout(() => setMessage(""), 3000);
+                      return;
+                    }
+                    await handleAndThenThereWasOneMore();
+                  }}
+                  disabled={!selectedSecret || lock}
+                >
+                  Ejecutar Evento
+                </button>
+                <button
+                  className="action-button"
+                  onClick={() => {
+                    setSelectedSecret(null);
+                    setSelectedTargetPlayer(null);
+                    setActiveEventCard(null);
+                    setStep("start");
+                  }}
+                >
+                  Cancelar
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       {step === "cards_off_the_table" && (
         <div className="action-step-container">
           <TextType
@@ -539,21 +666,21 @@ export default function TurnActions({
               onClick={async () => {
                 if (!selectedTargetPlayer) {
                   setMessage("Debe seleccionar un jugador.");
-                  setTimeout(() => setMessage(""), 3000); // Limpiar mensaje después de 3 segundos
+                  setTimeout(() => setMessage(""), 3000);
                   return;
                 }
                 await handleCardsOffTheTable(selectedTargetPlayer.player_id);
               }}
-              disabled={!selectedTargetPlayer || lock} // Botón habilitado solo si hay un jugador seleccionado
+              disabled={!selectedTargetPlayer || lock}
             >
               Ejecutar Evento
             </button>
             <button
               className="action-button"
               onClick={() => {
-                setSelectedTargetPlayer(null); // Limpiar la selección
-                setActiveEventCard(null); // Limpiar la carta de evento (importante si el usuario cancela)
-                setStep("start"); // Volver al menú principal
+                setSelectedTargetPlayer(null);
+                setActiveEventCard(null);
+                setStep("start");
               }}
             >
               Cancelar
