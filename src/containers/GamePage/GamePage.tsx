@@ -311,9 +311,9 @@ export default function GamePage() {
                 onSecretClick={handleSecretSelect}
                 selectedSecret={selectedSecret}
                 isSecretSelectionStep={
-                  turnActionStep === "reveal_secret" ||
-                  turnActionStep === "hide_secret" ||
-                  turnActionStep === "and_then_there_was_one_more"
+                  turnActionStep === "and_then_there_was_one_more" ||
+                  turnActionStep === "sel_reveal_secret" ||
+                  turnActionStep === "sel_hide_secret"
                 }
                 onClick={() => {
                   if (
@@ -358,8 +358,8 @@ export default function GamePage() {
               onSecretClick={handleSecretSelect}
               selectedSecret={selectedSecret}
               isSecretSelectionStep={
-                turnActionStep === "reveal_secret" ||
-                turnActionStep === "hide_secret" ||
+                turnActionStep === "sel_reveal_secret" ||
+                turnActionStep === "sel_hide_secret" ||
                 turnActionStep === "and_then_there_was_one_more"
               }
               onClick={() => {
