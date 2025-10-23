@@ -226,6 +226,7 @@ export default function TurnActions({
         case "Lady Eileen 'Bundle' Brent":
         case "Tommy Beresford":
         case "Tuppence Beresford":
+        case "Beresford brothers":
           setStep("sel_player_reveal");
           break;
         case "Parker Pyne":
