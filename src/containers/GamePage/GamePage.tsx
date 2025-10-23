@@ -11,6 +11,13 @@ import You from "../../components/MyHand";
 import type { GameResponse } from "../../services/gameService";
 import type { CardResponse } from "../../services/cardService";
 import DraftPile from "../../components/DraftPile";
+import type { SetResponse } from "../../services/setService";
+import type { Steps } from "./TurnActions";
+import type { SecretResponse } from "../../services/secretService";
+import secretService from "../../services/secretService";
+import playerService from "../../services/playerService";
+import TextType from "../../components/TextType";
+import destinations from "../../navigation/destinations";
 
 export default function GamePage() {
   const location = useLocation();
@@ -23,9 +30,18 @@ export default function GamePage() {
   //const [lastDiscarded, setLastDiscarded] = useState<CardResponse | null>(null);
   const [discardedCards, setDiscardedCards] = useState<CardResponse[]>([]);
   const [error, setError] = useState("");
+  const [selectedDiscardIds, setSelectedDiscardIds] = useState<number[]>([]);
   const [selectedCardIds, setSelectedCardIds] = useState<number[]>([]);
-  const [turnActionStep, setTurnActionStep] = useState<0 | 1 | 2>(0);
   const [draftPile, setDraftPile] = useState<CardResponse[]>([]);
+  const [selectedCard, setSelectedCard] = useState<CardResponse | null>(null);
+  const [selectedSet, setSelectedSet] = useState<SetResponse | null>(null);
+  const [selectedSecret, setSelectedSecret] = useState<SecretResponse | null>(
+    null
+  );
+  const [selectedTargetPlayer, setSelectedTargetPlayer] =
+    useState<PlayerStateResponse | null>(null);
+
+  const [turnActionStep, setTurnActionStep] = useState<Steps>("start");
 
   if (!game) {
     return (
@@ -51,35 +67,28 @@ export default function GamePage() {
       setError("");
     };
 
-    // Escuchamos todos los mensajes que el servidor envía para esta partida
     ws.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
         console.log("MSJ WS", message);
-        // Lógica para manejar datos que pueden ser string o ya un objeto
-        // Esta es la clave: si es un string, lo parseamos. Si no, lo usamos directamente.
+
         const dataContent =
           typeof message.data === "string"
             ? JSON.parse(message.data)
             : message.data;
-        // Usamos un switch para manejar los diferentes tipos de actualizaciones
+
         switch (message.type) {
           case "playersState":
-            // Actualiza la lista de jugadores
-            // Parseo a JSON primero de string
-            // const playersData = JSON.parse(message.data)
             setPlayers(dataContent);
             break;
 
           case "gameUpdated":
-            // Actualiza el estado completo de la partida (ej: cambio de turno)
             setCurrentGame(dataContent);
+
             break;
 
           case "droppedCards":
-            // Actualiza la última carta descartada
             console.log("SE RECIBIERON LAS CARTAS DESCARTADAS", dataContent);
-            //setLastDiscarded(dataContent[0]);
             setDiscardedCards(dataContent);
             break;
 
@@ -88,7 +97,6 @@ export default function GamePage() {
             console.log("SE RECIBIERON LAS CARTAS DEL DRAFT", dataContent);
             break;
 
-          // más casos acá. ("player_played_card", "game_over", etc.)
           default:
             console.log("Mensaje WS recibido sin tipo conocido:", message);
         }
@@ -114,25 +122,108 @@ export default function GamePage() {
     };
   }, [game.game_id, navigate]); // Dependemos solo de game.game_id para no reconectar innecesariamente
 
-  // El resto de la lógica del componente permanece igual,
-  // ya que reacciona a los cambios de estado que ahora son actualizados por el WebSocket.
+  useEffect(() => {
+    if (!currentGame) return;
+
+    if (currentGame.status === "finished") {
+      navigate(destinations.endGame, {
+        replace: true,
+        state: {
+          players: players,
+          game: currentGame,
+          myPlayerId: player.player_id,
+        },
+      });
+    }
+  }, [currentGame, players, player.player_id, navigate]);
 
   const currentPlayer = players.find((p) => p.player_id === player.player_id);
   const cardCount = currentPlayer ? currentPlayer.cards.length : 0;
 
-  // DEPURACIÓN isMyTurn
+  const handleSetSelect = (set: SetResponse | undefined) => {
+    if (selectedSet && set && selectedSet.set_id === set.set_id) {
+      setSelectedSet(null);
+    } else {
+      setSelectedSet(set ?? null);
+    }
+  };
 
-  // console.log("DEBUG: CÁLCULO DE TURNO ");
-  // console.log("Objeto 'player' del Lobby:", player);
-  // console.log("Objeto 'currentGame':", currentGame);
-  // console.log("Objeto 'currentPlayer' (encontrado en la lista):", currentPlayer);
+  const handleHandCardSelect = (card: CardResponse) => {
+    // seleccion multiple si es set o descarte
+    if (
+      turnActionStep === "p_set" ||
+      turnActionStep === "discard_op" ||
+      turnActionStep === "discard_skip"
+    ) {
+      setSelectedCard(null); // Deseleccionar cualquier carta individualmente seleccionada previamente
 
-  // if (currentGame) {
-  //   console.log("  ➡️ Turno actual del juego (current_turn):", currentGame.current_turn);
-  // }
-  // if (currentPlayer) {
-  //   console.log("  ➡️ Mi orden de turno (turn_order):", currentPlayer.turn_order);
-  // }
+      setSelectedCardIds((prevIds) => {
+        const id = card.card_id;
+        if (prevIds.includes(id)) {
+          // Deseleccionar
+          return prevIds.filter((cid) => cid !== id);
+        } else {
+          // Seleccionar
+          return [...prevIds, id];
+        }
+      });
+    }
+
+    // seleccion unica si es jugar evento
+    else if (turnActionStep === "p_event") {
+      setSelectedCardIds([]); // Limpiar multiselección
+      // Si la carta ya está seleccionada, la deseleccionamos (ponemos null).
+      // Si no, la seleccionamos.
+      setSelectedCard((prev) => (prev?.card_id === card.card_id ? null : card));
+    }
+  };
+
+  const handleSecretSelect = (secret: SecretResponse | undefined) => {
+    if (
+      selectedSecret &&
+      secret &&
+      selectedSecret.secret_id === secret.secret_id
+    ) {
+      setSelectedSet(null);
+    } else {
+      setSelectedSecret(secret ?? null);
+    }
+  };
+
+  const handleSelectPlayer = (targetPlayer: PlayerStateResponse) => {
+    if (selectedTargetPlayer?.player_id === targetPlayer.player_id) {
+      setSelectedTargetPlayer(null);
+    } else {
+      setSelectedTargetPlayer(targetPlayer);
+    }
+    console.log("Jugador seleccionado:", targetPlayer);
+  };
+
+  useEffect(() => {
+    console.log("Paso de Acción:", turnActionStep);
+
+    if (selectedCardIds.length > 0) {
+      console.log("Selección Múltiple (IDs):", selectedCardIds);
+    }
+
+    if (selectedCard) {
+      console.log(
+        "Selección Única (Draft/Evento):",
+        selectedCard.name,
+        `(ID: ${selectedCard.card_id})`
+      );
+    }
+
+    if (selectedCardIds.length === 0 && !selectedCard) {
+      console.log("No hay cartas seleccionadas.");
+    }
+    console.log("---");
+  }, [selectedCardIds, selectedCard, turnActionStep]);
+
+  const handleDraftSelect = (card: CardResponse) => {
+    // Si el jugador hace clic en la misma carta, se deselecciona. Si no, se selecciona.
+    setSelectedCard((prev) => (prev === card ? null : card));
+  };
 
   const isMyTurn = useMemo(() => {
     if (
@@ -168,10 +259,14 @@ export default function GamePage() {
   useEffect(() => {
     // Si no es mi turno, aseguramos que las acciones no se muestren
     if (!isMyTurn) {
-      setTurnActionStep(0); // Reiniciar el estado de acciones
+      setTurnActionStep("start"); // Reiniciar el estado de acciones
       return;
     }
   }, [isMyTurn, turnActionStep]);
+
+  const isForcedToAct = useMemo(() => {
+    return !isMyTurn && (currentPlayer?.isSelected ?? false);
+  }, [isMyTurn, currentPlayer]);
 
   return (
     <div className="game-page">
@@ -179,25 +274,78 @@ export default function GamePage() {
         <section className="area-top">
           <div className="opponents-row">
             {distribution.opponents.map((p) => (
-              <Opponent key={p.player_id} player={p} />
+              <Opponent
+                key={p.player_id}
+                player={p}
+                isMyTurn={p.turn_order === currentGame?.current_turn}
+                onSetClick={handleSetSelect}
+                selectedSet={selectedSet}
+                isSetSelectionStep={turnActionStep === "another_victim"}
+                onSecretClick={handleSecretSelect}
+                selectedSecret={selectedSecret}
+                isSecretSelectionStep={
+                  turnActionStep === "and_then_there_was_one_more" ||
+                  turnActionStep === "sel_reveal_secret" ||
+                  turnActionStep === "sel_hide_secret"
+                }
+                onClick={() => {
+                  if (
+                    turnActionStep === "cards_off_the_table" ||
+                    turnActionStep === "and_then_there_was_one_more" ||
+                    turnActionStep === "sel_player_reveal"
+                  ) {
+                    handleSelectPlayer(p);
+                  }
+                }}
+                selectable={
+                  turnActionStep === "cards_off_the_table" ||
+                  turnActionStep === "and_then_there_was_one_more" ||
+                  turnActionStep === "sel_player_reveal"
+                }
+                isSelected={selectedTargetPlayer?.player_id === p.player_id}
+              />
             ))}
           </div>
         </section>
 
         <section className="area-center">
+          <DraftPile
+            cards={draftPile}
+            selectedCard={selectedCard}
+            onCardSelect={handleDraftSelect}
+            isMyTurn={isMyTurn}
+          />
           <Decks
             cardsLeftCount={currentGame?.cards_left ?? null}
             discardedCards={discardedCards}
-            isMyTurn={isMyTurn}
           />
-          <DraftPile cards={draftPile} />
         </section>
         <section className="area-bottom">
           {distribution.bottom ? (
             <You
               player={distribution.bottom}
               selectedCardIds={selectedCardIds}
-              onCardsSelected={setSelectedCardIds}
+              onCardsSelected={handleHandCardSelect}
+              isMyTurn={isMyTurn}
+              selectedCard={selectedCard}
+              onSecretClick={handleSecretSelect}
+              selectedSecret={selectedSecret}
+              isSecretSelectionStep={
+                turnActionStep === "sel_reveal_secret" ||
+                turnActionStep === "sel_hide_secret" ||
+                turnActionStep === "and_then_there_was_one_more" ||
+                isForcedToAct
+              }
+              onClick={() => {
+                if (
+                  turnActionStep === "and_then_there_was_one_more" &&
+                  distribution.bottom
+                ) {
+                  handleSelectPlayer(distribution.bottom);
+                }
+              }}
+              selectable={turnActionStep === "and_then_there_was_one_more"}
+              isSelected={selectedTargetPlayer?.player_id === player.player_id}
             />
           ) : (
             <div className="empty-hint">Esperando jugadores…</div>
@@ -207,13 +355,72 @@ export default function GamePage() {
               <TurnActions
                 gameId={currentGame.game_id}
                 playerId={player.player_id}
+                players={players}
                 onTurnUpdated={handleTurnUpdated}
                 selectedCardIds={selectedCardIds}
                 setSelectedCardIds={setSelectedCardIds}
                 step={turnActionStep}
                 setStep={setTurnActionStep}
                 cardCount={cardCount}
+                selectedCard={selectedCard}
+                setSelectedCard={setSelectedCard}
+                discardedCards={discardedCards}
+                selectedSet={selectedSet}
+                selectedSecret={selectedSecret}
+                setSelectedSecret={setSelectedSecret}
+                selectedTargetPlayer={selectedTargetPlayer}
+                setSelectedTargetPlayer={setSelectedTargetPlayer}
+                selectedDiscardIds={selectedDiscardIds}
+                setSelectedDiscardIds={setSelectedDiscardIds}
               />
+            </div>
+          )}
+
+          {isForcedToAct && (
+            <div className="turn-actions-container">
+              <div className="action-step-container">
+                <TextType
+                  text={[
+                    "Te han seleccionado. Debes revelar uno de tus secretos.",
+                  ]}
+                  typingSpeed={35}
+                />
+                <div className="action-buttons-group">
+                  <button
+                    className="action-button"
+                    onClick={async () => {
+                      if (!selectedSecret) {
+                        alert("Por favor, selecciona un secreto para revelar.");
+                        return;
+                      }
+                      if (selectedSecret.revelated) {
+                        alert(
+                          "Ese secreto ya está revelado. Debes elegir uno oculto."
+                        );
+                        return;
+                      }
+
+                      try {
+                        // 1. Revelar el secreto
+                        await secretService.revealSecret(
+                          selectedSecret.secret_id
+                        );
+                        // 2. Desmarcarme a mí mismo
+                        await playerService.unselectPlayer(player.player_id);
+                        // 3. Limpiar estado local
+                        setSelectedSecret(null);
+                      } catch (err) {
+                        console.error("Error al revelar secreto forzado:", err);
+                        alert("Error al revelar secreto.");
+                      }
+                    }}
+                    // Deshabilitado si no hay secreto, o si el secreto ya está revelado
+                    disabled={!selectedSecret || selectedSecret.revelated}
+                  >
+                    Revelar Secreto
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </section>

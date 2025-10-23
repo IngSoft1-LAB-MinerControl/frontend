@@ -12,26 +12,34 @@ export default function CreatePage() {
   const [minPlayers, setMinPlayers] = useState(2);
   const [maxPlayers, setMaxPlayers] = useState(6);
   const [error, setError] = useState("");
+  const [nameError, setNameError] = useState(false);
+  const [numPlayerError, setNumPlayersError] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { playerName, playerDate } = location.state || {};
+  const { playerName, playerDate, playerAvatar } = location.state || {};
 
   const validate = () => {
+    let valid = true;
+    setError("");
+    setNameError(false);
+    setNumPlayersError(false);
+
     if (!gameName.trim()) {
       setError("Debe ingresar un nombre");
-      return false;
-    }
-    if (minPlayers < 2 || maxPlayers > 6) {
+      setNameError(true);
+      valid = false;
+    } else if (minPlayers < 2 || maxPlayers > 6) {
       setError("La cantidad de jugadores debe estar entre 2 y 6.");
-      return false;
-    }
-    if (minPlayers > maxPlayers) {
+      setNumPlayersError(true);
+      valid = false;
+    } else if (minPlayers > maxPlayers) {
       setError("El número mínimo de jugadores no puede ser mayor al máximo");
-      return false;
+      setNumPlayersError(true);
+      valid = false;
     }
-    setError("");
-    return true;
+
+    return valid;
   };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,9 +72,10 @@ export default function CreatePage() {
       // Crear el jugador host
       const newPlayer = await playerService.createPlayer({
         name: playerName,
-        birth_date: playerDate, //new Date(initialDate).toISOString().split("T")[0],
+        birth_date: playerDate,
         host: true,
         game_id: newGame.game_id,
+        avatar: playerAvatar,
       });
       console.log("newPlayer (create):", newPlayer);
 
@@ -94,9 +103,11 @@ export default function CreatePage() {
             placeholder="Ingrese un nombre para la partida."
             value={gameName}
             maxLength={30}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setGameName(e.target.value)
-            }
+            onChange={(e) => {
+              setGameName(e.target.value);
+              if (e.target.value.trim()) setNameError(false);
+            }}
+            error={nameError}
           />
         </div>
 
@@ -113,6 +124,7 @@ export default function CreatePage() {
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 setMinPlayers(Number(e.target.value))
               }
+              error={numPlayerError}
             />
           </div>
 
@@ -128,6 +140,7 @@ export default function CreatePage() {
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 setMaxPlayers(Number(e.target.value))
               }
+              error={numPlayerError}
             />
           </div>
         </div>

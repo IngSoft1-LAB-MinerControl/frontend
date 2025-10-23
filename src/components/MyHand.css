@@ -1,15 +1,35 @@
+/* MyHand.css o You.css */
+
 .you {
   position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.you-name.selectable {
+  cursor: pointer;
+}
+
+.you-name.selected {
+  text-decoration: underline;
+}
+
+.player-cards-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 20px;
+  width: 100%;
+  padding: 0 20px;
 }
 
 .you-hand {
   display: flex;
-  gap: 0;
-  justify-items: center;
   align-items: center;
-  padding: 6px 10px;
-  border-radius: 12px;
-  z-index: 50;
 }
 
 .you-hand .card {
@@ -50,12 +70,37 @@
 .you-hand.expanded .card:last-child {
   margin-right: 0;
 }
+
+.you-main-area {
+  display: flex;
+  flex-direction: column; /* Apila los sets y la mano verticalmente */
+  align-items: center; /* Centra los sets y la mano horizontalmente */
+  gap: 15px; /* Añade un espacio entre los sets y la mano */
+}
+
 .you-secrets {
   display: flex;
   gap: 10px;
-  justify-content: center;
   align-items: center;
-  z-index: 10;
+  margin-left: 4rem;
+  margin-right: 4rem;
+  padding: 5px;
+}
+
+.you-secrets .secret.clickable {
+  cursor: pointer;
+}
+
+.you-secrets .secret.clickable:hover:not(.selected) {
+  box-shadow: 0 0 5px 2px rgba(255, 221, 0, 0.7);
+}
+
+.you-secrets .secret.selected {
+  --selection-color: #00ff00;
+  box-shadow: 0 0 12px 6px var(--selection-color);
+  border: 3px solid var(--selection-color);
+  transform: scale(1.05);
+  transition: all 0.2s ease-in-out;
 }
 
 .you-name {
@@ -64,6 +109,14 @@
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
   justify-self: center;
   margin-bottom: 10px;
+}
+
+.you-name.myturn {
+  text-shadow: 0 0 100px rgb(119, 0, 0);
+  font-weight: 900;
+  color: #ffd166;
+  text-shadow: 0 0 12px rgba(255, 209, 102, 0.75);
+  font-weight: 900;
 }
 
 .controls-row {
@@ -84,4 +137,13 @@
   background-color: transparent;
   backdrop-filter: blur(6px);
   border-color: #fff;
+}
+
+.you-sets {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
 }

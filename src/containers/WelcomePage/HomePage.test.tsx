@@ -7,7 +7,6 @@ import { MemoryRouter } from "react-router-dom";
 import HomePage from "./HomePage";
 import destinations from "../../navigation/destinations";
 
-// Mock de useNavigate para espiar la navegación
 const mockedNavigate = vi.fn();
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual<any>("react-router-dom");
@@ -17,13 +16,11 @@ vi.mock("react-router-dom", async () => {
   };
 });
 
-describe("HomePage", () => {
-  // Antes de cada test, reseteamos el mock para que no quede información de tests anteriores
+describe("Validaciones del formulario en inicio", () => {
   beforeEach(() => {
     mockedNavigate.mockReset();
   });
 
-  // Test básico: que se renderice el título, labels y botones
   it("renderiza título, inputs y botones", () => {
     render(
       <MemoryRouter>
@@ -42,8 +39,7 @@ describe("HomePage", () => {
     ).toBeInTheDocument();
   });
 
-  // Test: error si no se ingresa nombre
-  it("muestra error si no se ingresa nombre", async () => {
+  it("muestra error si no se completa ningún campo", async () => {
     render(
       <MemoryRouter>
         <HomePage />
@@ -55,12 +51,33 @@ describe("HomePage", () => {
     );
 
     expect(
-      await screen.findByText("Debe ingresar un nombre")
+      await screen.findByText(
+        "Debe ingresar un nombre, fecha de nacimiento y avatar"
+      )
     ).toBeInTheDocument();
   });
 
-  // Test: error si no se ingresa fecha
-  it("muestra error si no se ingresa fecha", async () => {
+  it("muestra error si falta nombre y avatar", async () => {
+    render(
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>
+    );
+
+    await userEvent.type(
+      screen.getByLabelText("Fecha de nacimiento"),
+      "2000-01-01"
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "Nueva Partida" })
+    );
+
+    expect(
+      await screen.findByText("Debe ingresar un nombre y seleccionar un avatar")
+    ).toBeInTheDocument();
+  });
+
+  it("muestra error si falta fecha y avatar", async () => {
     render(
       <MemoryRouter>
         <HomePage />
@@ -73,26 +90,92 @@ describe("HomePage", () => {
     );
 
     expect(
-      await screen.findByText("Debe ingresar su fecha de nacimiento")
+      await screen.findByText(
+        "Debe ingresar su fecha de nacimiento y seleccionar un avatar"
+      )
     ).toBeInTheDocument();
   });
-  // Test: límite de 20 caracteres en el nombre
-  it("no permite ingresar más de 20 caracteres en el nombre", async () => {
+
+  it("muestra error si falta nombre y fecha", async () => {
     render(
       <MemoryRouter>
         <HomePage />
       </MemoryRouter>
     );
 
-    const input = screen.getByLabelText("Nombre");
-    const longName = "a".repeat(25); // 25 caracteres
-    await userEvent.type(input, longName);
+    await userEvent.click(screen.getByText("Elija"));
+    await userEvent.click(screen.getByAltText("Avatar 1"));
+    await userEvent.click(
+      screen.getByRole("button", { name: "Nueva Partida" })
+    );
 
-    // Comprobamos que el valor se cortó a 20 caracteres
-    expect(input).toHaveValue("a".repeat(20));
+    expect(
+      await screen.findByText("Debe ingresar su nombre y fecha de nacimiento")
+    ).toBeInTheDocument();
   });
 
-  // Test: error si el jugador tiene menos de 15 años
+  it("muestra error si falta solo el avatar", async () => {
+    render(
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>
+    );
+
+    await userEvent.type(screen.getByLabelText("Nombre"), "Juan");
+    await userEvent.type(
+      screen.getByLabelText("Fecha de nacimiento"),
+      "2000-01-01"
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "Nueva Partida" })
+    );
+
+    expect(
+      await screen.findByText("Debe elegir un avatar")
+    ).toBeInTheDocument();
+  });
+
+  it("muestra error si falta solo el nombre", async () => {
+    render(
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>
+    );
+
+    await userEvent.type(
+      screen.getByLabelText("Fecha de nacimiento"),
+      "2000-01-01"
+    );
+    await userEvent.click(screen.getByText("Elija"));
+    await userEvent.click(screen.getByAltText("Avatar 1"));
+    await userEvent.click(
+      screen.getByRole("button", { name: "Nueva Partida" })
+    );
+
+    expect(
+      await screen.findByText("Debe ingresar un nombre")
+    ).toBeInTheDocument();
+  });
+
+  it("muestra error si falta solo la fecha", async () => {
+    render(
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>
+    );
+
+    await userEvent.type(screen.getByLabelText("Nombre"), "Juan");
+    await userEvent.click(screen.getByText("Elija"));
+    await userEvent.click(screen.getByAltText("Avatar 1"));
+    await userEvent.click(
+      screen.getByRole("button", { name: "Nueva Partida" })
+    );
+
+    expect(
+      await screen.findByText("Debe ingresar su fecha de nacimiento")
+    ).toBeInTheDocument();
+  });
+
   it("muestra error si el jugador es menor de 15 años", async () => {
     render(
       <MemoryRouter>
@@ -100,16 +183,17 @@ describe("HomePage", () => {
       </MemoryRouter>
     );
 
-    const nameInput = screen.getByLabelText("Nombre");
-    const dateInput = screen.getByLabelText("Fecha de nacimiento");
-
     const today = new Date();
-    const underageYear = today.getFullYear() - 10; // 10 años
+    const underageYear = today.getFullYear() - 10;
     const birthDate = `${underageYear}-01-01`;
 
-    await userEvent.type(nameInput, "Juan");
-    await userEvent.type(dateInput, birthDate);
-
+    await userEvent.type(screen.getByLabelText("Nombre"), "Juan");
+    await userEvent.type(
+      screen.getByLabelText("Fecha de nacimiento"),
+      birthDate
+    );
+    await userEvent.click(screen.getByText("Elija"));
+    await userEvent.click(screen.getByAltText("Avatar 1"));
     await userEvent.click(
       screen.getByRole("button", { name: "Nueva Partida" })
     );
@@ -119,7 +203,20 @@ describe("HomePage", () => {
     ).toBeInTheDocument();
   });
 
-  // Test: navegación a crearPartida con datos válidos
+  it("no permite ingresar más de 20 caracteres en el nombre", async () => {
+    render(
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>
+    );
+
+    const input = screen.getByLabelText("Nombre");
+    const longName = "a".repeat(25);
+    await userEvent.type(input, longName);
+
+    expect(input).toHaveValue("a".repeat(20));
+  });
+
   it("navega a crearPartida con datos válidos", async () => {
     render(
       <MemoryRouter>
@@ -129,15 +226,22 @@ describe("HomePage", () => {
 
     const name = "Juan Perez";
     const birth = "2000-01-01";
+    const avatarAlt = "Avatar 1";
 
     await userEvent.type(screen.getByLabelText("Nombre"), name);
     await userEvent.type(screen.getByLabelText("Fecha de nacimiento"), birth);
+    await userEvent.click(screen.getByText("Elija"));
+    await userEvent.click(screen.getByAltText(avatarAlt));
     await userEvent.click(
       screen.getByRole("button", { name: "Nueva Partida" })
     );
 
     expect(mockedNavigate).toHaveBeenCalledWith(destinations.crearPartida, {
-      state: { playerName: name, playerDate: birth },
+      state: {
+        playerName: name,
+        playerDate: birth,
+        playerAvatar: "/src/assets/bart.png",
+      },
     });
   });
 });

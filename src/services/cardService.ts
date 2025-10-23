@@ -103,12 +103,126 @@ async function getDraftPile(gameId: number): Promise<CardResponse[]> {
   return data;
 }
 
+async function pickUpDraftCard(
+  gameId: number,
+  cardId: number,
+  playerId: number
+): Promise<CardResponse> {
+  const response = await fetch(
+    `${httpServerUrl}/cards/draft_pickup/${gameId},${cardId},${playerId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || "Error al tomar la carta del draft");
+  }
+
+  const data: CardResponse = await response.json();
+  return data;
+}
+
+export async function pickUpFromDiscard(
+  playerId: number,
+  cardId: number
+): Promise<void> {
+  // const url = `${httpServerUrl}/event/look_into_ashes/${playerId},${cardId}`;
+  // console.log("URL ENVIADA (PICKUP):", url);
+  const response = await fetch(
+    `${httpServerUrl}/event/look_into_ashes/${playerId},${cardId}`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(`Fallo al robar del descarte: ${errorData.detail}`);
+  }
+}
+
+async function cardsOffTheTable(playerId: number) {
+  const response = await fetch(
+    `${httpServerUrl}/event/cards_off_table/${playerId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Error al ejecutar Cards Off The Table");
+  }
+
+  return await response.json();
+}
+
+async function AndThenThereWasOneMore(
+  newSecretPlayerId: number,
+  secretId: number
+) {
+  const response = await fetch(
+    `${httpServerUrl}/event/one_more/${newSecretPlayerId},${secretId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || "Error al ejecutar One More Event");
+  }
+
+  return await response.json();
+}
+
+async function delayEscape(
+  playerId: number,
+  cardIds: number[],
+  eventCardId: number
+): Promise<any> {
+  const response = await fetch(
+    `${httpServerUrl}/event/delay_escape/${playerId},${eventCardId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        card_ids_to_return: cardIds,
+        event_card_id: eventCardId,
+      }),
+    }
+  );
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || "Error al ejecutar Delay Escape");
+  }
+  return await response.json();
+}
+
 const cardService = {
   getCardsByPlayer,
   discardAuto,
   drawCard,
   discardSelectedList,
   getDraftPile,
+  pickUpDraftCard,
+  pickUpFromDiscard,
+  cardsOffTheTable,
+  AndThenThereWasOneMore,
+  delayEscape,
 };
 
 export default cardService;

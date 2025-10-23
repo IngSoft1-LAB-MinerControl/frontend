@@ -25,16 +25,16 @@
 
 /* Tamaños ratio 2/3 */
 .card-mini {
-  width: 60px;
-  height: 90px;
+  width: 4rem;
+  height: 6rem;
 }
 
 .card-medium {
-  width: 76px;
-  height: 114px;
+  width: 7rem;
+  height: 10.5rem;
 }
 
 .card-large {
-  width: 160px;
-  height: 240px;
+  width: 10rem;
+  height: 15rem;
 }

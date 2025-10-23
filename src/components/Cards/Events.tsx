@@ -76,7 +76,6 @@ export default function Event({
       imgSrc = blackmailed;
       break;
     default: // This is the "otherwise" part
-      console.log(`error leyendo ${name}`);
       imgSrc = cardBack;
       break;
   }

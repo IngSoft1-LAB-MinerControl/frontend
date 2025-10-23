@@ -7,7 +7,6 @@ import { MemoryRouter } from "react-router-dom";
 import CreatePage from "./CreatePage";
 import destinations from "../../navigation/destinations";
 
-// Mock de useNavigate y useLocation
 const mockedNavigate = vi.fn();
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual<any>("react-router-dom");
@@ -15,7 +14,11 @@ vi.mock("react-router-dom", async () => {
     ...actual,
     useNavigate: () => mockedNavigate,
     useLocation: () => ({
-      state: { playerName: "Alice", playerDate: "2000-01-01" },
+      state: {
+        playerName: "Alice",
+        playerDate: "2000-01-01",
+        playerAvatar: "/src/assets/bart.png",
+      },
     }),
   };
 });
@@ -30,12 +33,12 @@ vi.mock("../../services/playerService");
 describe("CreatePage", () => {
   beforeEach(() => {
     mockedNavigate.mockReset();
-
-    // Configuramos los mocks de los servicios para que devuelvan valores simulados
+    (gameService.getGames as any).mockResolvedValue([]);
     (gameService.createGame as any).mockResolvedValue({ game_id: 123 });
     (playerService.createPlayer as any).mockResolvedValue({
       id: 1,
       name: "Alice",
+      avatar: "/src/assets/bart.png",
     });
   });
 
@@ -137,10 +140,10 @@ describe("CreatePage", () => {
     );
 
     const nameInput = await screen.findByLabelText("Nombre de la Partida");
-    await userEvent.type(nameInput, "Partida Test");
+    await userEvent.type(nameInput, "PartidaTest");
 
     const minInput = await screen.findByLabelText("Mínimo de jugadores");
-    const maxInput = await screen.findByLabelText("Máximo de jugadores");
+    const maxInput = await screen.getByLabelText("Máximo de jugadores");
 
     await userEvent.clear(minInput);
     await userEvent.type(minInput, "2");
@@ -148,8 +151,9 @@ describe("CreatePage", () => {
     await userEvent.type(maxInput, "6");
 
     await userEvent.click(
-      await screen.findByRole("button", { name: "Crear partida" })
+      screen.getByRole("button", { name: "Crear partida" })
     );
+    console.log("Valores enviados:", { nameInput, minInput, maxInput });
 
     expect(mockedNavigate).toHaveBeenCalled();
     expect(mockedNavigate).toHaveBeenCalledWith(
@@ -157,7 +161,7 @@ describe("CreatePage", () => {
       expect.objectContaining({
         state: expect.objectContaining({
           game: { game_id: 123 },
-          player: { id: 1, name: "Alice" },
+          player: { id: 1, name: "Alice", avatar: "/src/assets/bart.png" },
         }),
       })
     );

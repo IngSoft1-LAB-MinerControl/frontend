@@ -13,7 +13,7 @@ export default function ListGames() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { playerName, playerDate } = location.state || {};
+  const { playerName, playerDate, playerAvatar } = location.state || {};
 
   useEffect(() => {
     const wsURL = "ws://localhost:8000/ws/games/availables";
@@ -57,28 +57,46 @@ export default function ListGames() {
         birth_date: playerDate,
         host: false,
         game_id: game.game_id!,
+        avatar: playerAvatar,
       });
 
-      navigate(destinations.lobby, { state: { game, player: newPlayer } });
+      navigate(destinations.lobby, {
+        state: { game, player: newPlayer, playerAvatar },
+      });
     } catch (err) {
       console.error(err);
       setError("Error al unirse a la partida");
     }
   };
 
-  // ✅ función que define el orden deseado
   function getOrder(status: string) {
     if (status === "waiting players") return 1;
     if (status === "bootable") return 2;
     if (status === "full") return 3;
-    if (status === "in_course") return 4;
-    return 5; // por si llega un estado desconocido
+    if (status === "in course") return 4;
+    return 5;
   }
 
-  // ✅ ordenamos las partidas según el estado
   const sortedPartidas = [...partidas].sort((a, b) => {
     return getOrder(a.status) - getOrder(b.status);
   });
+
+  function getStatusMessage(status: string) {
+    switch (status) {
+      case "waiting players":
+        return "En espera ";
+      case "bootable":
+        return "En espera";
+      case "full":
+        return "En espera";
+      case "in course":
+        return "En curso";
+      case "finished":
+        return "Finalizada";
+      default:
+        return "";
+    }
+  }
 
   return (
     <div className="list-page">
@@ -99,7 +117,15 @@ export default function ListGames() {
                   <div className="item-data">
                     De {partida.min_players} a {partida.max_players} jugadores.
                     Lugares disponibles:{" "}
-                    {partida.max_players - partida.players_amount}
+                    {partida.max_players - partida.players_amount} <br />
+                    <span
+                      className={`status-message ${partida.status.replace(
+                        " ",
+                        "-"
+                      )}`}
+                    >
+                      {getStatusMessage(partida.status)}
+                    </span>
                   </div>
                 </div>
 

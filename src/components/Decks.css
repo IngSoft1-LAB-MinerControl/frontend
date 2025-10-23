@@ -1,15 +1,14 @@
 .decks {
   display: flex;
+  flex-direction: row;
   gap: 18px;
-  padding: 8px 0;
-  justify-content: center;
   align-items: center;
-  position: relative;
+  justify-content: center;
 }
 
 .deck {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   position: relative;
 }
@@ -45,30 +44,4 @@
 }
 .deck.discard-deck:hover {
   transform: scale(1.03);
-}
-
-.discard-preview {
-  position: absolute;
-  top: 50%;
-  left: calc(100% + 12px);
-  transform: translateY(-50%);
-  display: flex;
-  flex-direction: row-reverse;
-  gap: 0.8rem;
-
-  opacity: 0;
-  transition: opacity 0.25s ease, transform 0.25s ease;
-  z-index: 50;
-  min-width: 0;
-}
-
-.discard-preview.visible {
-  opacity: 1;
-  pointer-events: visible;
-}
-
-.discard-preview.visible .card:hover {
-  outline: 2px solid rgb(98, 22, 15);
-  transform: translateY(-10px);
-  transition: all 0.2s ease;
 }

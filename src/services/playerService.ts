@@ -8,6 +8,7 @@ export interface Player {
   host: boolean;
   game_id: number;
   birth_date: string;
+  avatar: string;
 }
 
 export interface PlayerResponse {
@@ -17,6 +18,7 @@ export interface PlayerResponse {
   game_id: number;
   birth_date: string;
   turn_order?: number;
+  avatar: string;
 }
 export interface PlayerStateResponse {
   player_id: number;
@@ -28,9 +30,10 @@ export interface PlayerStateResponse {
   cards: CardResponse[];
   secrets: SecretResponse[];
   sets: SetResponse[];
+  isSelected: boolean;
 }
 
-async function createPlayer(player: Player): Promise<PlayerResponse> {
+async function createPlayer(player: Player): Promise<PlayerStateResponse> {
   const response = await fetch(`${httpServerUrl}/players`, {
     method: "POST",
     headers: {
@@ -39,10 +42,21 @@ async function createPlayer(player: Player): Promise<PlayerResponse> {
     body: JSON.stringify(player),
   });
 
-  const data: PlayerResponse = await response.json();
+  if (!response.ok) {
+    // Si la respuesta es un error (como 400)
+    const errorData = await response.json(); // Lee el JSON de error de FastAPI
+    console.error("Error detallado del backend:", errorData);
+    throw new Error(
+      `Error al crear jugador: ${JSON.stringify(errorData.detail)}`
+    );
+  }
+
+  const data: PlayerStateResponse = await response.json();
   return data;
 }
-async function getPlayersByGame(gameId: number): Promise<PlayerResponse[]> {
+async function getPlayersByGame(
+  gameId: number
+): Promise<PlayerStateResponse[]> {
   const response = await fetch(`${httpServerUrl}/lobby/players/${gameId}`, {
     method: "GET",
     headers: {
@@ -50,13 +64,39 @@ async function getPlayersByGame(gameId: number): Promise<PlayerResponse[]> {
     },
   });
 
-  const data: PlayerResponse[] = await response.json();
+  const data: PlayerStateResponse[] = await response.json();
   return data;
+}
+
+async function selectPlayer(playerId: number): Promise<void> {
+  const response = await fetch(`${httpServerUrl}/select/player/${playerId}`, {
+    method: "PUT",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Error al seleccionar jugador: ${response.statusText}`);
+  }
+
+  return;
+}
+
+async function unselectPlayer(playerId: number): Promise<void> {
+  const response = await fetch(`${httpServerUrl}/unselect/player/${playerId}`, {
+    method: "PUT",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Error al deseleccionar jugador: ${response.statusText}`);
+  }
+
+  return;
 }
 
 const playerService = {
   createPlayer,
   getPlayersByGame,
+  selectPlayer,
+  unselectPlayer,
 };
 
 export default playerService;

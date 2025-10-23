@@ -5,15 +5,45 @@
   z-index: 10; /* siempre visible sobre la mesa */
 }
 
-.action-menu {
+.action-step-container {
   display: flex;
   flex-direction: column;
   gap: 15px;
   padding: 1.8em;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+}
+
+.turn-message {
+  color: #ff4d4d; /* rojo suave pero visible */
+  font-weight: 700;
+  background-color: rgba(0, 0, 0, 0.6); /* contraste */
+  padding: 0.5em 1em;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 0.6em;
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .menu-indications {
   text-wrap: wrap;
+  text-align: center;
+  width: 100%;
+  color: #fff;
+  font-weight: 600;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
 }
 
 .action-button {
@@ -41,4 +71,40 @@
 .action-button:active {
   transform: translateY(0);
   opacity: 0.85;
+}
+
+.action-buttons-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.discard-preview {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  max-width: 450px;
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+}
+
+.discard-preview .card-container {
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  cursor: pointer;
+}
+
+.discard-preview .card-container:hover {
+  transform: translateY(-15px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+}
+
+.discard-preview .card-container.isSelected {
+  transform: translateY(-10px);
+  box-shadow: 0 8px 15px rgba(255, 215, 0, 0.6);
+}
+
+.discard-preview .card-container.isSelected .card {
+  border: 3px solid gold;
 }
