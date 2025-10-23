@@ -214,12 +214,25 @@ export default function GamePage() {
   };
 
   const handleSelectPlayer = (targetPlayer: PlayerStateResponse) => {
-    if (selectedTargetPlayer?.player_id === targetPlayer.player_id) {
-      setSelectedTargetPlayer(null);
+    // ESTO VA AQUÍ DENTRO 👇
+    const selectableSteps: Steps[] = [
+      "cards_off_the_table",
+      "and_then_there_was_one_more",
+      "early_train", // Añadimos el nuevo paso
+    ];
+
+    if (selectableSteps.includes(turnActionStep)) {
+      if (selectedTargetPlayer?.player_id === targetPlayer.player_id) {
+        setSelectedTargetPlayer(null);
+      } else {
+        setSelectedTargetPlayer(targetPlayer);
+      }
+      console.log("Jugador seleccionado:", targetPlayer);
     } else {
-      setSelectedTargetPlayer(targetPlayer);
+      console.log("No es un paso válido para seleccionar jugador.");
+      // no se si hay que hacerlo por eso comento (uli) podrías deseleccionar si hacen click en un paso no válido
+      // setSelectedTargetPlayer(null);
     }
-    console.log("Jugador seleccionado:", targetPlayer);
   };
 
   useEffect(() => {
@@ -327,7 +340,8 @@ export default function GamePage() {
                 selectable={
                   turnActionStep === "cards_off_the_table" ||
                   // turnActionStep === "select_player" ||
-                  turnActionStep === "and_then_there_was_one_more"
+                  turnActionStep === "and_then_there_was_one_more" ||
+                  turnActionStep === "early_train"
                 }
                 isSelected={selectedTargetPlayer?.player_id === p.player_id}
               />
@@ -370,7 +384,10 @@ export default function GamePage() {
                   handleSelectPlayer(distribution.bottom);
                 }
               }}
-              selectable={turnActionStep === "and_then_there_was_one_more"}
+              selectable={
+                turnActionStep === "and_then_there_was_one_more" ||
+                turnActionStep === "early_train"
+              }
               isSelected={selectedTargetPlayer?.player_id === player.player_id}
             />
           ) : (

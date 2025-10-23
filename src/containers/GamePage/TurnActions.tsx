@@ -24,7 +24,8 @@ export type Steps =
   | "hide_secret"
   | "cards_off_the_table"
   | "and_then_there_was_one_more"
-  | "delay_escape_selection";
+  | "delay_escape_selection"
+  | "early_train";
 // | "select_player";
 
 interface TurnActionProps {
@@ -346,6 +347,9 @@ export default function TurnActions({
         case "Delay the murderer's escape!":
           setStep("delay_escape_selection");
           return;
+        case "Early Train":
+          setStep("early_train");
+          return;
         default:
           if (activeEventCard) {
             // descarto evento generico si no tiene accion especial
@@ -418,6 +422,38 @@ export default function TurnActions({
       console.error("Error al ocultar secreto:", err);
       setMessage("Error al ocultar secreto. Intenta de nuevo.");
       setTimeout(() => setMessage(""), 3000);
+    } finally {
+      setLock(false);
+    }
+  };
+
+  const handleEarlyTrain = async () => {
+    if (lock || !activeEventCard || !selectedTargetPlayer) return;
+    setLock(true);
+    setMessage("");
+    try {
+      await cardService.earlyTrain(playerId, selectedTargetPlayer.player_id);
+      console.log(
+        `Evento 'Early Train' ejecutado. Siguiente turno para: ${selectedTargetPlayer.name}`
+      );
+      await cardService.discardSelectedList(playerId, [
+        activeEventCard.card_id,
+      ]);
+      console.log(`Evento '${activeEventCard.name}' descartado.`);
+
+      setMessage("¡Turno cambiado exitosamente!");
+      setTimeout(() => setMessage(""), 2000);
+
+      setSelectedTargetPlayer(null);
+      setActiveEventCard(null);
+      setStep("discard_op");
+    } catch (err) {
+      console.error("Error al ejecutar Early Train:", err);
+      setMessage(
+        err instanceof Error
+          ? err.message
+          : "Error desconocido al ejecutar el evento Early Train."
+      );
     } finally {
       setLock(false);
     }
@@ -968,6 +1004,35 @@ export default function TurnActions({
                 setActiveEventCard(null);
                 setSelectedCard(null);
                 setStep("start");
+              }}
+              disabled={lock}
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+      {step === "early_train" && (
+        <div className="action-step-container">
+          <TextType
+            className="menu-indications"
+            text={["Selecciona el jugador que tomará el siguiente turno."]}
+            typingSpeed={35}
+          />
+          <div className="action-buttons-group">
+            <button
+              className="action-button"
+              onClick={handleEarlyTrain}
+              disabled={!selectedTargetPlayer || lock}
+            >
+              Confirmar Siguiente Turno
+            </button>
+            <button
+              className="action-button"
+              onClick={() => {
+                setSelectedTargetPlayer(null); // Limpiar selección
+                setActiveEventCard(null); // Limpiar evento activo
+                setStep("start"); // Volver al inicio del turno
               }}
               disabled={lock}
             >

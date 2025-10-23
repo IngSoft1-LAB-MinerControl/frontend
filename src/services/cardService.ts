@@ -212,6 +212,30 @@ async function delayEscape(
   return await response.json();
 }
 
+async function earlyTrain(
+  playerId: number,
+  targetPlayerId: number
+): Promise<any> {
+  const response = await fetch(
+    `${httpServerUrl}/event/early_train/${playerId},${targetPlayerId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(
+      errorData.detail || "Error al ejecutar el evento Early Train"
+    );
+  }
+
+  return await response.json();
+}
+
 const cardService = {
   getCardsByPlayer,
   discardAuto,
