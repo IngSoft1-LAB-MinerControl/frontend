@@ -1,10 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./GamePage.css";
-import type {
-  PlayerResponse,
-  PlayerStateResponse,
-} from "../../services/playerService";
+import type { PlayerStateResponse } from "../../services/playerService";
 import { httpServerUrl } from "../../services/config"; // Importar la URL base
 
 import TurnActions from "./TurnActions";
@@ -17,6 +14,9 @@ import DraftPile from "../../components/DraftPile";
 import type { SetResponse } from "../../services/setService";
 import type { Steps } from "./TurnActions";
 import type { SecretResponse } from "../../services/secretService";
+import secretService from "../../services/secretService";
+import playerService from "../../services/playerService";
+import TextType from "../../components/TextType";
 
 export default function GamePage() {
   const location = useLocation();
@@ -295,6 +295,10 @@ export default function GamePage() {
     );
   }
 
+  const isForcedToAct = useMemo(() => {
+    return !isMyTurn && (currentPlayer?.isSelected ?? false);
+  }, [isMyTurn, currentPlayer]);
+
   return (
     <div className="game-page">
       <main className="table-grid">
@@ -318,16 +322,16 @@ export default function GamePage() {
                 onClick={() => {
                   if (
                     turnActionStep === "cards_off_the_table" ||
-                    // turnActionStep === "select_player" ||
-                    turnActionStep === "and_then_there_was_one_more"
+                    turnActionStep === "and_then_there_was_one_more" ||
+                    turnActionStep === "sel_player_reveal"
                   ) {
                     handleSelectPlayer(p);
                   }
                 }}
                 selectable={
                   turnActionStep === "cards_off_the_table" ||
-                  // turnActionStep === "select_player" ||
-                  turnActionStep === "and_then_there_was_one_more"
+                  turnActionStep === "and_then_there_was_one_more" ||
+                  turnActionStep === "sel_player_reveal"
                 }
                 isSelected={selectedTargetPlayer?.player_id === p.player_id}
               />
@@ -360,7 +364,8 @@ export default function GamePage() {
               isSecretSelectionStep={
                 turnActionStep === "sel_reveal_secret" ||
                 turnActionStep === "sel_hide_secret" ||
-                turnActionStep === "and_then_there_was_one_more"
+                turnActionStep === "and_then_there_was_one_more" ||
+                isForcedToAct
               }
               onClick={() => {
                 if (
@@ -397,6 +402,54 @@ export default function GamePage() {
                 selectedTargetPlayer={selectedTargetPlayer}
                 setSelectedTargetPlayer={setSelectedTargetPlayer}
               />
+            </div>
+          )}
+
+          {isForcedToAct && (
+            <div className="turn-actions-container">
+              <div className="action-step-container">
+                <TextType
+                  text={[
+                    "Te han seleccionado. Debes revelar uno de tus secretos.",
+                  ]}
+                  typingSpeed={35}
+                />
+                <div className="action-buttons-group">
+                  <button
+                    className="action-button"
+                    onClick={async () => {
+                      if (!selectedSecret) {
+                        alert("Por favor, selecciona un secreto para revelar.");
+                        return;
+                      }
+                      if (selectedSecret.revelated) {
+                        alert(
+                          "Ese secreto ya está revelado. Debes elegir uno oculto."
+                        );
+                        return;
+                      }
+
+                      try {
+                        // 1. Revelar el secreto
+                        await secretService.revealSecret(
+                          selectedSecret.secret_id
+                        );
+                        // 2. Desmarcarme a mí mismo
+                        await playerService.unselectPlayer(player.player_id);
+                        // 3. Limpiar estado local
+                        setSelectedSecret(null);
+                      } catch (err) {
+                        console.error("Error al revelar secreto forzado:", err);
+                        alert("Error al revelar secreto.");
+                      }
+                    }}
+                    // Deshabilitado si no hay secreto, o si el secreto ya está revelado
+                    disabled={!selectedSecret || selectedSecret.revelated}
+                  >
+                    Revelar Secreto
+                  </button>
+                </div>
+              </div>
             </div>
           )}
           <p>{endMessage}</p>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./TurnActions.css";
 import gameService from "../../services/gameService";
 import cardService, { type CardResponse } from "../../services/cardService";
@@ -8,7 +8,9 @@ import Detective from "../../components/Cards/Detectives";
 import Event from "../../components/Cards/Events";
 import type { SecretResponse } from "../../services/secretService";
 import secretService from "../../services/secretService";
-import { type PlayerStateResponse } from "../../services/playerService";
+import playerService, {
+  type PlayerStateResponse,
+} from "../../services/playerService";
 
 export type Steps =
   | "start"
@@ -71,6 +73,33 @@ export default function TurnActions({
   const [activeEventCard, setActiveEventCard] = useState<CardResponse | null>(
     null
   );
+
+  useEffect(() => {
+    // Si no estamos en el paso de espera, o no hay un jugador objetivo, no hacemos nada.
+    if (step !== "wait_reveal_secret" || !selectedTargetPlayer) {
+      return;
+    }
+
+    // Buscamos el estado actualizado de ese jugador en la lista 'players'
+    // que viene de GamePage (y que se actualiza por WebSocket).
+    const updatedTargetState = players.find(
+      (p) => p.player_id === selectedTargetPlayer.player_id
+    );
+
+    // Si encontramos al jugador y su bandera 'isSelected' es false,
+    // significa que ya completó la acción (reveló su secreto).
+    if (updatedTargetState && !updatedTargetState.isSelected) {
+      console.log(
+        `El jugador ${updatedTargetState.name} ha revelado. Avanzando.`
+      );
+      // Limpiamos el jugador objetivo
+      setSelectedTargetPlayer(null);
+      // Avanzamos al siguiente paso (descartar)
+      setStep("discard_op");
+    }
+
+    // Dependemos de 'players' (que se actualiza por WS)
+  }, [players, step, selectedTargetPlayer, setStep, setSelectedTargetPlayer]);
 
   const handleEndTurn = async () => {
     try {
@@ -185,7 +214,6 @@ export default function TurnActions({
       switch (playedSet.name) {
         case "Hercule Poirot":
         case "Miss Marple":
-          setMessage("Selecciona el secreto de un oponente para revelar.");
           setStep("sel_reveal_secret");
           break;
 
@@ -193,11 +221,9 @@ export default function TurnActions({
         case "Lady Eileen 'Bundle' Brent":
         case "Tommy Beresford":
         case "Tuppence Beresford":
-          setMessage("Selecciona un oponente para forzarlo a revelar.");
           setStep("sel_player_reveal");
           break;
         case "Parker Pyne":
-          setMessage("Selecciona un secreto revelado para ocultar.");
           setStep("sel_hide_secret");
           break;
         default:
@@ -327,6 +353,29 @@ export default function TurnActions({
     } catch (err) {
       setMessage("Evento inválido. Elija otro.");
       setTimeout(() => setMessage(""), 3000);
+    } finally {
+      setLock(false);
+    }
+  };
+
+  const handleConfirmPlayerReveal = async () => {
+    if (lock || !selectedTargetPlayer) {
+      setMessage("Debe seleccionar un jugador.");
+      setTimeout(() => setMessage(""), 3000);
+      return;
+    }
+
+    setLock(true);
+    try {
+      await playerService.selectPlayer(selectedTargetPlayer.player_id);
+
+      // 2. Pasamos al estado de espera
+      setStep("wait_reveal_secret");
+    } catch (err) {
+      console.error("Error al seleccionar jugador para revelar:", err);
+      setMessage("Error al seleccionar jugador. Intenta de nuevo.");
+      setTimeout(() => setMessage(""), 3000);
+      setStep("sel_player_reveal");
     } finally {
       setLock(false);
     }
@@ -634,16 +683,6 @@ export default function TurnActions({
                 >
                   Avanzar
                 </button>
-                <button
-                  className="action-button"
-                  onClick={() => {
-                    setSelectedTargetPlayer(null);
-                    setActiveEventCard(null);
-                    setStep("start");
-                  }}
-                >
-                  Cancelar
-                </button>
               </>
             ) : (
               <>
@@ -814,7 +853,7 @@ export default function TurnActions({
           <div className="action-buttons-group">
             <button
               className="action-button"
-              // onClick={handleSelectOpponentReveal}
+              onClick={handleConfirmPlayerReveal}
               disabled={lock || !selectedTargetPlayer}
             >
               {lock ? "Seleccionando..." : "Confirmar"}
