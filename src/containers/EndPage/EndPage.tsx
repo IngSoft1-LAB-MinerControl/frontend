@@ -106,7 +106,7 @@ export default function EndPage() {
         className="lobby-button"
         onClick={() => navigate(destinations.home)} // Usamos destinations
       >
-        Volver al Lobby
+        Volver al inicio
       </button>
     </div>
   );
