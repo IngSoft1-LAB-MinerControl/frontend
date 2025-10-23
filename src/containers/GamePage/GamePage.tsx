@@ -31,7 +31,7 @@ export default function GamePage() {
   const [error, setError] = useState("");
   const [endMessage, setEndMessage] = useState<string | null>(null);
   const [isGameOver, setIsGameOver] = useState(false);
-
+  const [selectedDiscardIds, setSelectedDiscardIds] = useState<number[]>([]);
   const [selectedCardIds, setSelectedCardIds] = useState<number[]>([]);
   const [draftPile, setDraftPile] = useState<CardResponse[]>([]);
   const [selectedCard, setSelectedCard] = useState<CardResponse | null>(null);
@@ -401,6 +401,8 @@ export default function GamePage() {
                 setSelectedSecret={setSelectedSecret}
                 selectedTargetPlayer={selectedTargetPlayer}
                 setSelectedTargetPlayer={setSelectedTargetPlayer}
+                selectedDiscardIds={selectedDiscardIds}
+                setSelectedDiscardIds={setSelectedDiscardIds}
               />
             </div>
           )}
