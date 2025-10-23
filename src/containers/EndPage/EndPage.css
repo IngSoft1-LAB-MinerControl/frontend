@@ -1,0 +1,171 @@
+/* src/pages/EndPage/EndPage.css */
+
+/* --- 1. Contenedor Principal y Fondo --- */
+/*
+ * Usamos la misma técnica que tu GamePage: un pseudo-elemento ::before
+ * para poner el fondo detrás de todo el contenido.
+ */
+.end-page {
+  position: relative; /* Necesario para que z-index y ::before funcionen */
+  height: 100dvh;
+  width: 100vw;
+  overflow-y: auto; /* Permite scroll si el contenido es muy alto */
+
+  /* Centramos todo el contenido de la página */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  /* Estilos de fuente base de tu GamePage.css */
+  font-family: "Poppins", sans-serif;
+  color: white;
+
+  /* Aseguramos que el contenido esté por encima del fondo */
+  z-index: 1;
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+.end-page::before {
+  content: "";
+  position: fixed; /* Fijo para que no se mueva con el scroll */
+  inset: 0; /* Ocupa toda la pantalla */
+
+  /* ¡AQUÍ ESTÁ LA MAGIA! Copiado de tu GamePage.css */
+  background: url("../../assets/background.png") center/cover no-repeat;
+  filter: brightness(0.9);
+
+  /* Se asegura de que esté detrás del contenido de .end-page */
+  z-index: -2;
+}
+
+/* --- 2. Títulos --- */
+/*
+ * Estilo de título principal, copiado de tu .game-page.end-screen h1
+ */
+.end-page h1 {
+  text-align: center;
+  color: white;
+  font-family: "Poppins", sans-serif;
+  font-size: 4rem;
+  font-weight: 800;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.9),
+    0 0 16px rgba(255, 255, 255, 0.7), 0 0 24px rgba(255, 255, 255, 0.5);
+  margin: 0;
+  margin-bottom: 0.5rem;
+  padding: 1rem;
+}
+
+/* Mensaje de Ganaste/Perdiste (verde y rojo) */
+.winner-message {
+  font-size: 2.5rem;
+  margin: 0;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+  font-family: "Poppins", sans-serif;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+}
+.winner-message.win {
+  color: #76ff03; /* Verde brillante */
+}
+.winner-message.lose {
+  color: #ff5252; /* Rojo brillante */
+}
+
+/* Mensaje resumen (ej. "¡El Asesino ha ganado!") */
+.result-summary {
+  font-size: 1.5rem;
+  color: #f0f0f0;
+  margin-bottom: 3rem;
+  font-weight: 400;
+  font-family: "Poppins", sans-serif;
+  text-align: center;
+}
+.player-list {
+  background-color: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.player-list h3 {
+  font-family: "Poppins", sans-serif;
+  margin-top: 0;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.8);
+  padding-bottom: 0.5rem;
+  color: #ffffff;
+}
+
+.player-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0; /* Aseguramos que no haya margen */
+}
+
+/* MODIFICADO: Hacemos que <li> use Flexbox */
+.player-list li {
+  font-family: "Poppins", sans-serif;
+  font-size: 1.1rem;
+  padding: 0.75rem 0.5rem; /* Ajustamos padding */
+  border-bottom: 1px solid #555;
+
+  /* --- AÑADIDO --- */
+  display: flex;
+  justify-content: space-between; /* Pone el nombre a la izq. y rol a la der. */
+  align-items: center;
+}
+.player-list li:last-child {
+  border-bottom: none;
+}
+
+.player-list .player-name {
+  font-weight: bold;
+  color: #f0f0f0; /* Color de nombre explícito */
+}
+
+/* --- AÑADIDO: Estilos para los roles --- */
+.player-list .player-role {
+  font-weight: bold;
+}
+
+/* Colores para cada rol */
+.player-list .role-asesino {
+  color: #ff5252; /* Rojo */
+}
+
+.player-list .role-cómplice {
+  color: #ff8a80; /* Rojo claro */
+}
+
+.player-list .role-ciudadano {
+  color: #76ff03; /* Verde */
+}
+/* --- 4. Botón --- */
+/*
+ * Estilo de botón, copiado de tu .host-start-button
+ */
+.lobby-button {
+  background: #1a1a1a;
+  color: #fff;
+  border: 1px solid #fff; /* Le añado un borde blanco para que resalte más */
+  padding: 0.8rem 1.5rem;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  font-family: "Poppins", sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-top: 1rem;
+  transition: all 0.2s ease-in-out;
+}
+.lobby-button:hover {
+  opacity: 0.95;
+  background: #000;
+  transform: translateY(-2px);
+}
