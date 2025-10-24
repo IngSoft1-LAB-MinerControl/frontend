@@ -1,4 +1,10 @@
-import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import {
+  useEffect,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+  useMemo,
+} from "react";
 import "./TurnActions.css";
 import gameService from "../../services/gameService";
 import cardService, { type CardResponse } from "../../services/cardService";
@@ -79,6 +85,14 @@ export default function TurnActions({
     null
   );
 
+  const currentPlayer = useMemo(() => {
+    return players.find((p) => p.player_id === playerId);
+  }, [players, playerId]);
+
+  const isSocialDisgrace = useMemo(() => {
+    return currentPlayer?.social_disgrace ?? false;
+  }, [currentPlayer]);
+
   useEffect(() => {
     // Si no estamos en el paso de espera, o no hay un jugador objetivo, no hacemos nada.
     if (step !== "wait_reveal_secret" || !selectedTargetPlayer) {
@@ -105,6 +119,13 @@ export default function TurnActions({
 
     // Dependemos de 'players' (que se actualiza por WS)
   }, [players, step, selectedTargetPlayer, setStep, setSelectedTargetPlayer]);
+
+  useEffect(() => {
+    if (isSocialDisgrace && step === "start") {
+      console.log("Jugador en desgracia social.");
+      setStep("discard_skip");
+    }
+  }, [isSocialDisgrace, step, setStep]);
 
   const handleEndTurn = async () => {
     try {
@@ -609,28 +630,41 @@ export default function TurnActions({
       {message && <div className="turn-message">{message}</div>}
       {step === "start" && ( // ELEGIR ACCION
         <div className="action-step-container">
-          <TextType
-            className="menu-indications"
-            text={["¿Qué acción desea realizar?"]}
-            typingSpeed={50}
-          />
-          <div className="action-buttons-group">
-            <button className="action-button" onClick={() => setStep("p_set")}>
-              Bajar Set
-            </button>
-            <button
-              className="action-button"
-              onClick={() => setStep("p_event")}
-            >
-              Jugar Evento
-            </button>
-            <button
-              className="action-button"
-              onClick={() => setStep("discard_skip")}
-            >
-              Saltear
-            </button>
-          </div>
+          {isSocialDisgrace ? (
+            <TextType
+              className="menu-indications"
+              text={["Procesando turno..."]}
+              typingSpeed={50}
+            />
+          ) : (
+            <>
+              <TextType
+                className="menu-indications"
+                text={["¿Qué acción desea realizar?"]}
+                typingSpeed={50}
+              />
+              <div className="action-buttons-group">
+                <button
+                  className="action-button"
+                  onClick={() => setStep("p_set")}
+                >
+                  Bajar Set
+                </button>
+                <button
+                  className="action-button"
+                  onClick={() => setStep("p_event")}
+                >
+                  Jugar Evento
+                </button>
+                <button
+                  className="action-button"
+                  onClick={() => setStep("discard_skip")}
+                >
+                  Saltear
+                </button>
+              </div>
+            </>
+          )}
         </div>
       )}
 
@@ -678,9 +712,17 @@ export default function TurnActions({
         </div>
       )}
 
-      {step === "discard_skip" && ( // DESCARTE IF SALTEAR TURNO
+      {step === "discard_skip" && ( // DESCARTE IF SALTEAR TURNO (O SOCIAL DISGRACE)
         <div className="action-step-container">
-          <TextType text={["Seleccione una o mas cartas"]} typingSpeed={50} />
+          {isSocialDisgrace ? (
+            <TextType
+              text={["Descartar una o mas cartas"]}
+              typingSpeed={40}
+              key="social-disgrace-discard"
+            />
+          ) : (
+            <TextType text={["Seleccione una o mas cartas"]} typingSpeed={50} />
+          )}
           <div className="action-buttons-group">
             <button
               className="action-button"
@@ -689,9 +731,15 @@ export default function TurnActions({
             >
               {lock ? "Descartando..." : "Descartar Selección"}
             </button>
-            <button className="action-button" onClick={() => setStep("start")}>
-              Volver
-            </button>
+
+            {!isSocialDisgrace && (
+              <button
+                className="action-button"
+                onClick={() => setStep("start")}
+              >
+                Volver
+              </button>
+            )}
           </div>
         </div>
       )}

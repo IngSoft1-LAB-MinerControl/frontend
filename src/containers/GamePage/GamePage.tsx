@@ -140,6 +140,10 @@ export default function GamePage() {
   const currentPlayer = players.find((p) => p.player_id === player.player_id);
   const cardCount = currentPlayer ? currentPlayer.cards.length : 0;
 
+  const isSocialDisgrace = useMemo(() => {
+    return currentPlayer?.social_disgrace === true;
+  }, [currentPlayer]);
+
   const handleSetSelect = (set: SetResponse | undefined) => {
     if (selectedSet && set && selectedSet.set_id === set.set_id) {
       setSelectedSet(null);
@@ -346,6 +350,7 @@ export default function GamePage() {
               }}
               selectable={turnActionStep === "and_then_there_was_one_more"}
               isSelected={selectedTargetPlayer?.player_id === player.player_id}
+              isSocialDisgrace={isSocialDisgrace}
             />
           ) : (
             <div className="empty-hint">Esperando jugadores…</div>

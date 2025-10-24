@@ -19,6 +19,7 @@ interface YouProps {
   onClick?: () => void;
   isSelected: boolean;
   selectable: boolean;
+  isSocialDisgrace: boolean;
 }
 
 export default function You({
@@ -33,6 +34,7 @@ export default function You({
   onClick,
   isSelected = false,
   selectable = false,
+  isSocialDisgrace,
 }: YouProps) {
   const handleCardClick = (card: CardResponse) => {
     onCardsSelected(card);
@@ -51,25 +53,30 @@ export default function You({
 
       <div className="player-cards-container">
         <div className="you-secrets">
-          {player.secrets.map((secret) => {
-            return (
-              <Secret
-                key={secret.secret_id}
-                secret_id={secret.secret_id}
-                mine={true}
-                revealed={secret.revelated}
-                murderer={secret.murderer}
-                accomplice={secret.accomplice}
-                size="large"
-                isSelected={secret.secret_id == selectedSecret?.secret_id}
-                onClick={
-                  isSecretSelectionStep
-                    ? () => onSecretClick(secret)
-                    : undefined
-                }
-              />
-            );
-          })}
+          {isSocialDisgrace && (
+            <div className="social-disgrace-banner">DESGRACIA SOCIAL</div>
+          )}
+          <div className="secrets-list">
+            {player.secrets.map((secret) => {
+              return (
+                <Secret
+                  key={secret.secret_id}
+                  secret_id={secret.secret_id}
+                  mine={true}
+                  revealed={secret.revelated}
+                  murderer={secret.murderer}
+                  accomplice={secret.accomplice}
+                  size="large"
+                  isSelected={secret.secret_id == selectedSecret?.secret_id}
+                  onClick={
+                    isSecretSelectionStep
+                      ? () => onSecretClick(secret)
+                      : undefined
+                  }
+                />
+              );
+            })}
+          </div>
         </div>
         <div className="you-main-area">
           <div className="you-sets">
