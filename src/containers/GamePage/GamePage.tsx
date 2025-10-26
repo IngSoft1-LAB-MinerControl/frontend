@@ -42,6 +42,8 @@ export default function GamePage() {
     useState<PlayerStateResponse | null>(null);
 
   const [turnActionStep, setTurnActionStep] = useState<Steps>("start");
+  const [playerToReveal, setPlayerToReveal] =
+    useState<PlayerStateResponse | null>(null);
 
   if (!game) {
     return (
@@ -272,20 +274,32 @@ export default function GamePage() {
     return !isMyTurn && (currentPlayer?.isSelected ?? false);
   }, [isMyTurn, currentPlayer]);
 
-  // Aca vamos a manejar el estado de la partida segun votación
   useEffect(() => {
     if (!currentGame) return;
 
-    if (currentGame.status === "voting") {
-      setTurnActionStep("vote");
+    if (currentGame.status === "Voting") {
+      setTurnActionStep("vote"); // Todos votan
     } else if (
       currentGame.status === "in course" &&
       turnActionStep === "vote"
     ) {
-      // Cuando termina la votación, volvemos al paso inicial
-      setTurnActionStep("start");
+      // Cuando vuelve a "in course" después de votar, calculamos ganador
+      const playerWithMostVotes = players.reduce((prev, curr) => {
+        if (!prev) return curr;
+        return curr.votes_received > (prev.votes_received ?? 0) ? curr : prev;
+      }, null as PlayerStateResponse | null);
+
+      // if (playerWithMostVotes) {
+      //   // Solo seteamos el jugador ganador
+      setSelectedTargetPlayer(playerWithMostVotes);
+
+      //   if (playerWithMostVotes.player_id === player.player_id) {
+      //     setTurnActionStep("sel_reveal_secret");
+      //   } else {
+      //   }
+      // }
     }
-  }, [currentGame?.status, turnActionStep]);
+  }, [currentGame?.status, players, turnActionStep, player.player_id]);
 
   return (
     <div className="game-page">
@@ -370,7 +384,7 @@ export default function GamePage() {
           ) : (
             <div className="empty-hint">Esperando jugadores…</div>
           )}
-          {isMyTurn && (
+          {(isMyTurn || turnActionStep === "vote") && (
             <div className="turn-actions-container">
               <TurnActions
                 gameId={currentGame.game_id}

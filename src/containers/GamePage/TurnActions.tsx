@@ -632,6 +632,14 @@ export default function TurnActions({
     }
   };
 
+  useEffect(() => {
+    if (
+      selectedTargetPlayer /* && selectedTargetPlayer.player_id !== playerId*/
+    ) {
+      handleConfirmPlayerReveal();
+    }
+  }, [step, selectedTargetPlayer, playerId]);
+
   return (
     <div className="turn-actions-box">
       {message && <div className="turn-message">{message}</div>}
@@ -867,6 +875,7 @@ export default function TurnActions({
                   try {
                     await playerService.votePlayer(p.player_id);
                     setMessage(`Votaste por ${p.name}.`);
+                    setTimeout(() => setMessage(""), 3000);
                   } catch (err) {
                     console.error("Error al votar:", err);
                     setMessage(
