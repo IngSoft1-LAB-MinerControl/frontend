@@ -32,6 +32,7 @@ export interface PlayerStateResponse {
   sets: SetResponse[];
   isSelected: boolean;
   social_disgrace: boolean;
+  votes_received: number;
 }
 
 async function createPlayer(player: Player): Promise<PlayerStateResponse> {

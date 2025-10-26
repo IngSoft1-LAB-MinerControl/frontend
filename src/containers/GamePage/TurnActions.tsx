@@ -34,7 +34,9 @@ export type Steps =
   | "sel_hide_secret"
   | "wait_reveal_secret"
   | "sel_player_reveal"
-  | "delay_escape_selection";
+  | "delay_escape_selection"
+  | "point_your_suspicions"
+  | "vote";
 
 interface TurnActionProps {
   players: PlayerStateResponse[];
@@ -253,6 +255,7 @@ export default function TurnActions({
         case "Parker Pyne":
           setStep("sel_hide_secret");
           break;
+
         default:
           console.log(`Set ${playedSet.name} no tiene acción.`);
           setStep("discard_op");
@@ -452,6 +455,10 @@ export default function TurnActions({
         case "Delay the murderer's escape!":
           setStep("delay_escape_selection");
           return;
+        case "Point your suspicions":
+          setStep("point_your_suspicions");
+          return;
+
         default:
           if (activeEventCard) {
             await cardService.discardSelectedList(playerId, [
@@ -793,6 +800,76 @@ export default function TurnActions({
               Finalizar Turno
             </button>
           )}
+        </div>
+      )}
+      {step === "point_your_suspicions" && (
+        <div className="action-step-container">
+          <TextType
+            className="menu-indications"
+            text={["¿Listo para votar?"]}
+            typingSpeed={35}
+          />
+          <div className="action-buttons-group">
+            <button
+              className="action-button"
+              onClick={async () => {
+                try {
+                  await cardService.pointYourSuspicions(gameId);
+
+                  if (activeEventCard) {
+                    await cardService.discardSelectedList(playerId, [
+                      activeEventCard.card_id,
+                    ]);
+                    console.log("Evento descartado:", activeEventCard.name);
+                  }
+
+                  setActiveEventCard(null);
+                } catch (error) {
+                  console.error("Error al iniciar votación:", error);
+                  setMessage("Error al iniciar votación. Intenta de nuevo.");
+                  setTimeout(() => setMessage(""), 3000);
+                }
+              }}
+            >
+              Comenzar votación
+            </button>
+            <button
+              className="action-button"
+              onClick={() => {
+                setActiveEventCard(null);
+                setStep("start");
+              }}
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+      {step === "vote" && (
+        <div className="action-step-container">
+          <TextType
+            className="menu-indications"
+            text={["Vota al jugador que creas culpable."]}
+            typingSpeed={35}
+          />
+          <div className="action-buttons-group">
+            {players.map((p) => (
+              <button
+                key={p.player_id}
+                className={`action-button ${
+                  selectedTargetPlayer?.player_id === p.player_id
+                    ? "selected"
+                    : ""
+                }`}
+                onClick={() => {
+                  if (!hasVoted) onVote?.(p.player_id);
+                }}
+                disabled={hasVoted}
+              >
+                {p.name}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 

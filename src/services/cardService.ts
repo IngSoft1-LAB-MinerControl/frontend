@@ -211,6 +211,49 @@ async function delayEscape(
   }
   return await response.json();
 }
+// este evento cambiará el estado de la partida a voting
+async function pointYourSuspicions(gameId: number) {
+  const response = await fetch(
+    `${httpServerUrl}/event/point_your_suspicion/${gameId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(
+      errorData.detail || "Error al iniciar Point Your Supicions"
+    );
+  }
+
+  return await response.json();
+}
+
+// con este evento terminamos el estado "voting" de la partida y lo convertimos en "in-course"
+async function endPointYourSuspicions(gameId: number) {
+  const response = await fetch(
+    `${httpServerUrl}/event/end/point_your_suspicion/${gameId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(
+      errorData.detail || "Error al finalizar Point Your Suspicions"
+    );
+  }
+
+  return await response.json();
+}
 
 const cardService = {
   getCardsByPlayer,
@@ -223,6 +266,8 @@ const cardService = {
   cardsOffTheTable,
   AndThenThereWasOneMore,
   delayEscape,
+  pointYourSuspicions,
+  endPointYourSuspicions,
 };
 
 export default cardService;
