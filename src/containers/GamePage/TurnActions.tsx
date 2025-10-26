@@ -861,10 +861,22 @@ export default function TurnActions({
                     ? "selected"
                     : ""
                 }`}
-                onClick={() => {
-                  if (!hasVoted) onVote?.(p.player_id);
+                onClick={async () => {
+                  if (lock) return;
+                  setLock(true);
+                  try {
+                    await playerService.votePlayer(p.player_id);
+                    setMessage(`Votaste por ${p.name}.`);
+                  } catch (err) {
+                    console.error("Error al votar:", err);
+                    setMessage(
+                      "No se pudo registrar el voto. Intenta de nuevo."
+                    );
+                    setTimeout(() => setMessage(""), 3000);
+                  } finally {
+                    setLock(false);
+                  }
                 }}
-                disabled={hasVoted}
               >
                 {p.name}
               </button>

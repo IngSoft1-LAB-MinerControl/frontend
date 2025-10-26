@@ -272,6 +272,21 @@ export default function GamePage() {
     return !isMyTurn && (currentPlayer?.isSelected ?? false);
   }, [isMyTurn, currentPlayer]);
 
+  // Aca vamos a manejar el estado de la partida segun votación
+  useEffect(() => {
+    if (!currentGame) return;
+
+    if (currentGame.status === "voting") {
+      setTurnActionStep("vote");
+    } else if (
+      currentGame.status === "in course" &&
+      turnActionStep === "vote"
+    ) {
+      // Cuando termina la votación, volvemos al paso inicial
+      setTurnActionStep("start");
+    }
+  }, [currentGame?.status, turnActionStep]);
+
   return (
     <div className="game-page">
       <main className="table-grid">
