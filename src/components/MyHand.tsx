@@ -52,8 +52,6 @@ export default function You({
       <div className="player-cards-container">
         <div className="you-secrets">
           {player.secrets.map((secret) => {
-            const isClickable =
-              isMyTurn && isSecretSelectionStep && secret.revelated;
             return (
               <Secret
                 key={secret.secret_id}
@@ -64,7 +62,11 @@ export default function You({
                 accomplice={secret.accomplice}
                 size="large"
                 isSelected={secret.secret_id == selectedSecret?.secret_id}
-                onClick={isClickable ? () => onSecretClick(secret) : undefined}
+                onClick={
+                  isSecretSelectionStep
+                    ? () => onSecretClick(secret)
+                    : undefined
+                }
               />
             );
           })}

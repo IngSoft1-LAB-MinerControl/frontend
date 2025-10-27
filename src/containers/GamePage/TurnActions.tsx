@@ -1,4 +1,4 @@
-import { useState, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import "./TurnActions.css";
 import gameService from "../../services/gameService";
 import cardService, { type CardResponse } from "../../services/cardService";
@@ -8,7 +8,9 @@ import Detective from "../../components/Cards/Detectives";
 import Event from "../../components/Cards/Events";
 import type { SecretResponse } from "../../services/secretService";
 import secretService from "../../services/secretService";
-import { type PlayerStateResponse } from "../../services/playerService";
+import playerService, {
+  type PlayerStateResponse,
+} from "../../services/playerService";
 
 export type Steps =
   | "start"
@@ -19,14 +21,15 @@ export type Steps =
   | "draw"
   | "another_victim"
   | "look_into_the_ashes"
-  | "set_actions"
-  | "reveal_secret"
-  | "hide_secret"
   | "cards_off_the_table"
   | "and_then_there_was_one_more"
+  | "set_actions"
+  | "sel_reveal_secret"
+  | "sel_hide_secret"
+  | "wait_reveal_secret"
+  | "sel_player_reveal"
   | "delay_escape_selection"
   | "early_train";
-// | "select_player";
 
 interface TurnActionProps {
   players: PlayerStateResponse[];
@@ -76,6 +79,33 @@ export default function TurnActions({
   const [activeEventCard, setActiveEventCard] = useState<CardResponse | null>(
     null
   );
+
+  useEffect(() => {
+    // Si no estamos en el paso de espera, o no hay un jugador objetivo, no hacemos nada.
+    if (step !== "wait_reveal_secret" || !selectedTargetPlayer) {
+      return;
+    }
+
+    // Buscamos el estado actualizado de ese jugador en la lista 'players'
+    // que viene de GamePage (y que se actualiza por WebSocket).
+    const updatedTargetState = players.find(
+      (p) => p.player_id === selectedTargetPlayer.player_id
+    );
+
+    // Si encontramos al jugador y su bandera 'isSelected' es false,
+    // significa que ya completó la acción (reveló su secreto).
+    if (updatedTargetState && !updatedTargetState.isSelected) {
+      console.log(
+        `El jugador ${updatedTargetState.name} ha revelado. Avanzando.`
+      );
+      // Limpiamos el jugador objetivo
+      setSelectedTargetPlayer(null);
+      // Avanzamos al siguiente paso (descartar)
+      setStep("discard_op");
+    }
+
+    // Dependemos de 'players' (que se actualiza por WS)
+  }, [players, step, selectedTargetPlayer, setStep, setSelectedTargetPlayer]);
 
   const handleEndTurn = async () => {
     try {
@@ -163,11 +193,15 @@ export default function TurnActions({
     }
     setLock(true);
     try {
+      let playedSet: SetResponse | null = null;
       if (selectedCardIds.length == 2) {
-        await setService.playSet2(selectedCardIds[0], selectedCardIds[1]);
+        playedSet = await setService.playSet2(
+          selectedCardIds[0],
+          selectedCardIds[1]
+        );
         console.log(`set de ${selectedCardIds.length} cartas bajado.`);
       } else if (selectedCardIds.length == 3) {
-        await setService.playSet3(
+        playedSet = await setService.playSet3(
           selectedCardIds[0],
           selectedCardIds[1],
           selectedCardIds[2]
@@ -177,7 +211,31 @@ export default function TurnActions({
       setMessage("");
       setSelectedCardIds([]);
 
-      setStep("set_actions");
+      if (!playedSet) {
+        console.error("No se recibió el set jugado.");
+        setStep("discard_op");
+        return;
+      }
+
+      switch (playedSet.name) {
+        case "Hercule Poirot":
+        case "Miss Marple":
+          setStep("sel_reveal_secret");
+          break;
+
+        case "Mr Satterthwaite":
+        case "Lady Eileen 'Bundle' Brent":
+        case "Tommy Beresford":
+        case "Tuppence Beresford":
+          setStep("sel_player_reveal");
+          break;
+        case "Parker Pyne":
+          setStep("sel_hide_secret");
+          break;
+        default:
+          console.log(`Set ${playedSet.name} no tiene acción.`);
+          setStep("discard_op");
+      }
     } catch (err) {
       setMessage("Set inválido. Elija otra combinacigón");
       setTimeout(() => setMessage(""), 3000);
@@ -367,6 +425,29 @@ export default function TurnActions({
     } catch (err) {
       setMessage("Evento inválido. Elija otro.");
       setTimeout(() => setMessage(""), 3000);
+    } finally {
+      setLock(false);
+    }
+  };
+
+  const handleConfirmPlayerReveal = async () => {
+    if (lock || !selectedTargetPlayer) {
+      setMessage("Debe seleccionar un jugador.");
+      setTimeout(() => setMessage(""), 3000);
+      return;
+    }
+
+    setLock(true);
+    try {
+      await playerService.selectPlayer(selectedTargetPlayer.player_id);
+
+      // 2. Pasamos al estado de espera
+      setStep("wait_reveal_secret");
+    } catch (err) {
+      console.error("Error al seleccionar jugador para revelar:", err);
+      setMessage("Error al seleccionar jugador. Intenta de nuevo.");
+      setTimeout(() => setMessage(""), 3000);
+      setStep("sel_player_reveal");
     } finally {
       setLock(false);
     }
@@ -706,16 +787,6 @@ export default function TurnActions({
                 >
                   Avanzar
                 </button>
-                <button
-                  className="action-button"
-                  onClick={() => {
-                    setSelectedTargetPlayer(null);
-                    setActiveEventCard(null);
-                    setStep("start");
-                  }}
-                >
-                  Cancelar
-                </button>
               </>
             ) : (
               <>
@@ -755,7 +826,7 @@ export default function TurnActions({
         </div>
       )}
 
-      {step === "cards_off_the_table" && (
+      {step === "cards_off_the_table" && ( // EVENTO: CARDS OFF THE TABLE
         <div className="action-step-container">
           <TextType
             className="menu-indications"
@@ -876,7 +947,41 @@ export default function TurnActions({
         </div>
       )}
 
-      {step === "reveal_secret" && ( // REVEAL SECRET
+      {step === "sel_player_reveal" && (
+        <div className="action-step-container">
+          <TextType
+            className="menu-indications"
+            text={["Seleccione un jugador para que revele un secreto"]}
+            typingSpeed={35}
+          />
+          <div className="action-buttons-group">
+            <button
+              className="action-button"
+              onClick={handleConfirmPlayerReveal}
+              disabled={lock || !selectedTargetPlayer}
+            >
+              {lock ? "Seleccionando..." : "Confirmar"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === "wait_reveal_secret" && ( // Para Satterthwaite (Paso 2)
+        <div className="action-step-container">
+          <TextType
+            className="menu-indications"
+            text={[
+              `Esperando a que ${
+                selectedTargetPlayer?.name ?? "el oponente"
+              } revele un secreto...`,
+            ]}
+            typingSpeed={50}
+            loop={true}
+          />
+        </div>
+      )}
+
+      {step === "sel_reveal_secret" && ( // REVEAL SECRET
         <div className="action-step-container">
           <TextType
             className="menu-indications"
@@ -891,20 +996,11 @@ export default function TurnActions({
             >
               {lock ? "Revelando..." : "Revelar"}
             </button>
-            <button
-              className="action-button"
-              onClick={() => {
-                setSelectedSecret(null); // Cancelar la carta de evento
-                setStep("start"); // Volver al menú principal
-              }}
-            >
-              Cancelar
-            </button>
           </div>
         </div>
       )}
 
-      {step === "hide_secret" && ( // HIDE SECRET
+      {step === "sel_hide_secret" && ( // HIDE SECRET
         <div className="action-step-container">
           <TextType
             className="menu-indications"
@@ -918,35 +1014,6 @@ export default function TurnActions({
               disabled={lock || !selectedSecret} // Deshabilitado si no hay set seleccionado
             >
               {lock ? "Ocultando..." : "Ocultar"}
-            </button>
-            <button
-              className="action-button"
-              onClick={() => {
-                setSelectedSecret(null); // Cancelar la carta de evento
-                setStep("set_actions"); // Volver al menú principal
-              }}
-            >
-              Cancelar
-            </button>
-          </div>
-        </div>
-      )}
-
-      {step === "set_actions" && ( // OPTIONS PLAY SET
-        <div className="action-step-container">
-          <TextType text={["Seleccione una acción"]} typingSpeed={50} />
-          <div className="action-buttons-group">
-            <button
-              className="action-button"
-              onClick={() => setStep("reveal_secret")}
-            >
-              Revelar secreto
-            </button>
-            <button
-              className="action-button"
-              onClick={() => setStep("hide_secret")}
-            >
-              Ocultar secreto
             </button>
           </div>
         </div>

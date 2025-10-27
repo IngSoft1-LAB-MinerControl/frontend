@@ -247,6 +247,7 @@ const cardService = {
   cardsOffTheTable,
   AndThenThereWasOneMore,
   delayEscape,
+  earlyTrain,
 };
 
 export default cardService;
