@@ -199,7 +199,6 @@ export default function GamePage() {
     const selectableSteps: Steps[] = [
       "cards_off_the_table",
       "and_then_there_was_one_more",
-      "early_train", // Añadimos el nuevo paso
     ];
 
     if (selectableSteps.includes(turnActionStep)) {
@@ -317,7 +316,6 @@ export default function GamePage() {
                 selectable={
                   turnActionStep === "cards_off_the_table" ||
                   turnActionStep === "and_then_there_was_one_more" ||
-                  turnActionStep === "early_train" ||
                   turnActionStep === "sel_player_reveal"
                 }
                 isSelected={selectedTargetPlayer?.player_id === p.player_id}
@@ -362,10 +360,7 @@ export default function GamePage() {
                   handleSelectPlayer(distribution.bottom);
                 }
               }}
-              selectable={
-                turnActionStep === "and_then_there_was_one_more" ||
-                turnActionStep === "early_train"
-              }
+              selectable={turnActionStep === "and_then_there_was_one_more"}
               isSelected={selectedTargetPlayer?.player_id === player.player_id}
               isSocialDisgrace={isSocialDisgrace}
             />

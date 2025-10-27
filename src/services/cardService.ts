@@ -187,11 +187,7 @@ async function AndThenThereWasOneMore(
   return await response.json();
 }
 
-async function delayEscape(
-  gameId: number,
-  cardIds: number[],
-  eventCardId: number
-): Promise<any> {
+async function delayEscape(gameId: number, cardIds: number[]): Promise<any> {
   const response = await fetch(
     `${httpServerUrl}/event/delay_escape/${gameId}`,
     {
@@ -211,12 +207,9 @@ async function delayEscape(
   return await response.json();
 }
 
-async function earlyTrain(
-  playerId: number,
-  targetPlayerId: number
-): Promise<any> {
+async function earlyTrainPaddington(gameId: number): Promise<any> {
   const response = await fetch(
-    `${httpServerUrl}/event/early_train/${playerId},${targetPlayerId}`,
+    `${httpServerUrl}/event/early_train_paddington/${gameId}`,
     {
       method: "PUT",
       headers: {
@@ -228,7 +221,8 @@ async function earlyTrain(
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error(
-      errorData.detail || "Error al ejecutar el evento Early Train"
+      errorData.detail ||
+        "Error al ejecutar el evento Early Train to Paddington"
     );
   }
 
@@ -246,7 +240,7 @@ const cardService = {
   cardsOffTheTable,
   AndThenThereWasOneMore,
   delayEscape,
-  earlyTrain,
+  earlyTrainPaddington,
 };
 
 export default cardService;
