@@ -17,6 +17,7 @@ import type { SecretResponse } from "../../services/secretService";
 import secretService from "../../services/secretService";
 import playerService from "../../services/playerService";
 import TextType from "../../components/TextType";
+import destinations from "../../navigation/destinations";
 
 export default function GamePage() {
   const location = useLocation();
@@ -29,8 +30,6 @@ export default function GamePage() {
   //const [lastDiscarded, setLastDiscarded] = useState<CardResponse | null>(null);
   const [discardedCards, setDiscardedCards] = useState<CardResponse[]>([]);
   const [error, setError] = useState("");
-  const [endMessage, setEndMessage] = useState<string | null>(null);
-  const [isGameOver, setIsGameOver] = useState(false);
   const [selectedDiscardIds, setSelectedDiscardIds] = useState<number[]>([]);
   const [selectedCardIds, setSelectedCardIds] = useState<number[]>([]);
   const [draftPile, setDraftPile] = useState<CardResponse[]>([]);
@@ -124,44 +123,26 @@ export default function GamePage() {
   }, [game.game_id, navigate]); // Dependemos solo de game.game_id para no reconectar innecesariamente
 
   useEffect(() => {
-    if (!currentGame || players.length === 0) return;
+    if (!currentGame) return;
 
     if (currentGame.status === "finished") {
-      const currentPlayerState = players.find(
-        (p) => p.player_id === player.player_id
-      );
-
-      if (!currentPlayerState) {
-        setEndMessage("Perdiste. El asesino ganó la partida."); // menasje de "Error" generico por si falla
-        return;
-      }
-
-      const hasMurderSecret = currentPlayerState.secrets.some(
-        (s) => s.murderer
-      );
-      const hasAccompliceSecret = currentPlayerState.secrets.some(
-        (s) => s.accomplice
-      );
-
-      if (currentGame.cards_left === 0) {
-        setEndMessage(
-          hasMurderSecret || hasAccompliceSecret
-            ? "¡Ganaste!"
-            : "Perdiste. El asesino ganó la partida."
-        );
-      } else {
-        setEndMessage(
-          hasMurderSecret || hasAccompliceSecret
-            ? "¡Perdiste! !Te descubrieron!"
-            : "!Ganaste! !Descubriste al asesino!"
-        );
-      }
-      setIsGameOver(true);
+      navigate(destinations.endGame, {
+        replace: true,
+        state: {
+          players: players,
+          game: currentGame,
+          myPlayerId: player.player_id,
+        },
+      });
     }
-  }, [currentGame, players, player.player_id]);
+  }, [currentGame, players, player.player_id, navigate]);
 
   const currentPlayer = players.find((p) => p.player_id === player.player_id);
   const cardCount = currentPlayer ? currentPlayer.cards.length : 0;
+
+  const isSocialDisgrace = useMemo(() => {
+    return currentPlayer?.social_disgrace === true;
+  }, [currentPlayer]);
 
   const handleSetSelect = (set: SetResponse | undefined) => {
     if (selectedSet && set && selectedSet.set_id === set.set_id) {
@@ -300,14 +281,6 @@ export default function GamePage() {
     }
   }, [isMyTurn, turnActionStep]);
 
-  if (isGameOver) {
-    return (
-      <div className="game-page end-screen">
-        <h1>{endMessage}</h1>
-      </div>
-    );
-  }
-
   const isForcedToAct = useMemo(() => {
     return !isMyTurn && (currentPlayer?.isSelected ?? false);
   }, [isMyTurn, currentPlayer]);
@@ -394,6 +367,7 @@ export default function GamePage() {
                 turnActionStep === "early_train"
               }
               isSelected={selectedTargetPlayer?.player_id === player.player_id}
+              isSocialDisgrace={isSocialDisgrace}
             />
           ) : (
             <div className="empty-hint">Esperando jugadores…</div>
@@ -471,7 +445,6 @@ export default function GamePage() {
               </div>
             </div>
           )}
-          <p>{endMessage}</p>
         </section>
       </main>
     </div>

@@ -31,6 +31,7 @@ export interface PlayerStateResponse {
   secrets: SecretResponse[];
   sets: SetResponse[];
   isSelected: boolean;
+  social_disgrace: boolean;
 }
 
 async function createPlayer(player: Player): Promise<PlayerStateResponse> {

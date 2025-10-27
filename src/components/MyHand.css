@@ -79,12 +79,20 @@
 }
 
 .you-secrets {
+  position: relative;
   display: flex;
-  gap: 10px;
+  flex-direction: column;
   align-items: center;
+  gap: 8px;
   margin-left: 4rem;
   margin-right: 4rem;
   padding: 5px;
+}
+
+.secrets-list {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
 .you-secrets .secret.clickable {
@@ -101,6 +109,18 @@
   border: 3px solid var(--selection-color);
   transform: scale(1.05);
   transition: all 0.2s ease-in-out;
+}
+
+.social-disgrace-banner {
+  color: #f0f0f0;
+  padding: 3px 10px; /* Más pequeño */
+  font-size: 1rem; /* Más discreto */
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid #ffaaaa;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+  backdrop-filter: blur(10px);
 }
 
 .you-name {

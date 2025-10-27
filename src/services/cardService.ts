@@ -188,20 +188,19 @@ async function AndThenThereWasOneMore(
 }
 
 async function delayEscape(
-  playerId: number,
+  gameId: number,
   cardIds: number[],
   eventCardId: number
 ): Promise<any> {
   const response = await fetch(
-    `${httpServerUrl}/event/delay_escape/${playerId},${eventCardId}`,
+    `${httpServerUrl}/event/delay_escape/${gameId}`,
     {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        card_ids_to_return: cardIds,
-        event_card_id: eventCardId,
+        card_ids: cardIds,
       }),
     }
   );
