@@ -403,10 +403,14 @@ export default function TurnActions({
 
     try {
       await cardService.delayEscape(
-        playerId,
+        gameId,
         selectedDiscardIds,
         activeEventCard.card_id
       );
+
+      await cardService.discardSelectedList(playerId, [
+        activeEventCard.card_id,
+      ]);
       setMessage("¡Cartas devueltas al mazo! Evento retirado.");
       setTimeout(() => setMessage(""), 2000); // Mensaje de éxito corto
     } catch (err) {
