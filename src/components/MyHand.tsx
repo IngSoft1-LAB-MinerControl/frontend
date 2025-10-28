@@ -6,6 +6,8 @@ import Set from "./Set.tsx";
 import "./MyHand.css";
 import type { CardResponse } from "../services/cardService.ts";
 import type { SecretResponse } from "../services/secretService.ts";
+import { useState } from "react";
+import Button from "./Button.tsx";
 
 interface YouProps {
   player: PlayerStateResponse;
@@ -36,6 +38,14 @@ export default function You({
   selectable = false,
   isSocialDisgrace,
 }: YouProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const toggleExpansion = () => {
+    setIsExpanded(!isExpanded);
+  };
+
+  const cardSize = isExpanded ? "large" : "medium";
+
   const handleCardClick = (card: CardResponse) => {
     onCardsSelected(card);
   };
@@ -51,7 +61,9 @@ export default function You({
         {player.name}
       </div>
 
+      {/* Contenedor principal para la estructura: Secretos | Área Central */}
       <div className="player-cards-container">
+        {/* Lado Izquierdo: Secretos */}
         <div className="you-secrets">
           {isSocialDisgrace && (
             <div className="social-disgrace-banner">DESGRACIA SOCIAL</div>
@@ -78,10 +90,14 @@ export default function You({
             })}
           </div>
         </div>
+
+        {/* Área Central: Sets, Mano y Botón */}
         <div className="you-main-area">
+          {/* Sets (Arriba, Centrados, uno al lado del otro) */}
           <div className="you-sets">
             {player.sets.map((set) => (
               <Set
+                key={set.set_id} // Añadir key
                 game_id={set.game_id}
                 player_id={set.player_id}
                 set_id={set.set_id}
@@ -91,7 +107,9 @@ export default function You({
               />
             ))}
           </div>
-          <div className={`you-hand`}>
+
+          {/* Mano (Centro, Centrada) */}
+          <div className={`you-hand ${isExpanded ? "expanded" : "compact"}`}>
             {player.cards.map((card) => {
               if (card.card_id === undefined) return null;
 
@@ -104,7 +122,7 @@ export default function You({
                   key={card.card_id}
                   card_id={card.card_id}
                   shown={true}
-                  size={"large"}
+                  size={cardSize}
                   onCardClick={
                     card.card_id !== undefined
                       ? () => handleCardClick(card)
@@ -118,7 +136,7 @@ export default function You({
                   key={card.card_id}
                   card_id={card.card_id}
                   shown={true}
-                  size={"large"}
+                  size={cardSize}
                   onCardClick={
                     card.card_id !== undefined
                       ? () => handleCardClick(card)
@@ -129,6 +147,14 @@ export default function You({
                 />
               );
             })}
+          </div>
+
+          {/* Botón de Expansión/Contracción (Centrado Debajo de la Mano) */}
+          <div className="hand-toggle-button">
+            <Button
+              label={isExpanded ? "Volver" : "Ampliar"}
+              onClick={toggleExpansion}
+            />
           </div>
         </div>
       </div>
