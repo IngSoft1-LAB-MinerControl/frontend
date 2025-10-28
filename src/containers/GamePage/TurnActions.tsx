@@ -461,9 +461,9 @@ export default function TurnActions({
           setStep("delay_escape_selection");
           setLock(false);
           return;
-        case "Early Train to Paddington":
+        case "Early train to paddington":
           await handleEarlyTrainPaddington();
-          return;
+          break;
         default:
           console.log("Evento genérico descartado:", selectedCard.name);
           await cardService.discardSelectedList(playerId, [
@@ -472,7 +472,7 @@ export default function TurnActions({
           setActiveEventCard(null);
           setSelectedCard(null);
           setStep("discard_op");
-          setLock(false);
+          // setLock(false);
           return;
       }
     } catch (err) {
@@ -567,8 +567,9 @@ export default function TurnActions({
   };
 
   const handleEarlyTrainPaddington = async () => {
-    if (lock || !activeEventCard) return;
-    setLock(true);
+    if (!activeEventCard) return;
+    //if (lock || !activeEventCard) return;
+    //setLock(true);
     setMessage("");
 
     try {
@@ -591,7 +592,7 @@ export default function TurnActions({
     } finally {
       setActiveEventCard(null);
       setSelectedCard(null);
-      setLock(false);
+      //setLock(false);
     }
   };
 
