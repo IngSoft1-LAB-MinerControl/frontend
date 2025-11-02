@@ -13,7 +13,7 @@ import type { GameResponse } from "../../services/gameService";
 import type { CardResponse } from "../../services/cardService";
 import DraftPile from "../../components/DraftPile";
 import type { SetResponse } from "../../services/setService";
-import type { Steps } from "./TurnActions";
+import type { Steps } from "./TurnActionsTypes";
 import type { SecretResponse } from "../../services/secretService";
 import secretService from "../../services/secretService";
 import playerService from "../../services/playerService";

@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useGameContext } from "../context/GameContext";
 import { httpServerUrl } from "../services/config";
+import { data } from "react-router-dom";
 
 /**
  * Hook personalizado para manejar la conexión WebSocket de la partida.
@@ -38,6 +39,9 @@ export const useGameWebSocket = (gameId: number | undefined) => {
             break;
           case "gameUpdated":
             dispatch({ type: "SET_GAME", payload: dataContent });
+            // if (dataContent.game.status === "voting") {
+            //   dispatch({ type: "SET_STEP", payload: "vote" });
+            // }
             break;
           case "droppedCards":
             dispatch({ type: "SET_DISCARD_PILE", payload: dataContent });

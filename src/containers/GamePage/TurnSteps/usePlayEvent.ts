@@ -48,6 +48,10 @@ export const usePlayEvent = () => {
           dispatch({ type: "SET_STEP", payload: "delay_escape_selection" });
           setLock(false);
           return;
+        case "Point your suspicions":
+          dispatch({ type: "SET_STEP", payload: "point_your_suspicions" });
+          setLock(false);
+          return;
 
         // --- Eventos simples (lógica aquí mismo) ---
         case "Early train to paddington":

@@ -1,4 +1,4 @@
-import React from "react";
+//import React from "react";
 import TextType from "../../../components/TextType";
 import { useGameContext } from "../../../context/GameContext";
 import { useDelayEscape } from "./useDelayEscape";

@@ -284,6 +284,8 @@ const cardService = {
   AndThenThereWasOneMore,
   delayEscape,
   earlyTrainPaddington,
+  pointYourSuspicions,
+  endPointYourSuspicions,
 };
 
 export default cardService;

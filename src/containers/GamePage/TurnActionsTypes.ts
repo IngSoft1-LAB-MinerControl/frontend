@@ -14,4 +14,6 @@ export type Steps =
   | "sel_hide_secret"
   | "wait_reveal_secret"
   | "sel_player_reveal"
-  | "delay_escape_selection";
+  | "delay_escape_selection"
+  | "point_your_suspicions"
+  | "vote";
