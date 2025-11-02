@@ -1,0 +1,17 @@
+export type Steps =
+  | "start"
+  | "p_set"
+  | "p_event"
+  | "discard_skip"
+  | "discard_op"
+  | "draw"
+  | "another_victim"
+  | "look_into_the_ashes"
+  | "cards_off_the_table"
+  | "and_then_there_was_one_more"
+  | "set_actions"
+  | "sel_reveal_secret"
+  | "sel_hide_secret"
+  | "wait_reveal_secret"
+  | "sel_player_reveal"
+  | "delay_escape_selection";
