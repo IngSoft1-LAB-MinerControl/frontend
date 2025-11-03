@@ -1,21 +1,8 @@
-import React from "react";
 import { useGameContext } from "../../../context/GameContext";
 import TextType from "../../../components/TextType";
 
 export const StartStep = () => {
-  const { dispatch, isSocialDisgrace } = useGameContext();
-
-  if (isSocialDisgrace) {
-    return (
-      <div className="action-step-container">
-        <TextType
-          className="menu-indications"
-          text={["Procesando turno..."]}
-          typingSpeed={50}
-        />
-      </div>
-    );
-  }
+  const { dispatch } = useGameContext();
 
   return (
     <div className="action-step-container">

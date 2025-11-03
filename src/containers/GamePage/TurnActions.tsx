@@ -1,9 +1,7 @@
-import React from "react";
+import { useEffect } from "react";
 import { useGameContext } from "../../context/GameContext";
-import type { Steps } from "./TurnActionsTypes"; // <-- El nuevo archivo de tipos
 
-// 1. Importa todos los nuevos componentes de paso
-// (Aún no los creamos, pero este es el plan)
+//componentes de paso
 import { StartStep } from "./TurnSteps/StartStep";
 import { PlaySetStep } from "./TurnSteps/PlaySetStep";
 import { PlayEventStep } from "./TurnSteps/PlayEventStep";
@@ -19,12 +17,24 @@ import { HideSecretStep } from "./TurnSteps/HideSecretStep";
 import { SelectPlayerRevealStep } from "./TurnSteps/SelectPlayerRevealStep";
 import { WaitRevealStep } from "./TurnSteps/WaitRevealStep";
 
-// Importa los estilos (los mismos de antes)
+// estilos
 import "./TurnActions.css";
+import TextType from "../../components/TextType";
 
 export default function TurnActions() {
-  const { state } = useGameContext();
+  const { state, dispatch, isSocialDisgrace } = useGameContext();
   const { currentStep } = state;
+
+  useEffect(() => {
+    // Si el paso actual es 'start' Y estamos en desgracia social...
+    if (currentStep === "start" && isSocialDisgrace) {
+      // ...despacha la acción para cambiar el estado real en el Context.
+      console.log(
+        "Desgracia social detectada. Cambiando estado a 'discard_skip'."
+      );
+      dispatch({ type: "SET_STEP", payload: "discard_skip" });
+    }
+  }, [currentStep, isSocialDisgrace, dispatch]);
 
   // El 'div' contenedor se mantiene
   return (
@@ -36,6 +46,13 @@ export default function TurnActions() {
         switch (currentStep) {
           // --- Pasos Principales ---
           case "start":
+            if (isSocialDisgrace) {
+              return (
+                <div className="action-step-container">
+                  <TextType text={["Procesando turno..."]} typingSpeed={50} />
+                </div>
+              );
+            }
             return <StartStep />;
           case "p_set":
             return <PlaySetStep />;
