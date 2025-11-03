@@ -1,5 +1,3 @@
-// Ubicación: src/hooks/useGameWebSocket.ts
-
 import { useEffect } from "react";
 import { useGameContext } from "../context/GameContext";
 import { httpServerUrl } from "../services/config";
@@ -18,20 +16,30 @@ export const useGameWebSocket = (gameId: number | undefined) => {
     const ws = new WebSocket(wsURL);
 
     ws.onopen = () => {
-      console.log(`Conectado al WebSocket de la partida: ${wsURL}`);
-      // Limpiamos cualquier error de conexión previo
+      console.log(
+        `%c[WebSocket] Conectado a: ${wsURL}`,
+        "color: #0088cc; font-weight: bold;"
+      );
       dispatch({ type: "SET_ERROR", payload: null });
     };
 
     ws.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
+        // Esto registrará CADA mensaje completo que entre por el WebSocket.
+        console.log(
+          "%c[MSJ WS RECIBIDO]",
+          "color: #00aa00; font-weight: bold;",
+          message
+        );
+        // ---
+
         const dataContent =
           typeof message.data === "string"
             ? JSON.parse(message.data)
             : message.data;
 
-        // Despacha acciones al reducer en lugar de llamar 'setters'
+        // Despacha acciones al reducer
         switch (message.type) {
           case "playersState":
             dispatch({ type: "SET_PLAYERS", payload: dataContent });
@@ -46,6 +54,8 @@ export const useGameWebSocket = (gameId: number | undefined) => {
             dispatch({ type: "SET_DRAFT_PILE", payload: dataContent });
             break;
           default:
+            // Este log ahora es redundante, pero lo podemos dejar
+            // para mensajes que no tengan un 'case'.
             console.log("Mensaje WS recibido sin tipo conocido:", message);
         }
       } catch (err) {
@@ -54,7 +64,7 @@ export const useGameWebSocket = (gameId: number | undefined) => {
     };
 
     ws.onerror = (event) => {
-      console.error("Error en WebSocket:", event);
+      console.error("[Error WebSocket]", event);
       dispatch({
         type: "SET_ERROR",
         payload:
@@ -63,16 +73,14 @@ export const useGameWebSocket = (gameId: number | undefined) => {
     };
 
     ws.onclose = () => {
-      console.log("Conexión WebSocket de la partida cerrada.");
+      console.log(
+        "%c[WebSocket] Conexión cerrada.",
+        "color: #cc8800; font-weight: bold;"
+      );
     };
 
-    // Cierra la conexión cuando el componente se desmonta
     return () => {
       ws.close();
     };
-    // 'dispatch' es estable y no causará reconexiones
   }, [gameId, dispatch]);
-
-  // Este hook no necesita devolver nada, ya que su trabajo
-  // es "inyectar" datos en el GameContext.
 };
