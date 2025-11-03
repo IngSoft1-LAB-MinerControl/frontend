@@ -1,14 +1,15 @@
 import TextType from "../../../components/TextType";
 import { useGameContext } from "../../../context/GameContext";
-import { useWaitReveal } from "./useWaitReveal";
+import { useWaitWinnerReveal } from "./useWaitWinnerReveal";
 
-export const WaitRevealStep = () => {
+export const WaitWinnerRevealStep = () => {
   // 1. Llamamos al hook para que se ejecute su 'useEffect'
-  useWaitReveal();
+  useWaitWinnerReveal();
 
   // 2. Leemos el estado del context para mostrar el mensaje
   const { state } = useGameContext();
   const { selectedTargetPlayer } = state;
+  const winner = selectedTargetPlayer;
 
   return (
     <div className="action-step-container">
@@ -16,7 +17,7 @@ export const WaitRevealStep = () => {
         className="menu-indications"
         text={[
           `Esperando a que ${
-            selectedTargetPlayer?.name ?? "el oponente"
+            winner?.name ?? "el oponente"
           } revele un secreto...`,
         ]}
         typingSpeed={50}

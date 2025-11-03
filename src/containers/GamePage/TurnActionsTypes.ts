@@ -16,4 +16,5 @@ export type Steps =
   | "sel_player_reveal"
   | "delay_escape_selection"
   | "point_your_suspicions"
+  | "wait_winner_reveal"
   | "vote";

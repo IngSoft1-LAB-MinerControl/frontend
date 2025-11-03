@@ -22,11 +22,6 @@ export const usePointYourSuspicions = () => {
           activeEventCard.card_id,
         ]);
       }
-      setMessage("Evento ejecutado exitosamente.");
-      setTimeout(() => {
-        dispatch({ type: "CLEAR_SELECTIONS" });
-        dispatch({ type: "SET_STEP", payload: "discard_op" });
-      }, 2000);
     } catch (err) {
       console.error("Error al ejecutar evento:", err);
       setMessage("Error al ejecutar el evento.");

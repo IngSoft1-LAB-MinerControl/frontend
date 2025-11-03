@@ -19,9 +19,11 @@ import { HideSecretStep } from "./TurnSteps/HideSecretStep";
 import { SelectPlayerRevealStep } from "./TurnSteps/SelectPlayerRevealStep";
 import { WaitRevealStep } from "./TurnSteps/WaitRevealStep";
 import { PointYourSuspicionsStep } from "./TurnSteps/PointYourSuspicionsStep";
+import { WaitWinnerRevealStep } from "./TurnSteps/WaitWinnerRevealStep";
 
 // Importa los estilos (los mismos de antes)
 import "./TurnActions.css";
+import { VoteStep } from "./TurnSteps/VoteStep";
 
 export default function TurnActions() {
   const { state } = useGameContext();
@@ -61,6 +63,10 @@ export default function TurnActions() {
             return <DelayEscapeStep />;
           case "point_your_suspicions":
             return <PointYourSuspicionsStep />;
+          case "vote":
+            return <VoteStep />;
+          case "wait_winner_reveal":
+            return <WaitWinnerRevealStep />;
 
           // --- Pasos de Sets ---
           case "sel_reveal_secret":

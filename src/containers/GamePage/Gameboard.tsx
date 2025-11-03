@@ -19,6 +19,8 @@ import secretService from "../../services/secretService";
 import playerService from "../../services/playerService";
 import TextType from "../../components/TextType";
 import destinations from "../../navigation/destinations";
+import { useSelectPlayerReveal } from "./TurnSteps/useSelectPlayerReveal";
+import { useSelectWinnerReveal } from "./TurnSteps/useSelectWinnerReveal";
 
 // --- ¡Imports Clave! ---
 import { useGameContext } from "../../context/GameContext";
@@ -152,6 +154,84 @@ export default function Gameboard() {
     dispatch({ type: "SET_SELECTED_CARD", payload: newCard });
   };
 
+  const isForcedToActPYS = useMemo(() => {
+    const amITheWinner = selectedTargetPlayer?.player_id === myPlayerId;
+    const isNotMyTurnPlayer = myPlayerId !== game.current_turn;
+
+    const finishedVoting = game.status !== "Voting";
+
+    // Si cumplo las tres, tengo que ser forzado.
+    return amITheWinner && isNotMyTurnPlayer && finishedVoting;
+  }, [myPlayerId, selectedTargetPlayer, game.current_turn, game.status]);
+  const { confirmWinnerReveal } = useSelectWinnerReveal();
+
+  // Gameboard.tsx - useEffect de Transición
+  useEffect(() => {
+    const winner = selectedTargetPlayer;
+    const isPlayerWhoPlayedCard = myPlayerId === game.current_turn;
+
+    // 1. GUARDA PRINCIPAL: Si no hay un ganador seleccionado, no hacemos nada.
+    if (!winner) {
+      return;
+    }
+
+    // 2. GUARDA CONDICIONAL: Si el juego sigue en "Voting" Y NO SOY el jugador que jugó la carta,
+    // salgo. Esto previene que jugadores neutrales y el ganador actúen antes de tiempo.
+    if (game.status === "Voting" && !isPlayerWhoPlayedCard) {
+      return;
+    }
+
+    // A partir de aquí, o:
+    // a) El juego ya no está en "Voting".
+    // b) Soy el jugador de turno, y ya tenemos un ganador (winner != null), aunque el estado sea "Voting".
+
+    const isWinnerNotCurrentPlayer =
+      winner.player_id === myPlayerId && !isPlayerWhoPlayedCard;
+
+    // --- LÓGICA DE TRANSICIÓN ---
+
+    // 3. Si SOY el ganador, pero NO SOY el de turno (ganador externo PYS)
+    if (isWinnerNotCurrentPlayer) {
+      // A. Forzar la acción en el backend solo si AÚN NO estoy marcado como seleccionado.
+      if (!currentPlayer?.isSelected) {
+        confirmWinnerReveal();
+      }
+      // El forzado PYS se activa en el JSX (isForcedToActPYS).
+      return;
+    }
+
+    // 4. Si SOY el jugador de turno (quien jugó el evento)
+    // **ESTE BLOQUE YA SE EJECUTA INMEDIATAMENTE POST-VOTACIÓN**
+    if (isPlayerWhoPlayedCard) {
+      if (winner.player_id === myPlayerId) {
+        // Gané: Revelar mi secreto
+        dispatch({ type: "SET_STEP", payload: "sel_reveal_secret" });
+      } else {
+        // Perdí: Esperar a que el ganador revele
+        dispatch({ type: "SET_STEP", payload: "wait_winner_reveal" });
+      }
+
+      // CRÍTICO: El jugador de turno limpia el target para TODOS, avanzando el ciclo para el resto.
+      dispatch({ type: "SET_SELECTED_TARGET_PLAYER", payload: null });
+      return;
+    }
+
+    // 5. Si soy un jugador neutral (ni de turno, ni ganador)
+    // Si llegamos aquí, el selectedTargetPlayer ya debería haber sido limpiado por el Jugador de Turno
+    // (punto 4), pero si no lo fue (por un error de sincronización), aseguramos el retorno a 'start'
+    // una vez que el estado del juego haya avanzado (no es "Voting").
+    if (!isPlayerWhoPlayedCard && winner.player_id !== myPlayerId) {
+      dispatch({ type: "SET_STEP", payload: "start" });
+    }
+  }, [
+    selectedTargetPlayer,
+    confirmWinnerReveal,
+    myPlayerId,
+    game.status,
+    game.current_turn,
+    dispatch,
+    currentPlayer?.isSelected, // Aseguramos que reaccionamos a mi estado isSelected
+  ]);
   // --- 7. El RENDER (JSX) ---
   // (Exactamente igual que antes)
 
@@ -215,7 +295,8 @@ export default function Gameboard() {
                 currentStep === "sel_reveal_secret" ||
                 currentStep === "sel_hide_secret" ||
                 currentStep === "and_then_there_was_one_more" ||
-                isForcedToAct
+                isForcedToAct ||
+                isForcedToActPYS
               }
               onClick={() => {
                 if (
@@ -232,16 +313,14 @@ export default function Gameboard() {
           ) : (
             <div className="empty-hint">Esperando jugadores…</div>
           )}
-
-          {isMyTurn && (
+          {(isMyTurn || game.status === "Voting") && (
             <div className="turn-actions-container">
-              {/* TurnActions ya no recibe props, usa los hooks */}
               <TurnActions />
             </div>
           )}
 
           {/* Lógica de acción forzada (revelar secreto) */}
-          {isForcedToAct && (
+          {isForcedToAct && !isForcedToActPYS && (
             <div className="turn-actions-container">
               <div className="action-step-container">
                 <TextType
@@ -272,6 +351,53 @@ export default function Gameboard() {
                         await playerService.unselectPlayer(myPlayerId);
 
                         // Limpiamos el estado local usando dispatch
+                        dispatch({
+                          type: "SET_SELECTED_SECRET",
+                          payload: null,
+                        });
+                      } catch (err) {
+                        console.error("Error al revelar secreto forzado:", err);
+                        alert("Error al revelar secreto.");
+                      }
+                    }}
+                    disabled={!selectedSecret || selectedSecret.revelated}
+                  >
+                    Revelar Secreto
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          {isForcedToActPYS && (
+            <div className="turn-actions-container">
+              <div className="action-step-container">
+                <TextType
+                  text={[
+                    "Sos el jugador más votado. Debes revelar uno de tus secretos.",
+                  ]}
+                  typingSpeed={35}
+                />
+                <div className="action-buttons-group">
+                  <button
+                    className="action-button"
+                    onClick={async () => {
+                      if (!selectedSecret) {
+                        alert("Por favor, selecciona un secreto para revelar.");
+                        return;
+                      }
+                      if (selectedSecret.revelated) {
+                        alert(
+                          "Ese secreto ya está revelado. Debes elegir uno oculto."
+                        );
+                        return;
+                      }
+
+                      try {
+                        await secretService.revealSecret(
+                          selectedSecret.secret_id
+                        );
+                        await playerService.unselectPlayer(myPlayerId);
+
                         dispatch({
                           type: "SET_SELECTED_SECRET",
                           payload: null,

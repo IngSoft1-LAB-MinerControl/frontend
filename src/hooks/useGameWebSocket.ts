@@ -1,6 +1,6 @@
 // Ubicación: src/hooks/useGameWebSocket.ts
 
-import { useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { useGameContext } from "../context/GameContext";
 import { httpServerUrl } from "../services/config";
 import { data } from "react-router-dom";
@@ -11,6 +11,7 @@ import { data } from "react-router-dom";
  */
 export const useGameWebSocket = (gameId: number | undefined) => {
   const { dispatch } = useGameContext();
+  const previousStatusRef = useRef<string | null>(null); // estado anterior del juego
 
   useEffect(() => {
     if (!gameId) return;
@@ -38,10 +39,38 @@ export const useGameWebSocket = (gameId: number | undefined) => {
             dispatch({ type: "SET_PLAYERS", payload: dataContent });
             break;
           case "gameUpdated":
+            const previousStatus = previousStatusRef.current; // lee el estado anterior
+            const newStatus = dataContent.status; // estado nuevo recibido
             dispatch({ type: "SET_GAME", payload: dataContent });
-            // if (dataContent.game.status === "voting") {
-            //   dispatch({ type: "SET_STEP", payload: "vote" });
-            // }
+            if (previousStatus === "in course" && newStatus === "Voting") {
+              dispatch({ type: "SET_STEP", payload: "vote" });
+            } else if (
+              previousStatus === "Voting" &&
+              newStatus === "in course"
+            ) {
+              // buscamos al jugador más votado
+              const players = dataContent.players || [];
+              if (players.length > 0) {
+                const maxVotes = Math.max(
+                  ...players.map((p: any) => p.votes_received)
+                );
+                const mostVoted = players.find(
+                  (p: any) => p.votes_received === maxVotes
+                );
+
+                if (mostVoted) {
+                  // Guardamos al ganador como selectedTargetPlayer
+                  dispatch({
+                    type: "SET_SELECTED_TARGET_PLAYER",
+                    payload: mostVoted,
+                  });
+
+                  //dispatch({ type: "SET_STEP", payload: "start" });
+                }
+              }
+            }
+
+            previousStatusRef.current = newStatus;
             break;
           case "droppedCards":
             dispatch({ type: "SET_DISCARD_PILE", payload: dataContent });
