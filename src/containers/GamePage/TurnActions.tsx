@@ -16,6 +16,7 @@ import { RevealSecretStep } from "./TurnSteps/RevealSecretStep";
 import { HideSecretStep } from "./TurnSteps/HideSecretStep";
 import { SelectPlayerRevealStep } from "./TurnSteps/SelectPlayerRevealStep";
 import { WaitRevealStep } from "./TurnSteps/WaitRevealStep";
+import { PointYourSuspicionsStep } from "./TurnSteps/PointYourSuspicionsStep";
 
 // estilos
 import "./TurnActions.css";
@@ -75,6 +76,8 @@ export default function TurnActions() {
             return <AndThenThereWasOneMoreStep />;
           case "delay_escape_selection":
             return <DelayEscapeStep />;
+          case "point_your_suspicions":
+            return <PointYourSuspicionsStep />;
 
           // --- Pasos de Sets ---
           case "sel_reveal_secret":

@@ -13,7 +13,7 @@ import type { GameResponse } from "../../services/gameService";
 import type { CardResponse } from "../../services/cardService";
 import DraftPile from "../../components/DraftPile";
 import type { SetResponse } from "../../services/setService";
-import type { Steps } from "./TurnActions";
+import type { Steps } from "./TurnActionsTypes";
 import type { SecretResponse } from "../../services/secretService";
 import secretService from "../../services/secretService";
 import playerService from "../../services/playerService";
@@ -97,6 +97,10 @@ export default function Gameboard() {
     return !isMyTurn && (currentPlayer?.isSelected ?? false);
   }, [isMyTurn, currentPlayer]);
 
+  const pysWinner = useMemo(() => {
+    return players.find((p) => p.isSelected === true) || null;
+  }, [players]);
+
   // --- 6. Handlers de UI ---
   // (se mantienen igual, despachan acciones al reducer)
 
@@ -152,6 +156,62 @@ export default function Gameboard() {
     dispatch({ type: "SET_SELECTED_CARD", payload: newCard });
   };
 
+  // Gameboard.tsx - Nuevo useEffect de Transición PYS
+
+  useEffect(() => {
+    const winner = pysWinner;
+    const isPlayerWhoPlayedCard = myPlayerId === game.current_turn;
+
+    // 1. GUARDA: Solo actuamos si hay un ganador (marcado con isSelected=true)
+    if (!winner || currentStep !== "point_your_suspicions") {
+      return;
+    }
+
+    // --- TRANSICIÓN POST-VOTACIÓN PYS ---
+
+    // A. Si SOY el jugador de turno (quien jugó PYS)
+    if (isPlayerWhoPlayedCard) {
+      if (winner.player_id === myPlayerId) {
+        // Gané el PYS: Paso a revelar mi secreto
+        dispatch({ type: "SET_STEP", payload: "sel_reveal_secret" });
+      } else {
+        // Perdí el PYS: Paso a esperar que el ganador revele
+        dispatch({ type: "SET_STEP", payload: "wait_reveal_secret" });
+      }
+
+      // CRÍTICO: Limpiamos la bandera de voto de sessionStorage para todos (backend ya limpió el isSelected)
+      sessionStorage.removeItem(`voted_${myPlayerId}`);
+
+      // No necesitamos `return` explícito si estamos seguros de que el cambio de step es la acción final
+    }
+
+    // B. Si SOY el ganador, pero NO SOY el de turno (Ganador Forzado)
+    const isWinnerNotCurrentPlayer =
+      winner.player_id === myPlayerId && !isPlayerWhoPlayedCard;
+
+    if (isWinnerNotCurrentPlayer) {
+      // Me fuerzo a revelar. El JSX ya mostrará la UI de forzado (isForcedToAct).
+      // Sin embargo, para fines de paso interno, podríamos usar un paso específico
+      // Pero dado que `isForcedToAct` ya maneja la UI, no necesitamos cambiar el step aquí,
+      // simplemente dejamos que el JSX lo fuerce.
+
+      // **Alternativa más limpia:** Forzar el step y limpiar `isForcedToAct`
+      // dispatch({ type: "SET_STEP", payload: "sel_reveal_secret" });
+      return;
+    }
+
+    // C. Jugador Neutral: El ganador fue determinado, vuelven a 'start'
+    if (!isPlayerWhoPlayedCard && winner.player_id !== myPlayerId) {
+      dispatch({ type: "SET_STEP", payload: "start" });
+      sessionStorage.removeItem(`voted_${myPlayerId}`);
+    }
+  }, [
+    pysWinner, // Trigger principal
+    myPlayerId,
+    game.current_turn,
+    currentStep, // Dependencia para asegurar que solo se dispara desde la votación
+    dispatch,
+  ]);
   // --- 7. El RENDER (JSX) ---
   // (Exactamente igual que antes)
 
@@ -233,7 +293,10 @@ export default function Gameboard() {
             <div className="empty-hint">Esperando jugadores…</div>
           )}
 
-          {isMyTurn && (
+          {((isMyTurn &&
+            currentStep !== "wait_reveal_secret" && // Exclusión para el jugador de turno
+            currentStep !== "sel_reveal_secret") ||
+            currentStep === "point_your_suspicions") && ( // Inclusión para todos
             <div className="turn-actions-container">
               {/* TurnActions ya no recibe props, usa los hooks */}
               <TurnActions />

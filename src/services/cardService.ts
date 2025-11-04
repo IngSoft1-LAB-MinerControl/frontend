@@ -229,6 +229,26 @@ async function earlyTrainPaddington(gameId: number): Promise<any> {
   return await response.json();
 }
 
+async function pointYourSuspicions(gameId: number) {
+  const response = await fetch(
+    `${httpServerUrl}/event/point_your_suspicion/${gameId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(
+      errorData.detail || "Error al iniciar Point Your Supicions"
+    );
+  }
+
+  return await response.json();
+}
 const cardService = {
   getCardsByPlayer,
   discardAuto,
@@ -241,6 +261,7 @@ const cardService = {
   AndThenThereWasOneMore,
   delayEscape,
   earlyTrainPaddington,
+  pointYourSuspicions,
 };
 
 export default cardService;
