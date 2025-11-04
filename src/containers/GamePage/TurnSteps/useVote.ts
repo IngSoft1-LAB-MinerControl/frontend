@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import playerService from "../../../services/playerService";
 import { useGameContext } from "../../../context/GameContext";
 
@@ -8,12 +8,18 @@ export const useVote = () => {
 
   const [lock, setLock] = useState(false);
   const [message, setMessage] = useState("");
-  const [voted, setVoted] = useState(() => {
-    return sessionStorage.getItem(`voted_${myId}`) === "true";
-  });
+
+  const [voted, setVoted] = useState(false);
+
+  useEffect(() => {
+    if (myId) {
+      const isVoted = sessionStorage.getItem(`voted_${myId}`) === "true";
+      setVoted(isVoted);
+    }
+  }, [myId]);
 
   const handleVote = async (targetPlayerId: number) => {
-    if (lock || voted) return;
+    if (lock || voted || !myId) return;
 
     setLock(true);
     setMessage("");
@@ -22,7 +28,8 @@ export const useVote = () => {
       setVoted(true);
       sessionStorage.setItem(`voted_${myId}`, "true");
       setMessage("Voto registrado correctamente.");
-      setInterval(setMessage, 2000);
+      // Corregir setInterval por setTimeout para un solo mensaje
+      setTimeout(() => setMessage(""), 2000);
     } catch (error) {
       console.error("Error al votar:", error);
       setMessage("No se pudo registrar el voto.");

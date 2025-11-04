@@ -70,12 +70,19 @@ export default function Gameboard() {
   }, [game, players, myPlayerId, navigate]);
 
   // 5. El useEffect que resetea el step si no es tu turno (se mantiene igual)
+  // useEffect(() => {
+  //   if (!isMyTurn) {
+  //     dispatch({ type: "SET_STEP", payload: "start" });
+  //   }
+  // }, [isMyTurn, dispatch]);
+
   useEffect(() => {
-    if (!isMyTurn) {
+    const globalSteps: Steps[] = ["point_your_suspicions"];
+
+    if (!isMyTurn && !globalSteps.includes(currentStep)) {
       dispatch({ type: "SET_STEP", payload: "start" });
     }
-  }, [isMyTurn, dispatch]);
-
+  }, [isMyTurn, dispatch, currentStep]); // ¡Importante incluir currentStep aquí!
   // --- Lógica de UI y Valores Calculados (se mantienen igual) ---
 
   const cardCount = currentPlayer ? currentPlayer.cards.length : 0;
@@ -138,6 +145,7 @@ export default function Gameboard() {
       "cards_off_the_table",
       "and_then_there_was_one_more",
       "sel_player_reveal",
+      "point_your_suspicions",
     ];
 
     if (selectableSteps.includes(currentStep)) {
@@ -241,7 +249,8 @@ export default function Gameboard() {
                 selectable={
                   currentStep === "cards_off_the_table" ||
                   currentStep === "and_then_there_was_one_more" ||
-                  currentStep === "sel_player_reveal"
+                  currentStep === "sel_player_reveal" ||
+                  currentStep === "point_your_suspicions"
                 }
                 isSelected={selectedTargetPlayer?.player_id === p.player_id}
               />
@@ -285,7 +294,10 @@ export default function Gameboard() {
                   handleSelectPlayer(distribution.bottom);
                 }
               }}
-              selectable={currentStep === "and_then_there_was_one_more"}
+              selectable={
+                currentStep === "and_then_there_was_one_more" ||
+                currentStep === "point_your_suspicions"
+              }
               isSelected={selectedTargetPlayer?.player_id === myPlayerId}
               isSocialDisgrace={isSocialDisgrace}
             />
@@ -293,10 +305,7 @@ export default function Gameboard() {
             <div className="empty-hint">Esperando jugadores…</div>
           )}
 
-          {((isMyTurn &&
-            currentStep !== "wait_reveal_secret" && // Exclusión para el jugador de turno
-            currentStep !== "sel_reveal_secret") ||
-            currentStep === "point_your_suspicions") && ( // Inclusión para todos
+          {(isMyTurn || currentStep === "point_your_suspicions") && ( // Inclusión para todos
             <div className="turn-actions-container">
               {/* TurnActions ya no recibe props, usa los hooks */}
               <TurnActions />
