@@ -30,8 +30,8 @@ export interface PlayerStateResponse {
   cards: CardResponse[];
   secrets: SecretResponse[];
   sets: SetResponse[];
-  isSelected: boolean;
   social_disgrace: boolean;
+  pending_action: string | null;
   votes_received: number;
 }
 
@@ -94,14 +94,20 @@ async function unselectPlayer(playerId: number): Promise<void> {
   return;
 }
 
-async function votePlayer(playerId: number): Promise<void> {
+async function votePlayer(
+  playerIdVoted: number,
+  playerIdVoting: number
+): Promise<void> {
   try {
-    const response = await fetch(`${httpServerUrl}/vote/player/${playerId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    const response = await fetch(
+      `${httpServerUrl}/vote/player/${playerIdVoted}/${playerIdVoting}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
     if (!response.ok) {
       let errorDetail = "";

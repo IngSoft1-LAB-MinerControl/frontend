@@ -50,7 +50,6 @@ export const usePlayEvent = () => {
           return;
         case "Point your suspicions":
           dispatch({ type: "SET_STEP", payload: "point_your_suspicions" });
-          await cardService.pointYourSuspicions(game.game_id);
 
           setLock(false);
           return;

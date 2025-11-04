@@ -24,7 +24,7 @@ export const useVote = () => {
     setLock(true);
     setMessage("");
     try {
-      await playerService.votePlayer(targetPlayerId);
+      await playerService.votePlayer(targetPlayerId, myId);
       setVoted(true);
       sessionStorage.setItem(`voted_${myId}`, "true");
       setMessage("Voto registrado correctamente.");

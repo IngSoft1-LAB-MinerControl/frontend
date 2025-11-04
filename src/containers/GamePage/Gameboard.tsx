@@ -19,6 +19,7 @@ import secretService from "../../services/secretService";
 import playerService from "../../services/playerService";
 import TextType from "../../components/TextType";
 import destinations from "../../navigation/destinations";
+import { VoteStep } from "./TurnSteps/VoteStep";
 
 // --- ¡Imports Clave! ---
 import { useGameContext } from "../../context/GameContext";
@@ -69,21 +70,11 @@ export default function Gameboard() {
     }
   }, [game, players, myPlayerId, navigate]);
 
-  // 5. El useEffect que resetea el step si no es tu turno (se mantiene igual)
-  // useEffect(() => {
-  //   if (!isMyTurn) {
-  //     dispatch({ type: "SET_STEP", payload: "start" });
-  //   }
-  // }, [isMyTurn, dispatch]);
-
   useEffect(() => {
-    const globalSteps: Steps[] = ["point_your_suspicions"];
-
-    if (!isMyTurn && !globalSteps.includes(currentStep)) {
+    if (!isMyTurn) {
       dispatch({ type: "SET_STEP", payload: "start" });
     }
-  }, [isMyTurn, dispatch, currentStep]); // ¡Importante incluir currentStep aquí!
-  // --- Lógica de UI y Valores Calculados (se mantienen igual) ---
+  }, [isMyTurn, dispatch]);
 
   const cardCount = currentPlayer ? currentPlayer.cards.length : 0;
 
@@ -100,13 +91,28 @@ export default function Gameboard() {
     return { bottom: me, opponents };
   }, [players, currentPlayer]);
 
+  const pendingAction = currentPlayer?.pending_action;
   const isForcedToAct = useMemo(() => {
-    return !isMyTurn && (currentPlayer?.isSelected ?? false);
-  }, [isMyTurn, currentPlayer]);
+    // Tu lógica actual para 'revelar secreto' (¡perfecta!)
+    return !isMyTurn && pendingAction === "REVEAL_SECRET";
+  }, [isMyTurn, pendingAction]);
 
-  const pysWinner = useMemo(() => {
-    return players.find((p) => p.isSelected === true) || null;
-  }, [players]);
+  const isForcedToVote = useMemo(() => {
+    return (
+      pendingAction === "VOTE" || pendingAction === "WAITING_VOTING_TO_END"
+    );
+  }, [pendingAction]);
+
+  useEffect(() => {
+    if (isMyTurn && currentStep === "wait_voting_to_end") {
+      if (pendingAction === "Clense" /*|| pendingAction === undefined*/) {
+        console.log(
+          "Transición exitosa: Revelación de secreto completada. Avanzando a 'discard_op'."
+        );
+        dispatch({ type: "SET_STEP", payload: "discard_op" });
+      }
+    }
+  }, [isMyTurn, currentStep, pendingAction, dispatch]);
 
   // --- 6. Handlers de UI ---
   // (se mantienen igual, despachan acciones al reducer)
@@ -166,60 +172,6 @@ export default function Gameboard() {
 
   // Gameboard.tsx - Nuevo useEffect de Transición PYS
 
-  useEffect(() => {
-    const winner = pysWinner;
-    const isPlayerWhoPlayedCard = myPlayerId === game.current_turn;
-
-    // 1. GUARDA: Solo actuamos si hay un ganador (marcado con isSelected=true)
-    if (!winner || currentStep !== "point_your_suspicions") {
-      return;
-    }
-
-    // --- TRANSICIÓN POST-VOTACIÓN PYS ---
-
-    // A. Si SOY el jugador de turno (quien jugó PYS)
-    if (isPlayerWhoPlayedCard) {
-      if (winner.player_id === myPlayerId) {
-        // Gané el PYS: Paso a revelar mi secreto
-        dispatch({ type: "SET_STEP", payload: "sel_reveal_secret" });
-      } else {
-        // Perdí el PYS: Paso a esperar que el ganador revele
-        dispatch({ type: "SET_STEP", payload: "wait_reveal_secret" });
-      }
-
-      // CRÍTICO: Limpiamos la bandera de voto de sessionStorage para todos (backend ya limpió el isSelected)
-      sessionStorage.removeItem(`voted_${myPlayerId}`);
-
-      // No necesitamos `return` explícito si estamos seguros de que el cambio de step es la acción final
-    }
-
-    // B. Si SOY el ganador, pero NO SOY el de turno (Ganador Forzado)
-    const isWinnerNotCurrentPlayer =
-      winner.player_id === myPlayerId && !isPlayerWhoPlayedCard;
-
-    if (isWinnerNotCurrentPlayer) {
-      // Me fuerzo a revelar. El JSX ya mostrará la UI de forzado (isForcedToAct).
-      // Sin embargo, para fines de paso interno, podríamos usar un paso específico
-      // Pero dado que `isForcedToAct` ya maneja la UI, no necesitamos cambiar el step aquí,
-      // simplemente dejamos que el JSX lo fuerce.
-
-      // **Alternativa más limpia:** Forzar el step y limpiar `isForcedToAct`
-      // dispatch({ type: "SET_STEP", payload: "sel_reveal_secret" });
-      return;
-    }
-
-    // C. Jugador Neutral: El ganador fue determinado, vuelven a 'start'
-    if (!isPlayerWhoPlayedCard && winner.player_id !== myPlayerId) {
-      dispatch({ type: "SET_STEP", payload: "start" });
-      sessionStorage.removeItem(`voted_${myPlayerId}`);
-    }
-  }, [
-    pysWinner, // Trigger principal
-    myPlayerId,
-    game.current_turn,
-    currentStep, // Dependencia para asegurar que solo se dispara desde la votación
-    dispatch,
-  ]);
   // --- 7. El RENDER (JSX) ---
   // (Exactamente igual que antes)
 
@@ -304,14 +256,12 @@ export default function Gameboard() {
           ) : (
             <div className="empty-hint">Esperando jugadores…</div>
           )}
-
           {(isMyTurn || currentStep === "point_your_suspicions") && ( // Inclusión para todos
             <div className="turn-actions-container">
               {/* TurnActions ya no recibe props, usa los hooks */}
               <TurnActions />
             </div>
           )}
-
           {/* Lógica de acción forzada (revelar secreto) */}
           {isForcedToAct && (
             <div className="turn-actions-container">
@@ -341,7 +291,7 @@ export default function Gameboard() {
                         await secretService.revealSecret(
                           selectedSecret.secret_id
                         );
-                        await playerService.unselectPlayer(myPlayerId);
+                        // await playerService.unselectPlayer(myPlayerId);
 
                         // Limpiamos el estado local usando dispatch
                         dispatch({
@@ -359,6 +309,12 @@ export default function Gameboard() {
                   </button>
                 </div>
               </div>
+            </div>
+          )}
+
+          {isForcedToVote && (
+            <div className="turn-actions-container">
+              <VoteStep />
             </div>
           )}
         </section>
