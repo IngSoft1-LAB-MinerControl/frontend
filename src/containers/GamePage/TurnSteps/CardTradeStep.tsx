@@ -1,9 +1,8 @@
 import TextType from "../../../components/TextType";
 import { useGameContext } from "../../../context/GameContext";
-import { useSelectPlayerReveal } from "./useSelectPlayerReveal";
-
-export const SelectPlayerRevealStep = () => {
-  const { lock, message, confirmPlayerReveal } = useSelectPlayerReveal();
+import { useCardTrade } from "./useCardTrade";
+export const CardTradeStep = () => {
+  const { lock, message, confirmCardTrade } = useCardTrade();
   const { state } = useGameContext();
 
   return (
@@ -11,16 +10,16 @@ export const SelectPlayerRevealStep = () => {
       {message && <div className="turn-message">{message}</div>}
       <TextType
         className="menu-indications"
-        text={["Seleccione un jugador para que revele un secreto"]}
+        text={["Selecciona un jugador con quien intercambiar una carta"]}
         typingSpeed={35}
       />
       <div className="action-buttons-group">
         <button
           className="action-button"
-          onClick={confirmPlayerReveal}
+          onClick={confirmCardTrade}
           disabled={lock || !state.selectedTargetPlayer}
         >
-          {lock ? "Seleccionando..." : "Confirmar"}
+          {lock ? "Iniciando..." : "Confirmar Intercambio"}
         </button>
       </div>
     </div>

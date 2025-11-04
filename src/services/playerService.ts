@@ -30,8 +30,8 @@ export interface PlayerStateResponse {
   cards: CardResponse[];
   secrets: SecretResponse[];
   sets: SetResponse[];
-  isSelected: boolean;
   social_disgrace: boolean;
+  pending_action: string | null;
 }
 
 async function createPlayer(player: Player): Promise<PlayerStateResponse> {

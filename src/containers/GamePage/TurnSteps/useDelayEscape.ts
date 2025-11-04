@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useGameContext } from "../../../context/GameContext";
 import cardService from "../../../services/cardService";
+import eventService from "../../../services/eventService";
 
 export const useDelayEscape = () => {
   const { state, dispatch } = useGameContext();
@@ -25,7 +26,7 @@ export const useDelayEscape = () => {
     setLock(true);
     setMessage("Devolviendo cartas al mazo...");
     try {
-      await cardService.delayEscape(game.game_id, selectedDiscardIds);
+      await eventService.delayEscape(game.game_id, selectedDiscardIds);
       await cardService.discardSelectedList(myPlayerId, [
         activeEventCard.card_id,
       ]);

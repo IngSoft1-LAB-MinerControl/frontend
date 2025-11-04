@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useGameContext } from "../../../context/GameContext";
 import cardService from "../../../services/cardService";
+import eventService from "../../../services/eventService";
 
 export const usePlayEvent = () => {
   const { state, dispatch } = useGameContext();
@@ -49,19 +50,23 @@ export const usePlayEvent = () => {
           setLock(false);
           return;
 
-        // --- Eventos simples (lógica aquí mismo) ---
         case "Early train to paddington":
-          await cardService.earlyTrainPaddington(game.game_id);
+          await eventService.earlyTrainPaddington(game.game_id);
           await cardService.discardSelectedList(myPlayerId, [
             selectedCard.card_id,
           ]);
-          setMessage("¡Evento ejecutado! 6 cartas movidas al descarte.");
+          setMessage(
+            "¡Evento ejecutado! 6 carta        // --- Eventos genéricos ---s movidas al descarte."
+          );
           setTimeout(() => setMessage(""), 2000);
           dispatch({ type: "SET_SELECTED_CARD", payload: null });
           dispatch({ type: "SET_STEP", payload: "discard_op" });
           break;
 
-        // --- Eventos genéricos ---
+        case "Card trade":
+          dispatch({ type: "SET_STEP", payload: "card_trade" });
+          setLock(false);
+          return;
         default:
           console.log("Evento genérico descartado:", selectedCard.name);
           await cardService.discardSelectedList(myPlayerId, [
@@ -91,7 +96,3 @@ export const usePlayEvent = () => {
   // Devolvemos activeEventCard para que los sub-pasos puedan usarlo
   return { lock, message, playEvent, cancel };
 };
-// NOTA: 'activeEventCard' tendrá que pasarse por Context o Prop si los
-// sub-pasos (como 'AnotherVictimStep') lo necesitan.
-// Por ahora lo dejamos en el hook, pero puede requerir moverlo al GameContext.
-// (Vamos a simplificar y moverlo al GameContext).

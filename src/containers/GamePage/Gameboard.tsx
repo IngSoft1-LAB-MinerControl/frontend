@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import "./GamePage.css"; // Sigue usando los mismos estilos
 import type { PlayerStateResponse } from "../../services/playerService";
@@ -9,22 +9,20 @@ import TurnActions from "./TurnActions";
 import Opponent from "../../components/Opponent";
 import Decks from "../../components/Decks";
 import You from "../../components/MyHand";
-import type { GameResponse } from "../../services/gameService";
 import type { CardResponse } from "../../services/cardService";
 import DraftPile from "../../components/DraftPile";
 import type { SetResponse } from "../../services/setService";
-import type { Steps } from "./TurnActions";
+import type { Steps } from "./TurnActionsTypes";
 import type { SecretResponse } from "../../services/secretService";
 import secretService from "../../services/secretService";
 import playerService from "../../services/playerService";
 import TextType from "../../components/TextType";
 import destinations from "../../navigation/destinations";
 
-// --- ¡Imports Clave! ---
 import { useGameContext } from "../../context/GameContext";
 import { useGameWebSocket } from "../../hooks/useGameWebSocket"; // 1. Importamos el nuevo hook
+import eventService from "../../services/eventService";
 
-// Este componente CONTIENE la lógica que antes estaba en GamePage
 export default function Gameboard() {
   const navigate = useNavigate();
 
@@ -76,10 +74,6 @@ export default function Gameboard() {
     }
   }, [isMyTurn, dispatch]);
 
-  // --- Lógica de UI y Valores Calculados (se mantienen igual) ---
-
-  const cardCount = currentPlayer ? currentPlayer.cards.length : 0;
-
   const distribution = useMemo(() => {
     if (!players.length)
       return {
@@ -93,9 +87,28 @@ export default function Gameboard() {
     return { bottom: me, opponents };
   }, [players, currentPlayer]);
 
+  const pendingAction = currentPlayer?.pending_action;
+
   const isForcedToAct = useMemo(() => {
-    return !isMyTurn && (currentPlayer?.isSelected ?? false);
-  }, [isMyTurn, currentPlayer]);
+    // Tu lógica actual para 'revelar secreto' (¡perfecta!)
+    return !isMyTurn && pendingAction === "REVEAL_SECRET";
+  }, [isMyTurn, pendingAction]);
+
+  const isForcedToTrade = useMemo(() => {
+    return (
+      pendingAction === "SELECT_TRADE_CARD" ||
+      pendingAction === "WAITING_FOR_TRADE_PARTNER"
+    );
+  }, [pendingAction]);
+
+  useEffect(() => {
+    if (isMyTurn && currentStep === "wait_trade") {
+      if (pendingAction === null || pendingAction === undefined) {
+        console.log("Trade completado. Avanzando a 'discard_op'.");
+        dispatch({ type: "SET_STEP", payload: "discard_op" });
+      }
+    }
+  }, [isMyTurn, currentStep, pendingAction, dispatch]);
 
   // --- 6. Handlers de UI ---
   // (se mantienen igual, despachan acciones al reducer)
@@ -109,6 +122,14 @@ export default function Gameboard() {
   };
 
   const handleHandCardSelect = (card: CardResponse) => {
+    if (pendingAction === "SELECT_TRADE_CARD") {
+      const newCard = selectedCard?.card_id === card.card_id ? null : card;
+      dispatch({ type: "SET_SELECTED_CARD", payload: newCard });
+      return;
+    }
+    // if (pendingAction === "WAITING_FOR_TRADE_PARTNER") {
+    //   return;
+    // }
     if (
       currentStep === "p_set" ||
       currentStep === "discard_op" ||
@@ -134,6 +155,7 @@ export default function Gameboard() {
       "cards_off_the_table",
       "and_then_there_was_one_more",
       "sel_player_reveal",
+      "card_trade",
     ];
 
     if (selectableSteps.includes(currentStep)) {
@@ -181,7 +203,8 @@ export default function Gameboard() {
                 selectable={
                   currentStep === "cards_off_the_table" ||
                   currentStep === "and_then_there_was_one_more" ||
-                  currentStep === "sel_player_reveal"
+                  currentStep === "sel_player_reveal" ||
+                  currentStep === "card_trade"
                 }
                 isSelected={selectedTargetPlayer?.player_id === p.player_id}
               />
@@ -284,6 +307,57 @@ export default function Gameboard() {
                     disabled={!selectedSecret || selectedSecret.revelated}
                   >
                     Revelar Secreto
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {isForcedToTrade && (
+            <div className="turn-actions-container">
+              <div className="action-step-container">
+                <TextType
+                  text={
+                    pendingAction === "SELECT_TRADE_CARD"
+                      ? ["¡Intercambio! Selecciona una carta de tu mano..."]
+                      : ["Carta seleccionada. Esperando al otro jugador..."]
+                  }
+                  typingSpeed={35}
+                />
+                <div className="action-buttons-group">
+                  <button
+                    className="action-button"
+                    onClick={async () => {
+                      if (!selectedCard || !myPlayerId) return;
+
+                      try {
+                        // ¡Llamamos al endpoint que resuelve el deadlock!
+                        await eventService.cardTrade(
+                          myPlayerId,
+                          selectedCard.card_id
+                        );
+
+                        // El backend pondrá la acción en 'WAITING' o la completará.
+                        // El WebSocket refrescará el estado.
+                        // Limpiamos la selección local.
+                        dispatch({ type: "SET_SELECTED_CARD", payload: null });
+                      } catch (err) {
+                        console.error(
+                          "Error al seleccionar carta para trade:",
+                          err
+                        );
+                        alert("Error al seleccionar carta.");
+                      }
+                    }}
+                    // Deshabilitado si no hay carta o si ya esperamos
+                    disabled={
+                      !selectedCard ||
+                      pendingAction === "WAITING_FOR_TRADE_PARTNER"
+                    }
+                  >
+                    {pendingAction === "WAITING_FOR_TRADE_PARTNER"
+                      ? "Esperando..."
+                      : "Confirmar Carta"}
                   </button>
                 </div>
               </div>

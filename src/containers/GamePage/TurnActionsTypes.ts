@@ -14,4 +14,6 @@ export type Steps =
   | "sel_hide_secret"
   | "wait_reveal_secret"
   | "sel_player_reveal"
+  | "card_trade"
+  | "wait_trade"
   | "delay_escape_selection";

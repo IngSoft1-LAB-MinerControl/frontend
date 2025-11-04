@@ -16,6 +16,8 @@ import { RevealSecretStep } from "./TurnSteps/RevealSecretStep";
 import { HideSecretStep } from "./TurnSteps/HideSecretStep";
 import { SelectPlayerRevealStep } from "./TurnSteps/SelectPlayerRevealStep";
 import { WaitRevealStep } from "./TurnSteps/WaitRevealStep";
+import { CardTradeStep } from "./TurnSteps/CardTradeStep";
+import { WaitTradeStep } from "./TurnSteps/WaitTradeStep";
 
 // estilos
 import "./TurnActions.css";
@@ -75,6 +77,10 @@ export default function TurnActions() {
             return <AndThenThereWasOneMoreStep />;
           case "delay_escape_selection":
             return <DelayEscapeStep />;
+          case "card_trade":
+            return <CardTradeStep />;
+          case "wait_trade":
+            return <WaitTradeStep />;
 
           // --- Pasos de Sets ---
           case "sel_reveal_secret":
@@ -85,7 +91,6 @@ export default function TurnActions() {
             return <SelectPlayerRevealStep />;
           case "wait_reveal_secret":
             return <WaitRevealStep />;
-
           default:
             return <div>Paso desconocido: {currentStep}</div>;
         }
