@@ -69,12 +69,8 @@ export const usePlaySet = () => {
       setLock(false);
     }
   };
-
-  // La acción de cancelar resetea todo y vuelve a 'start'
   const cancel = () => {
     dispatch({ type: "CLEAR_SELECTIONS" });
   };
-
-  // Devolvemos solo lo que la UI necesita
   return { lock, message, playSet, cancel };
 };

@@ -16,4 +16,5 @@ export type Steps =
   | "sel_player_reveal"
   | "card_trade"
   | "wait_trade"
-  | "delay_escape_selection";
+  | "delay_escape_selection"
+  | "add_detective";

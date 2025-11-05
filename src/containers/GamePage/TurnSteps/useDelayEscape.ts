@@ -26,7 +26,11 @@ export const useDelayEscape = () => {
     setLock(true);
     setMessage("Devolviendo cartas al mazo...");
     try {
-      await eventService.delayEscape(game.game_id, selectedDiscardIds);
+      await eventService.delayEscape(
+        game.game_id,
+        myPlayerId,
+        selectedDiscardIds
+      );
       await cardService.discardSelectedList(myPlayerId, [
         activeEventCard.card_id,
       ]);

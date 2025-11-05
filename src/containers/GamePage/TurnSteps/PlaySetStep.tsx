@@ -1,4 +1,3 @@
-import React from "react";
 import TextType from "../../../components/TextType";
 import { usePlaySet } from "./usePlaySet"; // Importa su PROPIO hook
 

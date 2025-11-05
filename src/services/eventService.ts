@@ -40,9 +40,13 @@ async function andThenThereWasOneMore(
   return await response.json();
 }
 
-async function delayEscape(gameId: number, cardIds: number[]): Promise<any> {
+async function delayEscape(
+  gameId: number,
+  playerId: number,
+  cardIds: number[]
+): Promise<any> {
   const response = await fetch(
-    `${httpServerUrl}/event/delay_escape/${gameId}`,
+    `${httpServerUrl}/event/delay_escape/${gameId},${playerId}`,
     {
       method: "PUT",
       headers: {
@@ -60,9 +64,12 @@ async function delayEscape(gameId: number, cardIds: number[]): Promise<any> {
   return await response.json();
 }
 
-async function earlyTrainPaddington(gameId: number): Promise<any> {
+async function earlyTrainPaddington(
+  gameId: number,
+  playerId: number
+): Promise<any> {
   const response = await fetch(
-    `${httpServerUrl}/event/early_train_paddington/${gameId}`,
+    `${httpServerUrl}/event/early_train_paddington/${gameId},${playerId}`,
     {
       method: "PUT",
       headers: {

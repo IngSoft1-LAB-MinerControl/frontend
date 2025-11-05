@@ -1,9 +1,7 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "./GamePage.css"; // Sigue usando los mismos estilos
 import type { PlayerStateResponse } from "../../services/playerService";
-// Ya no importamos 'httpServerUrl' aquí, el hook se encarga
-// import { httpServerUrl } from "../../services/config";
 
 import TurnActions from "./TurnActions";
 import Opponent from "../../components/Opponent";
@@ -30,7 +28,8 @@ export default function Gameboard() {
   const { state, dispatch, currentPlayer, isMyTurn, isSocialDisgrace } =
     useGameContext();
 
-  // Desestructuramos el 'state' para un acceso más fácil en el JSX
+  const isWaitingOnFirstRender = useRef(true);
+
   const {
     game,
     players,
@@ -67,7 +66,6 @@ export default function Gameboard() {
     }
   }, [game, players, myPlayerId, navigate]);
 
-  // 5. El useEffect que resetea el step si no es tu turno (se mantiene igual)
   useEffect(() => {
     if (!isMyTurn) {
       dispatch({ type: "SET_STEP", payload: "start" });
@@ -90,7 +88,6 @@ export default function Gameboard() {
   const pendingAction = currentPlayer?.pending_action;
 
   const isForcedToAct = useMemo(() => {
-    // Tu lógica actual para 'revelar secreto' (¡perfecta!)
     return !isMyTurn && pendingAction === "REVEAL_SECRET";
   }, [isMyTurn, pendingAction]);
 
@@ -102,16 +99,14 @@ export default function Gameboard() {
   }, [pendingAction]);
 
   useEffect(() => {
-    if (isMyTurn && currentStep === "wait_trade") {
+    if (currentStep === "wait_trade") {
       if (pendingAction === null || pendingAction === undefined) {
         console.log("Trade completado. Avanzando a 'discard_op'.");
         dispatch({ type: "SET_STEP", payload: "discard_op" });
+        isWaitingOnFirstRender.current = true; // Resetea para la próxima
       }
     }
   }, [isMyTurn, currentStep, pendingAction, dispatch]);
-
-  // --- 6. Handlers de UI ---
-  // (se mantienen igual, despachan acciones al reducer)
 
   const handleSetSelect = (set: SetResponse | undefined) => {
     const newSet =
@@ -136,7 +131,7 @@ export default function Gameboard() {
       currentStep === "discard_skip"
     ) {
       dispatch({ type: "TOGGLE_HAND_CARD_ID", payload: card.card_id });
-    } else if (currentStep === "p_event") {
+    } else if (currentStep === "p_event" || currentStep === "add_detective") {
       const newCard = selectedCard?.card_id === card.card_id ? null : card;
       dispatch({ type: "SET_SELECTED_CARD", payload: newCard });
     }
@@ -174,9 +169,7 @@ export default function Gameboard() {
     dispatch({ type: "SET_SELECTED_CARD", payload: newCard });
   };
 
-  // --- 7. El RENDER (JSX) ---
-  // (Exactamente igual que antes)
-
+  console.log("RENDERIZANDO Gameboard. Step:", currentStep);
   return (
     <div className="game-page">
       {error && <div className="game-error-banner">{error}</div>}
@@ -251,6 +244,9 @@ export default function Gameboard() {
               selectable={currentStep === "and_then_there_was_one_more"}
               isSelected={selectedTargetPlayer?.player_id === myPlayerId}
               isSocialDisgrace={isSocialDisgrace}
+              onSetClick={handleSetSelect}
+              selectedSet={selectedSet}
+              isSetSelectionStep={currentStep === "add_detective"}
             />
           ) : (
             <div className="empty-hint">Esperando jugadores…</div>

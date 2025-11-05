@@ -20,6 +20,14 @@ export const StartStep = () => {
         </button>
         <button
           className="action-button"
+          onClick={() =>
+            dispatch({ type: "SET_STEP", payload: "add_detective" })
+          }
+        >
+          Añadir Detective
+        </button>
+        <button
+          className="action-button"
           onClick={() => dispatch({ type: "SET_STEP", payload: "p_event" })}
         >
           Jugar Evento

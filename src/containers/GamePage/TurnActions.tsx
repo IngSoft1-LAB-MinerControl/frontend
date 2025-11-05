@@ -18,6 +18,7 @@ import { SelectPlayerRevealStep } from "./TurnSteps/SelectPlayerRevealStep";
 import { WaitRevealStep } from "./TurnSteps/WaitRevealStep";
 import { CardTradeStep } from "./TurnSteps/CardTradeStep";
 import { WaitTradeStep } from "./TurnSteps/WaitTradeStep";
+import { AddDetectiveStep } from "./TurnSteps/AddDetectiveStep";
 
 // estilos
 import "./TurnActions.css";
@@ -60,6 +61,8 @@ export default function TurnActions() {
             return <PlaySetStep />;
           case "p_event":
             return <PlayEventStep />;
+          case "add_detective":
+            return <AddDetectiveStep />;
           case "discard_skip":
           case "discard_op":
             return <DiscardStep />;

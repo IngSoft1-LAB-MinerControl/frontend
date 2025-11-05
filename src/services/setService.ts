@@ -78,11 +78,32 @@ async function stealSet(
   return response.json();
 }
 
+async function addDetective(
+  card_id: number,
+  set_id: number
+): Promise<SetResponse> {
+  const response = await fetch(
+    `${httpServerUrl}/add/detective/${card_id}/${set_id}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || "Error al agregar detective");
+  }
+  return response.json();
+}
+
 const setService = {
   getSets,
   playSet2,
   playSet3,
   stealSet,
+  addDetective,
 };
 
 export default setService;
