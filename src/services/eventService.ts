@@ -156,6 +156,25 @@ async function initiateDeadCardFolly(
   return await response.json();
 }
 
+async function follyTrade(player_id: number, card_id: number) {
+  const response = await fetch(
+    `${httpServerUrl}/event/dead_card_folly/select_card/${player_id}/${card_id}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || "Error al finalizar el card trade");
+  }
+
+  return await response.json();
+}
+
 const eventService = {
   cardsOffTheTable,
   andThenThereWasOneMore,
@@ -164,6 +183,7 @@ const eventService = {
   initiateCardTrade,
   cardTrade,
   initiateDeadCardFolly,
+  follyTrade,
 };
 
 export default eventService;

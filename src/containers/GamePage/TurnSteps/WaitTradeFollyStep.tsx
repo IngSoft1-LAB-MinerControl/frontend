@@ -2,10 +2,10 @@ import TextType from "../../../components/TextType";
 import { useGameContext } from "../../../context/GameContext";
 
 export const WaitTradeFollyStep = () => {
-  const { state, currentPlayer } = useGameContext();
-  const { directionFolly, players, game } = state;
+  const { state } = useGameContext();
+  const { directionFolly, players } = state;
 
-  if (!directionFolly || !players.length || !game || !currentPlayer) {
+  if (!directionFolly || !players.length) {
     return (
       <div className="action-step-container">
         <TextType
@@ -19,23 +19,27 @@ export const WaitTradeFollyStep = () => {
 
   const directionText = directionFolly === "left" ? "izquierda" : "derecha";
 
+  const orderedPlayers = [...players].sort(
+    (a, b) => (a.turn_order ?? 0) - (b.turn_order ?? 0)
+  );
+
+  const orderString =
+    orderedPlayers.map((p) => p.name).join(" → ") +
+    ` → ${orderedPlayers[0].name}`;
+
   const messages = [
-    "Intercambio en progreso...",
-    `Todos los jugadores pasan una carta a la ${directionText}`,
+    `Todos los jugadores pasan una carta a la ${directionText}.`,
+    `Orden de intercambio: ${orderString}`,
   ];
 
-  const isMyTurn = currentPlayer.player_id === game.current_turn;
-  if (isMyTurn) {
-    messages.push(
-      `Seleccioná una carta del jugador a tu ${
-        directionFolly === "left" ? "izquierda" : "derecha"
-      }.`
-    );
-  }
-
   return (
-    <div className="action-step-container">
-      <TextType className="menu-indications" text={messages} typingSpeed={35} />
+    <div className="action-step-container text-center space-y-3">
+      <TextType
+        className="menu-indications text-lg"
+        text={messages[0]}
+        typingSpeed={35}
+      />
+      <div style={{ color: "white", fontWeight: "bold" }}>{messages[1]}</div>
     </div>
   );
 };

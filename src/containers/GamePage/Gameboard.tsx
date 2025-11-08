@@ -98,6 +98,10 @@ export default function Gameboard() {
     );
   }, [pendingAction]);
 
+  const isForcedToTradeFolly = useMemo(() => {
+    return pendingAction === "SELECT_TRADE_CARD_FOLLY";
+  }, [pendingAction]);
+
   useEffect(() => {
     if (currentStep === "wait_trade") {
       if (pendingAction === null || pendingAction === undefined) {
@@ -336,6 +340,53 @@ export default function Gameboard() {
                         // El backend pondrá la acción en 'WAITING' o la completará.
                         // El WebSocket refrescará el estado.
                         // Limpiamos la selección local.
+                        dispatch({ type: "SET_SELECTED_CARD", payload: null });
+                      } catch (err) {
+                        console.error(
+                          "Error al seleccionar carta para trade:",
+                          err
+                        );
+                        alert("Error al seleccionar carta.");
+                      }
+                    }}
+                    // Deshabilitado si no hay carta o si ya esperamos
+                    disabled={
+                      !selectedCard ||
+                      pendingAction === "WAITING_FOR_TRADE_PARTNER"
+                    }
+                  >
+                    {pendingAction === "WAITING_FOR_TRADE_PARTNER"
+                      ? "Esperando..."
+                      : "Confirmar Carta"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          {isForcedToTradeFolly && (
+            <div className="turn-actions-container">
+              <div className="action-step-container">
+                <TextType
+                  text={
+                    pendingAction === "SELECT_TRADE_CARD_FOLLY"
+                      ? ["¡Intercambio! Selecciona una carta de tu mano..."]
+                      : ["Carta seleccionada. Esperando jugadores..."]
+                  }
+                  typingSpeed={35}
+                />
+                <div className="action-buttons-group">
+                  <button
+                    className="action-button"
+                    onClick={async () => {
+                      if (!selectedCard || !myPlayerId) return;
+
+                      try {
+                        // ¡Llamamos al endpoint que resuelve el deadlock!
+                        await eventService.follyTrade(
+                          //JUGADOR DESTINO,
+                          selectedCard.card_id
+                        );
+
                         dispatch({ type: "SET_SELECTED_CARD", payload: null });
                       } catch (err) {
                         console.error(
