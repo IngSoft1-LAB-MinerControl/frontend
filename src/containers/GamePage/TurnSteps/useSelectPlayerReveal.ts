@@ -17,15 +17,12 @@ export const useSelectPlayerReveal = () => {
     }
     setLock(true);
     try {
-      // Marcar al jugador como 'isSelected' en el backend
       await playerService.selectPlayer(selectedTargetPlayer.player_id);
-      // Avanzar al paso de espera
       dispatch({ type: "SET_STEP", payload: "wait_reveal_secret" });
     } catch (err) {
       console.error("Error al seleccionar jugador para revelar:", err);
       setMessage("Error al seleccionar jugador. Intenta de nuevo.");
       setTimeout(() => setMessage(""), 3000);
-      // Nos quedamos en este paso si hay error
     } finally {
       setLock(false);
     }

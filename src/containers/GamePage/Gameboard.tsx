@@ -1,15 +1,12 @@
-import { useCallback, useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "./GamePage.css"; // Sigue usando los mismos estilos
 import type { PlayerStateResponse } from "../../services/playerService";
-// Ya no importamos 'httpServerUrl' aquí, el hook se encarga
-// import { httpServerUrl } from "../../services/config";
 
 import TurnActions from "./TurnActions";
 import Opponent from "../../components/Opponent";
 import Decks from "../../components/Decks";
 import You from "../../components/MyHand";
-import type { GameResponse } from "../../services/gameService";
 import type { CardResponse } from "../../services/cardService";
 import DraftPile from "../../components/DraftPile";
 import type { SetResponse } from "../../services/setService";
@@ -21,11 +18,10 @@ import TextType from "../../components/TextType";
 import destinations from "../../navigation/destinations";
 import { VoteStep } from "./TurnSteps/VoteStep";
 
-// --- ¡Imports Clave! ---
 import { useGameContext } from "../../context/GameContext";
 import { useGameWebSocket } from "../../hooks/useGameWebSocket"; // 1. Importamos el nuevo hook
+import eventService from "../../services/eventService";
 
-// Este componente CONTIENE la lógica que antes estaba en GamePage
 export default function Gameboard() {
   const navigate = useNavigate();
 
@@ -33,7 +29,8 @@ export default function Gameboard() {
   const { state, dispatch, currentPlayer, isMyTurn, isSocialDisgrace } =
     useGameContext();
 
-  // Desestructuramos el 'state' para un acceso más fácil en el JSX
+  const isWaitingOnFirstRender = useRef(true);
+
   const {
     game,
     players,
@@ -76,8 +73,6 @@ export default function Gameboard() {
     }
   }, [isMyTurn, dispatch]);
 
-  const cardCount = currentPlayer ? currentPlayer.cards.length : 0;
-
   const distribution = useMemo(() => {
     if (!players.length)
       return {
@@ -114,8 +109,22 @@ export default function Gameboard() {
     }
   }, [isMyTurn, currentStep, pendingAction, dispatch]);
 
-  // --- 6. Handlers de UI ---
-  // (se mantienen igual, despachan acciones al reducer)
+  const isForcedToTrade = useMemo(() => {
+    return (
+      pendingAction === "SELECT_TRADE_CARD" ||
+      pendingAction === "WAITING_FOR_TRADE_PARTNER"
+    );
+  }, [pendingAction]);
+
+  useEffect(() => {
+    if (currentStep === "wait_trade") {
+      if (pendingAction === null || pendingAction === undefined) {
+        console.log("Trade completado. Avanzando a 'discard_op'.");
+        dispatch({ type: "SET_STEP", payload: "discard_op" });
+        isWaitingOnFirstRender.current = true; // Resetea para la próxima
+      }
+    }
+  }, [isMyTurn, currentStep, pendingAction, dispatch]);
 
   const handleSetSelect = (set: SetResponse | undefined) => {
     const newSet =
@@ -126,13 +135,21 @@ export default function Gameboard() {
   };
 
   const handleHandCardSelect = (card: CardResponse) => {
+    if (pendingAction === "SELECT_TRADE_CARD") {
+      const newCard = selectedCard?.card_id === card.card_id ? null : card;
+      dispatch({ type: "SET_SELECTED_CARD", payload: newCard });
+      return;
+    }
+    // if (pendingAction === "WAITING_FOR_TRADE_PARTNER") {
+    //   return;
+    // }
     if (
       currentStep === "p_set" ||
       currentStep === "discard_op" ||
       currentStep === "discard_skip"
     ) {
       dispatch({ type: "TOGGLE_HAND_CARD_ID", payload: card.card_id });
-    } else if (currentStep === "p_event") {
+    } else if (currentStep === "p_event" || currentStep === "add_detective") {
       const newCard = selectedCard?.card_id === card.card_id ? null : card;
       dispatch({ type: "SET_SELECTED_CARD", payload: newCard });
     }
@@ -152,6 +169,7 @@ export default function Gameboard() {
       "and_then_there_was_one_more",
       "sel_player_reveal",
       "point_your_suspicions",
+      "card_trade",
     ];
 
     if (selectableSteps.includes(currentStep)) {
@@ -170,11 +188,7 @@ export default function Gameboard() {
     dispatch({ type: "SET_SELECTED_CARD", payload: newCard });
   };
 
-  // Gameboard.tsx - Nuevo useEffect de Transición PYS
-
-  // --- 7. El RENDER (JSX) ---
-  // (Exactamente igual que antes)
-
+  console.log("RENDERIZANDO Gameboard. Step:", currentStep);
   return (
     <div className="game-page">
       {error && <div className="game-error-banner">{error}</div>}
@@ -202,7 +216,8 @@ export default function Gameboard() {
                   currentStep === "cards_off_the_table" ||
                   currentStep === "and_then_there_was_one_more" ||
                   currentStep === "sel_player_reveal" ||
-                  currentStep === "point_your_suspicions"
+                  currentStep === "point_your_suspicions" ||
+                  currentStep === "card_trade"
                 }
                 isSelected={selectedTargetPlayer?.player_id === p.player_id}
               />
@@ -252,6 +267,9 @@ export default function Gameboard() {
               }
               isSelected={selectedTargetPlayer?.player_id === myPlayerId}
               isSocialDisgrace={isSocialDisgrace}
+              onSetClick={handleSetSelect}
+              selectedSet={selectedSet}
+              isSetSelectionStep={currentStep === "add_detective"}
             />
           ) : (
             <div className="empty-hint">Esperando jugadores…</div>
@@ -315,6 +333,56 @@ export default function Gameboard() {
           {isForcedToVote && (
             <div className="turn-actions-container">
               <VoteStep />
+            </div>
+          )}
+          {isForcedToTrade && (
+            <div className="turn-actions-container">
+              <div className="action-step-container">
+                <TextType
+                  text={
+                    pendingAction === "SELECT_TRADE_CARD"
+                      ? ["¡Intercambio! Selecciona una carta de tu mano..."]
+                      : ["Carta seleccionada. Esperando al otro jugador..."]
+                  }
+                  typingSpeed={35}
+                />
+                <div className="action-buttons-group">
+                  <button
+                    className="action-button"
+                    onClick={async () => {
+                      if (!selectedCard || !myPlayerId) return;
+
+                      try {
+                        // ¡Llamamos al endpoint que resuelve el deadlock!
+                        await eventService.cardTrade(
+                          myPlayerId,
+                          selectedCard.card_id
+                        );
+
+                        // El backend pondrá la acción en 'WAITING' o la completará.
+                        // El WebSocket refrescará el estado.
+                        // Limpiamos la selección local.
+                        dispatch({ type: "SET_SELECTED_CARD", payload: null });
+                      } catch (err) {
+                        console.error(
+                          "Error al seleccionar carta para trade:",
+                          err
+                        );
+                        alert("Error al seleccionar carta.");
+                      }
+                    }}
+                    // Deshabilitado si no hay carta o si ya esperamos
+                    disabled={
+                      !selectedCard ||
+                      pendingAction === "WAITING_FOR_TRADE_PARTNER"
+                    }
+                  >
+                    {pendingAction === "WAITING_FOR_TRADE_PARTNER"
+                      ? "Esperando..."
+                      : "Confirmar Carta"}
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </section>

@@ -1,42 +1,46 @@
 import { useState } from "react";
 import { useGameContext } from "../../../context/GameContext";
 import setService, { type SetResponse } from "../../../services/setService";
-import cardService from "../../../services/cardService";
 
-export const useAnotherVictim = () => {
+export const useAddDetective = () => {
   const { state, dispatch } = useGameContext();
-  // El 'activeEventCard' lo leemos del context
-  const { selectedSet, activeEventCard, myPlayerId } = state;
+  const { selectedCard, selectedSet } = state;
 
   const [lock, setLock] = useState(false);
   const [message, setMessage] = useState("");
 
-  const stealSet = async () => {
+  const addDetective = async () => {
     if (lock) return;
     setMessage("");
-    if (!selectedSet || !activeEventCard) {
-      setMessage("Debe seleccionar un set para robar.");
+
+    if (!selectedCard || !selectedSet) {
+      setMessage("Seleccione un detective válido");
       setTimeout(() => setMessage(""), 3000);
       return;
     }
     setLock(true);
+
+    console.log("Card ID a añadir:", selectedCard.card_id, selectedCard.name);
+    console.log("Set ID objetivo:", selectedSet.set_id, selectedSet.name);
+
+    let boostedSet: SetResponse | null = null;
     try {
-      const stolenSet: SetResponse = await setService.stealSet(
-        myPlayerId,
+      boostedSet = await setService.addDetective(
+        selectedCard.card_id,
         selectedSet.set_id
       );
-      await cardService.discardSelectedList(myPlayerId, [
-        activeEventCard.card_id,
-      ]);
+      setMessage("");
 
-      dispatch({ type: "CLEAR_SELECTIONS" }); // Limpia todo
+      // Limpiamos la selección
+      dispatch({ type: "SET_SELECTED_CARD", payload: null });
+      dispatch({ type: "SET_SELECTED_SET", payload: null });
 
-      if (!stolenSet) {
+      if (!boostedSet) {
         dispatch({ type: "SET_STEP", payload: "discard_op" });
         return;
       }
-      // Avanzamos al paso de acción del set robado
-      switch (stolenSet.name) {
+
+      switch (boostedSet.name) {
         case "Hercule Poirot":
         case "Miss Marple":
           dispatch({ type: "SET_STEP", payload: "sel_reveal_secret" });
@@ -55,10 +59,8 @@ export const useAnotherVictim = () => {
           dispatch({ type: "SET_STEP", payload: "discard_op" });
       }
     } catch (err) {
-      console.error("Error al robar set:", err);
-      setMessage("Error al robar set. Intenta de nuevo.");
+      setMessage("Detective inválido. Elija otro");
       setTimeout(() => setMessage(""), 3000);
-      dispatch({ type: "CLEAR_SELECTIONS" }); // Volver a 'start'
     } finally {
       setLock(false);
     }
@@ -68,5 +70,5 @@ export const useAnotherVictim = () => {
     dispatch({ type: "CLEAR_SELECTIONS" });
   };
 
-  return { lock, message, stealSet, cancel };
+  return { lock, message, addDetective, cancel };
 };

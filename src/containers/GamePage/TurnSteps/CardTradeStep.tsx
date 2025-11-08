@@ -1,30 +1,25 @@
 import TextType from "../../../components/TextType";
 import { useGameContext } from "../../../context/GameContext";
-import { useAnotherVictim } from "./useAnotherVictim";
-
-export const AnotherVictimStep = () => {
-  const { lock, message, stealSet, cancel } = useAnotherVictim();
+import { useCardTrade } from "./useCardTrade";
+export const CardTradeStep = () => {
+  const { lock, message, confirmCardTrade } = useCardTrade();
   const { state } = useGameContext();
-  const { selectedSet } = state; // Para deshabilitar el botón
 
   return (
     <div className="action-step-container">
       {message && <div className="turn-message">{message}</div>}
       <TextType
         className="menu-indications"
-        text={["Seleccione un set para robar"]}
+        text={["Selecciona un jugador con quien intercambiar una carta"]}
         typingSpeed={35}
       />
       <div className="action-buttons-group">
         <button
           className="action-button"
-          onClick={stealSet}
-          disabled={lock || !selectedSet}
+          onClick={confirmCardTrade}
+          disabled={lock || !state.selectedTargetPlayer}
         >
-          {lock ? "Robando..." : "Robar"}
-        </button>
-        <button className="action-button" onClick={cancel}>
-          Cancelar
+          {lock ? "Iniciando..." : "Confirmar Intercambio"}
         </button>
       </div>
     </div>

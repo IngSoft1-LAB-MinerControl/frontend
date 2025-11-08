@@ -8,6 +8,7 @@ import type { CardResponse } from "../services/cardService.ts";
 import type { SecretResponse } from "../services/secretService.ts";
 import { useState } from "react";
 import Button from "./Button.tsx";
+import type { SetResponse } from "../services/setService.ts";
 
 interface YouProps {
   player: PlayerStateResponse;
@@ -22,6 +23,9 @@ interface YouProps {
   isSelected: boolean;
   selectable: boolean;
   isSocialDisgrace: boolean;
+  onSetClick?: (set: SetResponse | undefined) => void;
+  selectedSet: SetResponse | null;
+  isSetSelectionStep: boolean;
 }
 
 export default function You({
@@ -33,6 +37,9 @@ export default function You({
   onSecretClick,
   selectedSecret,
   isSecretSelectionStep,
+  onSetClick,
+  selectedSet,
+  isSetSelectionStep,
   onClick,
   isSelected = false,
   selectable = false,
@@ -95,17 +102,23 @@ export default function You({
         <div className="you-main-area">
           {/* Sets (Arriba, Centrados, uno al lado del otro) */}
           <div className="you-sets">
-            {player.sets.map((set) => (
-              <Set
-                key={set.set_id} // Añadir key
-                game_id={set.game_id}
-                player_id={set.player_id}
-                set_id={set.set_id}
-                name={set.name}
-                cards={set.detective}
-                isSelected={false}
-              />
-            ))}
+            {player.sets.map((set) => {
+              // 1. Comprobamos si este set es el seleccionado
+              const isSetSelected = selectedSet?.set_id === set.set_id;
+
+              return (
+                <Set
+                  key={set.set_id}
+                  game_id={set.game_id}
+                  player_id={set.player_id}
+                  set_id={set.set_id}
+                  name={set.name}
+                  cards={set.detective}
+                  isSelected={isSetSelected}
+                  onSetClick={isSetSelectionStep ? onSetClick : undefined}
+                />
+              );
+            })}
           </div>
 
           {/* Mano (Centro, Centrada) */}

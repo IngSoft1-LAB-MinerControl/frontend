@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useGameContext } from "../../../context/GameContext";
 import cardService from "../../../services/cardService";
+import eventService from "../../../services/eventService";
 
 export const useCardsOffTable = () => {
   const { state, dispatch } = useGameContext();
@@ -21,7 +22,7 @@ export const useCardsOffTable = () => {
 
     setLock(true);
     try {
-      await cardService.cardsOffTheTable(selectedTargetPlayer.player_id);
+      await eventService.cardsOffTheTable(selectedTargetPlayer.player_id);
       await cardService.discardSelectedList(myPlayerId, [
         activeEventCard.card_id,
       ]);

@@ -19,6 +19,9 @@ import { WaitRevealStep } from "./TurnSteps/WaitRevealStep";
 import { PointYourSuspicionsStep } from "./TurnSteps/PointYourSuspicionsStep";
 import { WaitingVotingToEndStep } from "./TurnSteps/WaitingVotingToEndStep";
 import { VoteStep } from "./TurnSteps/VoteStep";
+import { CardTradeStep } from "./TurnSteps/CardTradeStep";
+import { WaitTradeStep } from "./TurnSteps/WaitTradeStep";
+import { AddDetectiveStep } from "./TurnSteps/AddDetectiveStep";
 
 // estilos
 import "./TurnActions.css";
@@ -61,6 +64,8 @@ export default function TurnActions() {
             return <PlaySetStep />;
           case "p_event":
             return <PlayEventStep />;
+          case "add_detective":
+            return <AddDetectiveStep />;
           case "discard_skip":
           case "discard_op":
             return <DiscardStep />;
@@ -84,6 +89,10 @@ export default function TurnActions() {
             return <VoteStep />;
           case "wait_voting_to_end":
             return <WaitingVotingToEndStep />;
+          case "card_trade":
+            return <CardTradeStep />;
+          case "wait_trade":
+            return <WaitTradeStep />;
 
           // --- Pasos de Sets ---
           case "sel_reveal_secret":
@@ -94,7 +103,6 @@ export default function TurnActions() {
             return <SelectPlayerRevealStep />;
           case "wait_reveal_secret":
             return <WaitRevealStep />;
-
           default:
             return <div>Paso desconocido: {currentStep}</div>;
         }

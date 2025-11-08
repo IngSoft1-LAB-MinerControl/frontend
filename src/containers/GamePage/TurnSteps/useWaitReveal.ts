@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useGameContext } from "../../../context/GameContext";
+import { usePrevious } from "../../../hooks/usePrevious";
 
 /**
  * Este hook no devuelve nada. Su único trabajo es ejecutar un efecto
@@ -8,33 +9,32 @@ import { useGameContext } from "../../../context/GameContext";
  */
 export const useWaitReveal = () => {
   const { state, dispatch } = useGameContext();
-  const { players, selectedTargetPlayer } = state;
+  const { players, currentStep, myPlayerId } = state;
+
+  const isWaitingForReveal = useMemo(() => {
+    // Esto ahora funciona porque 'myPlayerId' está definido
+    return players.some(
+      (p) => p.player_id !== myPlayerId && p.pending_action === "REVEAL_SECRET"
+    );
+  }, [players, myPlayerId]);
+
+  const prevIsWaitingForReveal = usePrevious(isWaitingForReveal);
 
   useEffect(() => {
-    // Si no hay un jugador objetivo, no hacer nada
-    if (!selectedTargetPlayer) {
+    // Solo nos importa la lógica si estamos en el paso de espera
+    if (currentStep !== "wait_reveal_secret") {
       return;
     }
 
-    // Buscar el estado actualizado de ese jugador en la lista 'players'
-    const updatedTargetState = players.find(
-      (p) => p.player_id === selectedTargetPlayer.player_id
-    );
-
-    // Si encontramos al jugador y su bandera 'isSelected' es false,
-    // significa que ya completó la acción (reveló su secreto).
-    if (updatedTargetState && !updatedTargetState.isSelected) {
+    if (prevIsWaitingForReveal === true && isWaitingForReveal === false) {
       console.log(
-        `El jugador ${updatedTargetState.name} ha revelado. Avanzando.`
+        "Revelación completada (detectada por useWaitReveal). Avanzando a 'discard_op'."
       );
-      // Limpiamos el jugador objetivo
+
       dispatch({ type: "SET_SELECTED_TARGET_PLAYER", payload: null });
-      // Avanzamos al siguiente paso (descartar)
       dispatch({ type: "SET_STEP", payload: "discard_op" });
     }
-
-    // Dependemos de 'players' (que se actualiza por WS)
-  }, [players, selectedTargetPlayer, dispatch]);
+  }, [currentStep, isWaitingForReveal, prevIsWaitingForReveal, dispatch]);
 
   // Este hook no necesita devolver nada a la UI
 };

@@ -17,4 +17,8 @@ export type Steps =
   | "delay_escape_selection"
   | "vote"
   | "wait_voting_to_end"
-  | "point_your_suspicions";
+  | "point_your_suspicions"
+  | "card_trade"
+  | "wait_trade"
+  | "delay_escape_selection"
+  | "add_detective";

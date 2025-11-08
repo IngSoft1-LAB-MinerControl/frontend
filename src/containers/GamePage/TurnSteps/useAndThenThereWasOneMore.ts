@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useGameContext } from "../../../context/GameContext";
 import cardService from "../../../services/cardService";
+import eventService from "../../../services/eventService";
 
 export const useAndThenThereWasOneMore = () => {
   const { state, dispatch } = useGameContext();
@@ -32,7 +33,7 @@ export const useAndThenThereWasOneMore = () => {
 
     setLock(true);
     try {
-      await cardService.AndThenThereWasOneMore(
+      await eventService.andThenThereWasOneMore(
         selectedTargetPlayer.player_id,
         selectedSecret.secret_id
       );
