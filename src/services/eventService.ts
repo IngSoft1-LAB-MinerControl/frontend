@@ -131,6 +131,31 @@ async function cardTrade(player_id: number, card_id: number) {
   return await response.json();
 }
 
+async function initiateDeadCardFolly(
+  player_id: number,
+  gameId: number,
+  card_id: number
+) {
+  const response = await fetch(
+    `${httpServerUrl}/event/dead_card_folly/initiate/${player_id}/${gameId}/${card_id}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(
+      errorData.detail || "Error al inicializar el Dead Card Folly"
+    );
+  }
+
+  return await response.json();
+}
+
 const eventService = {
   cardsOffTheTable,
   andThenThereWasOneMore,
@@ -138,6 +163,7 @@ const eventService = {
   earlyTrainPaddington,
   initiateCardTrade,
   cardTrade,
+  initiateDeadCardFolly,
 };
 
 export default eventService;

@@ -19,6 +19,8 @@ import { WaitRevealStep } from "./TurnSteps/WaitRevealStep";
 import { CardTradeStep } from "./TurnSteps/CardTradeStep";
 import { WaitTradeStep } from "./TurnSteps/WaitTradeStep";
 import { AddDetectiveStep } from "./TurnSteps/AddDetectiveStep";
+import { DeadCardFollyStep } from "./TurnSteps/DeadCardFollyStep";
+import { WaitTradeFollyStep } from "./TurnSteps/WaitTradeFollyStep";
 
 // estilos
 import "./TurnActions.css";
@@ -84,6 +86,10 @@ export default function TurnActions() {
             return <CardTradeStep />;
           case "wait_trade":
             return <WaitTradeStep />;
+          case "dead_card_folly":
+            return <DeadCardFollyStep />;
+          case "wait_trade_folly":
+            return <WaitTradeFollyStep />;
 
           // --- Pasos de Sets ---
           case "sel_reveal_secret":

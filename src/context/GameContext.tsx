@@ -31,6 +31,7 @@ export interface IGameState {
   selectedSecret: SecretResponse | null;
   selectedTargetPlayer: PlayerStateResponse | null;
   activeEventCard: CardResponse | null;
+  directionFolly: string | null;
 
   // Estado de carga y errores
   error: string | null;
@@ -55,6 +56,7 @@ export type GameAction =
   | { type: "SET_SELECTED_TARGET_PLAYER"; payload: PlayerStateResponse | null }
   | { type: "CLEAR_SELECTIONS" } // Resetea todas las selecciones
   | { type: "SET_ACTIVE_EVENT"; payload: CardResponse | null }
+  | { type: "SET_TRADE_DIRECTION"; payload: string | null }
 
   // Acciones de Carga/Error
   | { type: "SET_LOADING"; payload: boolean }
@@ -103,6 +105,9 @@ export const gameReducer = (
 
     case "SET_ACTIVE_EVENT":
       return { ...state, activeEventCard: action.payload };
+
+    case "SET_TRADE_DIRECTION":
+      return { ...state, directionFolly: action.payload };
 
     case "CLEAR_SELECTIONS":
       return {
@@ -168,6 +173,7 @@ export const GameProvider = ({
     activeEventCard: null,
     error: null,
     isLoading: false,
+    directionFolly: null,
   };
 
   const [state, dispatch] = useReducer(gameReducer, initialState);

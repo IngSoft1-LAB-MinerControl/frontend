@@ -75,6 +75,10 @@ export const usePlayEvent = () => {
           dispatch({ type: "SET_SELECTED_CARD", payload: null });
           dispatch({ type: "SET_STEP", payload: "discard_op" });
           break;
+        case "Dead card folly":
+          dispatch({ type: "SET_STEP", payload: "dead_card_folly" });
+          setLock(false);
+          return;
       }
     } catch (err) {
       console.error("Error al jugar evento:", err);

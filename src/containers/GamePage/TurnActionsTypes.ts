@@ -17,4 +17,6 @@ export type Steps =
   | "card_trade"
   | "wait_trade"
   | "delay_escape_selection"
-  | "add_detective";
+  | "add_detective"
+  | "dead_card_folly"
+  | "wait_trade_folly";
