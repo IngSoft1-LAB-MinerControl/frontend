@@ -381,12 +381,7 @@ export default function Gameboard() {
                       if (!selectedCard || !myPlayerId) return;
 
                       try {
-                        // ¡Llamamos al endpoint que resuelve el deadlock!
-                        await eventService.follyTrade(
-                          //JUGADOR DESTINO,
-                          selectedCard.card_id
-                        );
-
+                        //aca va la llamada aun service
                         dispatch({ type: "SET_SELECTED_CARD", payload: null });
                       } catch (err) {
                         console.error(
