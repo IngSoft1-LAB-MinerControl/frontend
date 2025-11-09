@@ -9,6 +9,11 @@ export function Chat() {
   const [newMessage, setNewMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  // --- ¡NUEVO! ---
+  // Estado para controlar si el chat está abierto o colapsado
+  // Lo ponemos 'true' para que empiece abierto por defecto
+  const [isChatOpen, setIsChatOpen] = useState(true);
+
   // Ref para el div de auto-scroll
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
 
@@ -37,44 +42,63 @@ export function Chat() {
 
   // Efecto para auto-scroll
   useEffect(() => {
-    // Cada vez que 'chatMessages' cambie, desplaza la vista
-    // al 'div' invisible que está al final de la lista.
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chatMessages]);
+    // --- MODIFICADO ---
+    // Solo hacemos auto-scroll si el chat está abierto
+    if (isChatOpen) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [chatMessages, isChatOpen]); // Añadimos isChatOpen a las dependencias
 
   return (
-    <div className="chat-container">
-      <div className="chat-messages">
-        {chatMessages.map((msg, index) => (
-          <div
-            key={index}
-            className={`chat-message ${
-              msg.sender_id === myPlayerId ? "my-message" : "other-message"
-            }`}
-          >
-            <span className="chat-sender-name">{msg.sender_name}</span>
-            <span className="chat-message-content">{msg.message}</span>
-          </div>
-        ))}
-        {/* Div invisible al que haremos scroll */}
-        <div ref={messagesEndRef} />
+    // --- MODIFICADO ---
+    // Añadimos la clase '.collapsed' dinámicamente
+    <div className={`chat-container ${!isChatOpen ? "collapsed" : ""}`}>
+      
+      {/* --- ¡NUEVO! Cabecera del Chat --- */}
+      <div className="chat-header" onClick={() => setIsChatOpen(!isChatOpen)}>
+        <span>Chat</span>
+        <button className="chat-toggle-button">
+          {isChatOpen ? "—" : "□"}
+        </button>
       </div>
 
-      <form className="chat-form" onSubmit={handleSubmit}>
-        <input
-          type="text"
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          placeholder="Escribe un mensaje..."
-          className="chat-input"
-        />
-        <button type="submit" className="chat-send-button">
-          Enviar
-        </button>
-      </form>
-      
-      {/* Muestra un error si la API falla */}
-      {error && <div className="chat-error">{error}</div>}
+      {/* --- ¡NUEVO! Contenedor de Contenido --- */}
+      {/* Envolvemos el contenido en un 'div' para poder 
+        ocultarlo y mostrarlo fácilmente con CSS.
+      */}
+      <div className="chat-content">
+        <div className="chat-messages">
+          {chatMessages.map((msg, index) => (
+            <div
+              key={index}
+              className={`chat-message ${
+                msg.sender_id === myPlayerId ? "my-message" : "other-message"
+              }`}
+            >
+              <span className="chat-sender-name">{msg.sender_name}</span>
+              <span className="chat-message-content">{msg.message}</span>
+            </div>
+          ))}
+          {/* Div invisible al que haremos scroll */}
+          <div ref={messagesEndRef} />
+        </div>
+
+        <form className="chat-form" onSubmit={handleSubmit}>
+          <input
+            type="text"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder="Escribe un mensaje..."
+            className="chat-input"
+          />
+          <button type="submit" className="chat-send-button">
+            Enviar
+          </button>
+        </form>
+        
+        {/* Muestra un error si la API falla */}
+        {error && <div className="chat-error">{error}</div>}
+      </div>
     </div>
   );
 }
