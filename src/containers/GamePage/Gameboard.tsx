@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import "./GamePage.css"; // Sigue usando los mismos estilos
 import type { PlayerStateResponse } from "../../services/playerService";
 
-import TurnActions from "./TurnActions";
 import Opponent from "../../components/Opponent";
 import Decks from "../../components/Decks";
 import You from "../../components/MyHand";
@@ -12,15 +11,11 @@ import DraftPile from "../../components/DraftPile";
 import type { SetResponse } from "../../services/setService";
 import type { Steps } from "./TurnActionsTypes";
 import type { SecretResponse } from "../../services/secretService";
-import secretService from "../../services/secretService";
-import playerService from "../../services/playerService";
-import TextType from "../../components/TextType";
 import destinations from "../../navigation/destinations";
-import { VoteStep } from "./TurnSteps/VoteStep";
 
 import { useGameContext } from "../../context/GameContext";
 import { useGameWebSocket } from "../../hooks/useGameWebSocket"; // 1. Importamos el nuevo hook
-import eventService from "../../services/eventService";
+import { GameLogPanel } from "../../components/GameLogPanel";
 
 export default function Gameboard() {
   const navigate = useNavigate();
@@ -28,8 +23,6 @@ export default function Gameboard() {
   // Obtenemos todo del contexto
   const { state, dispatch, currentPlayer, isMyTurn, isSocialDisgrace } =
     useGameContext();
-
-  const isWaitingOnFirstRender = useRef(true);
 
   const {
     game,
@@ -87,44 +80,24 @@ export default function Gameboard() {
   }, [players, currentPlayer]);
 
   const pendingAction = currentPlayer?.pending_action;
+
   const isForcedToAct = useMemo(() => {
     // Tu lógica actual para 'revelar secreto' (¡perfecta!)
     return !isMyTurn && pendingAction === "REVEAL_SECRET";
   }, [isMyTurn, pendingAction]);
 
-  const isForcedToVote = useMemo(() => {
-    return (
-      pendingAction === "VOTE" || pendingAction === "WAITING_VOTING_TO_END"
-    );
-  }, [pendingAction]);
+  // const isForcedToVote = useMemo(() => {
+  //   return (
+  //     pendingAction === "VOTE" || pendingAction === "WAITING_VOTING_TO_END"
+  //   );
+  // }, [pendingAction]);
 
-  useEffect(() => {
-    if (isMyTurn && currentStep === "wait_voting_to_end") {
-      if (pendingAction === "Clense" /*|| pendingAction === undefined*/) {
-        console.log(
-          "Transición exitosa: Revelación de secreto completada. Avanzando a 'discard_op'."
-        );
-        dispatch({ type: "SET_STEP", payload: "discard_op" });
-      }
-    }
-  }, [isMyTurn, currentStep, pendingAction, dispatch]);
-
-  const isForcedToTrade = useMemo(() => {
-    return (
-      pendingAction === "SELECT_TRADE_CARD" ||
-      pendingAction === "WAITING_FOR_TRADE_PARTNER"
-    );
-  }, [pendingAction]);
-
-  useEffect(() => {
-    if (currentStep === "wait_trade") {
-      if (pendingAction === null || pendingAction === undefined) {
-        console.log("Trade completado. Avanzando a 'discard_op'.");
-        dispatch({ type: "SET_STEP", payload: "discard_op" });
-        isWaitingOnFirstRender.current = true; // Resetea para la próxima
-      }
-    }
-  }, [isMyTurn, currentStep, pendingAction, dispatch]);
+  // const isForcedToTrade = useMemo(() => {
+  //   return (
+  //     pendingAction === "SELECT_TRADE_CARD" ||
+  //     pendingAction === "WAITING_FOR_TRADE_PARTNER"
+  //   );
+  // }, [pendingAction]);
 
   const handleSetSelect = (set: SetResponse | undefined) => {
     const newSet =
@@ -192,201 +165,95 @@ export default function Gameboard() {
   return (
     <div className="game-page">
       {error && <div className="game-error-banner">{error}</div>}
+      <div className="game-board-layout">
+        <main className="table-grid">
+          <section className="area-top">
+            <div className="opponents-row">
+              {distribution.opponents.map((p) => (
+                <Opponent
+                  key={p.player_id}
+                  player={p}
+                  isMyTurn={p.turn_order === game?.current_turn}
+                  onSetClick={handleSetSelect}
+                  selectedSet={selectedSet}
+                  isSetSelectionStep={currentStep === "another_victim"}
+                  onSecretClick={handleSecretSelect}
+                  selectedSecret={selectedSecret}
+                  isSecretSelectionStep={
+                    currentStep === "and_then_there_was_one_more" ||
+                    currentStep === "sel_reveal_secret" ||
+                    currentStep === "sel_hide_secret"
+                  }
+                  onClick={() => handleSelectPlayer(p)}
+                  selectable={
+                    currentStep === "cards_off_the_table" ||
+                    currentStep === "and_then_there_was_one_more" ||
+                    currentStep === "sel_player_reveal" ||
+                    currentStep === "point_your_suspicions" ||
+                    currentStep === "card_trade"
+                  }
+                  isSelected={selectedTargetPlayer?.player_id === p.player_id}
+                />
+              ))}
+            </div>
+          </section>
 
-      <main className="table-grid">
-        <section className="area-top">
-          <div className="opponents-row">
-            {distribution.opponents.map((p) => (
-              <Opponent
-                key={p.player_id}
-                player={p}
-                isMyTurn={p.turn_order === game?.current_turn}
-                onSetClick={handleSetSelect}
-                selectedSet={selectedSet}
-                isSetSelectionStep={currentStep === "another_victim"}
+          <section className="area-center">
+            <DraftPile
+              cards={draftPile}
+              selectedCard={selectedCard}
+              onCardSelect={handleDraftSelect}
+              isMyTurn={isMyTurn}
+            />
+            <Decks
+              cardsLeftCount={game?.cards_left ?? null}
+              discardedCards={discardPile}
+            />
+          </section>
+          <section className="area-bottom">
+            {distribution.bottom ? (
+              <You
+                player={distribution.bottom}
+                selectedCardIds={selectedCardIds}
+                onCardsSelected={handleHandCardSelect}
+                isMyTurn={isMyTurn}
+                selectedCard={selectedCard}
                 onSecretClick={handleSecretSelect}
                 selectedSecret={selectedSecret}
                 isSecretSelectionStep={
-                  currentStep === "and_then_there_was_one_more" ||
                   currentStep === "sel_reveal_secret" ||
-                  currentStep === "sel_hide_secret"
-                }
-                onClick={() => handleSelectPlayer(p)}
-                selectable={
-                  currentStep === "cards_off_the_table" ||
+                  currentStep === "sel_hide_secret" ||
                   currentStep === "and_then_there_was_one_more" ||
-                  currentStep === "sel_player_reveal" ||
-                  currentStep === "point_your_suspicions" ||
-                  currentStep === "card_trade"
+                  isForcedToAct
                 }
-                isSelected={selectedTargetPlayer?.player_id === p.player_id}
-              />
-            ))}
-          </div>
-        </section>
-
-        <section className="area-center">
-          <DraftPile
-            cards={draftPile}
-            selectedCard={selectedCard}
-            onCardSelect={handleDraftSelect}
-            isMyTurn={isMyTurn}
-          />
-          <Decks
-            cardsLeftCount={game?.cards_left ?? null}
-            discardedCards={discardPile}
-          />
-        </section>
-        <section className="area-bottom">
-          {distribution.bottom ? (
-            <You
-              player={distribution.bottom}
-              selectedCardIds={selectedCardIds}
-              onCardsSelected={handleHandCardSelect}
-              isMyTurn={isMyTurn}
-              selectedCard={selectedCard}
-              onSecretClick={handleSecretSelect}
-              selectedSecret={selectedSecret}
-              isSecretSelectionStep={
-                currentStep === "sel_reveal_secret" ||
-                currentStep === "sel_hide_secret" ||
-                currentStep === "and_then_there_was_one_more" ||
-                isForcedToAct
-              }
-              onClick={() => {
-                if (
-                  currentStep === "and_then_there_was_one_more" &&
-                  distribution.bottom
-                ) {
-                  handleSelectPlayer(distribution.bottom);
-                }
-              }}
-              selectable={
-                currentStep === "and_then_there_was_one_more" ||
-                currentStep === "point_your_suspicions"
-              }
-              isSelected={selectedTargetPlayer?.player_id === myPlayerId}
-              isSocialDisgrace={isSocialDisgrace}
-              onSetClick={handleSetSelect}
-              selectedSet={selectedSet}
-              isSetSelectionStep={currentStep === "add_detective"}
-            />
-          ) : (
-            <div className="empty-hint">Esperando jugadores…</div>
-          )}
-          {(isMyTurn || currentStep === "point_your_suspicions") && ( // Inclusión para todos
-            <div className="turn-actions-container">
-              {/* TurnActions ya no recibe props, usa los hooks */}
-              <TurnActions />
-            </div>
-          )}
-          {/* Lógica de acción forzada (revelar secreto) */}
-          {isForcedToAct && (
-            <div className="turn-actions-container">
-              <div className="action-step-container">
-                <TextType
-                  text={[
-                    "Te han seleccionado. Debes revelar uno de tus secretos.",
-                  ]}
-                  typingSpeed={35}
-                />
-                <div className="action-buttons-group">
-                  <button
-                    className="action-button"
-                    onClick={async () => {
-                      if (!selectedSecret) {
-                        alert("Por favor, selecciona un secreto para revelar.");
-                        return;
-                      }
-                      if (selectedSecret.revelated) {
-                        alert(
-                          "Ese secreto ya está revelado. Debes elegir uno oculto."
-                        );
-                        return;
-                      }
-
-                      try {
-                        await secretService.revealSecret(
-                          selectedSecret.secret_id
-                        );
-                        // await playerService.unselectPlayer(myPlayerId);
-
-                        // Limpiamos el estado local usando dispatch
-                        dispatch({
-                          type: "SET_SELECTED_SECRET",
-                          payload: null,
-                        });
-                      } catch (err) {
-                        console.error("Error al revelar secreto forzado:", err);
-                        alert("Error al revelar secreto.");
-                      }
-                    }}
-                    disabled={!selectedSecret || selectedSecret.revelated}
-                  >
-                    Revelar Secreto
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {isForcedToVote && (
-            <div className="turn-actions-container">
-              <VoteStep />
-            </div>
-          )}
-          {isForcedToTrade && (
-            <div className="turn-actions-container">
-              <div className="action-step-container">
-                <TextType
-                  text={
-                    pendingAction === "SELECT_TRADE_CARD"
-                      ? ["¡Intercambio! Selecciona una carta de tu mano..."]
-                      : ["Carta seleccionada. Esperando al otro jugador..."]
+                onClick={() => {
+                  if (
+                    currentStep === "and_then_there_was_one_more" &&
+                    distribution.bottom
+                  ) {
+                    handleSelectPlayer(distribution.bottom);
                   }
-                  typingSpeed={35}
-                />
-                <div className="action-buttons-group">
-                  <button
-                    className="action-button"
-                    onClick={async () => {
-                      if (!selectedCard || !myPlayerId) return;
+                }}
+                selectable={
+                  currentStep === "and_then_there_was_one_more" ||
+                  currentStep === "point_your_suspicions"
+                }
+                isSelected={selectedTargetPlayer?.player_id === myPlayerId}
+                isSocialDisgrace={isSocialDisgrace}
+                onSetClick={handleSetSelect}
+                selectedSet={selectedSet}
+                isSetSelectionStep={currentStep === "add_detective"}
+              />
+            ) : (
+              <div className="empty-hint">Esperando jugadores…</div>
+            )}
+          </section>
+        </main>
 
-                      try {
-                        // ¡Llamamos al endpoint que resuelve el deadlock!
-                        await eventService.cardTrade(
-                          myPlayerId,
-                          selectedCard.card_id
-                        );
-
-                        // El backend pondrá la acción en 'WAITING' o la completará.
-                        // El WebSocket refrescará el estado.
-                        // Limpiamos la selección local.
-                        dispatch({ type: "SET_SELECTED_CARD", payload: null });
-                      } catch (err) {
-                        console.error(
-                          "Error al seleccionar carta para trade:",
-                          err
-                        );
-                        alert("Error al seleccionar carta.");
-                      }
-                    }}
-                    // Deshabilitado si no hay carta o si ya esperamos
-                    disabled={
-                      !selectedCard ||
-                      pendingAction === "WAITING_FOR_TRADE_PARTNER"
-                    }
-                  >
-                    {pendingAction === "WAITING_FOR_TRADE_PARTNER"
-                      ? "Esperando..."
-                      : "Confirmar Carta"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </section>
-      </main>
+        <aside className="game-log-panel">
+          <GameLogPanel />
+        </aside>
+      </div>
     </div>
   );
 }

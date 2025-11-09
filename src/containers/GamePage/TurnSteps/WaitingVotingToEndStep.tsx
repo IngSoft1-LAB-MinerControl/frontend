@@ -1,6 +1,9 @@
 import TextType from "../../../components/TextType";
+import { useWaitingVotingToEnd } from "./useWaitingVotingToEnd"; // <-- 1. Importa el hook
 
 export const WaitingVotingToEndStep = () => {
+  useWaitingVotingToEnd();
+
   return (
     <div className="action-step-container">
       <TextType

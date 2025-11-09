@@ -1,6 +1,8 @@
 import TextType from "../../../components/TextType";
+import { useWaitTrade } from "./useWaitTrade";
 
 export const WaitTradeStep = () => {
+  useWaitTrade();
   return (
     <div className="action-step-container">
       <TextType

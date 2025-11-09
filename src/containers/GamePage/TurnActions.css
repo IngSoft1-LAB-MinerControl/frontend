@@ -1,24 +1,23 @@
 .turn-actions-box {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 10; /* siempre visible sobre la mesa */
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .action-step-container {
   display: flex;
   flex-direction: column;
   gap: 15px;
-  padding: 1rem;
+  padding: 0;
   align-items: center;
   justify-content: space-between;
-  font-weight: 600;
+  font-weight: 400;
+  width: 100%;
 }
 
 .turn-message {
-  color: #ff4d4d; /* rojo suave pero visible */
+  color: #ff4d4d;
   font-weight: 700;
-  background-color: rgba(0, 0, 0, 0.6); /* contraste */
+  background-color: rgba(0, 0, 0, 0.6);
   padding: 0.5em 1em;
   border-radius: 8px;
   text-align: center;
@@ -42,22 +41,33 @@
   text-align: center;
   width: 100%;
   color: #fff;
-  font-weight: 600;
+  font-weight: 400;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+}
+
+.action-buttons-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .action-button {
   background-color: transparent;
   border-color: #fff;
-  border-width: 3px;
+  border-width: 2px;
   color: #fff;
   padding: 0.8rem 1.4rem;
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 500;
   border-radius: 10px;
   cursor: pointer;
   box-shadow: 0 0px 15px rgba(0, 0, 0, 0.3);
-  transition: transform 0.1s ease, opacity 0.2s ease;
+  transition: transform 0.1s ease, opacity 0.2s ease, background-color 0.2s ease,
+    border-color 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .action-button:hover {
@@ -71,12 +81,6 @@
 .action-button:active {
   transform: translateY(0);
   opacity: 0.85;
-}
-
-.action-buttons-group {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
 
 .discard-preview {
