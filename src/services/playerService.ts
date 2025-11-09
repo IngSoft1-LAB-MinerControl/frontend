@@ -32,6 +32,7 @@ export interface PlayerStateResponse {
   sets: SetResponse[];
   social_disgrace: boolean;
   pending_action: string | null;
+  votes_received: number;
 }
 
 async function createPlayer(player: Player): Promise<PlayerStateResponse> {
@@ -93,11 +94,47 @@ async function unselectPlayer(playerId: number): Promise<void> {
   return;
 }
 
+async function votePlayer(
+  playerIdVoted: number,
+  playerIdVoting: number
+): Promise<void> {
+  try {
+    const response = await fetch(
+      `${httpServerUrl}/vote/player/${playerIdVoted}/${playerIdVoting}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      let errorDetail = "";
+      try {
+        const data = await response.json();
+        errorDetail = data?.detail ? `: ${data.detail}` : "";
+      } catch {}
+
+      throw new Error(`Error al votar jugador${errorDetail}`);
+    }
+
+    if (response.status !== 201) {
+      console.warn(
+        `Advertencia: se esperaba status 201, pero se recibió ${response.status}`
+      );
+    }
+  } catch (error) {
+    console.error("Error en votePlayer:", error);
+    throw error;
+  }
+}
 const playerService = {
   createPlayer,
   getPlayersByGame,
   selectPlayer,
   unselectPlayer,
+  votePlayer,
 };
 
 export default playerService;

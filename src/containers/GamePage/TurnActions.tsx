@@ -16,6 +16,9 @@ import { RevealSecretStep } from "./TurnSteps/RevealSecretStep";
 import { HideSecretStep } from "./TurnSteps/HideSecretStep";
 import { SelectPlayerRevealStep } from "./TurnSteps/SelectPlayerRevealStep";
 import { WaitRevealStep } from "./TurnSteps/WaitRevealStep";
+import { PointYourSuspicionsStep } from "./TurnSteps/PointYourSuspicionsStep";
+import { WaitingVotingToEndStep } from "./TurnSteps/WaitingVotingToEndStep";
+import { VoteStep } from "./TurnSteps/VoteStep";
 import { CardTradeStep } from "./TurnSteps/CardTradeStep";
 import { WaitTradeStep } from "./TurnSteps/WaitTradeStep";
 import { AddDetectiveStep } from "./TurnSteps/AddDetectiveStep";
@@ -82,6 +85,12 @@ export default function TurnActions() {
             return <AndThenThereWasOneMoreStep />;
           case "delay_escape_selection":
             return <DelayEscapeStep />;
+          case "point_your_suspicions":
+            return <PointYourSuspicionsStep />;
+          case "vote":
+            return <VoteStep />;
+          case "wait_voting_to_end":
+            return <WaitingVotingToEndStep />;
           case "card_trade":
             return <CardTradeStep />;
           case "wait_trade":

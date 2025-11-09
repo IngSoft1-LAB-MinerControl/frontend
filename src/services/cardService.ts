@@ -147,6 +147,108 @@ export async function pickUpFromDiscard(
   }
 }
 
+async function cardsOffTheTable(playerId: number) {
+  const response = await fetch(
+    `${httpServerUrl}/event/cards_off_table/${playerId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Error al ejecutar Cards Off The Table");
+  }
+
+  return await response.json();
+}
+
+async function AndThenThereWasOneMore(
+  newSecretPlayerId: number,
+  secretId: number
+) {
+  const response = await fetch(
+    `${httpServerUrl}/event/one_more/${newSecretPlayerId},${secretId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || "Error al ejecutar One More Event");
+  }
+
+  return await response.json();
+}
+
+async function delayEscape(gameId: number, cardIds: number[]): Promise<any> {
+  const response = await fetch(
+    `${httpServerUrl}/event/delay_escape/${gameId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        card_ids: cardIds,
+      }),
+    }
+  );
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || "Error al ejecutar Delay Escape");
+  }
+  return await response.json();
+}
+
+async function earlyTrainPaddington(gameId: number): Promise<any> {
+  const response = await fetch(
+    `${httpServerUrl}/event/early_train_paddington/${gameId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(
+      errorData.detail ||
+        "Error al ejecutar el evento Early Train to Paddington"
+    );
+  }
+
+  return await response.json();
+}
+
+async function pointYourSuspicions(gameId: number) {
+  const response = await fetch(
+    `${httpServerUrl}/event/point_your_suspicion/${gameId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(
+      errorData.detail || "Error al iniciar Point Your Supicions"
+    );
+  }
+
+  return await response.json();
+}
 const cardService = {
   getCardsByPlayer,
   discardAuto,
@@ -155,6 +257,11 @@ const cardService = {
   getDraftPile,
   pickUpDraftCard,
   pickUpFromDiscard,
+  cardsOffTheTable,
+  AndThenThereWasOneMore,
+  delayEscape,
+  earlyTrainPaddington,
+  pointYourSuspicions,
 };
 
 export default cardService;

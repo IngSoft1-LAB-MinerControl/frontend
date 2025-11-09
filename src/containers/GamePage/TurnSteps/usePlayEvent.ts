@@ -49,6 +49,11 @@ export const usePlayEvent = () => {
           dispatch({ type: "SET_STEP", payload: "delay_escape_selection" });
           setLock(false);
           return;
+        case "Point your suspicions":
+          dispatch({ type: "SET_STEP", payload: "point_your_suspicions" });
+
+          setLock(false);
+          return;
 
         case "Early train to paddington":
           await eventService.earlyTrainPaddington(game.game_id, myPlayerId);
