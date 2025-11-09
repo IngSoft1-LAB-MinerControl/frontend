@@ -53,6 +53,10 @@ export const useGameWebSocket = (gameId: number | undefined) => {
           case "draftCards":
             dispatch({ type: "SET_DRAFT_PILE", payload: dataContent });
             break;
+          case "Chat": // <-- AÑADIR ESTE CASE
+            dispatch({ type: "ADD_CHAT_MESSAGE", payload: dataContent });
+            break;
+
           default:
             // Este log ahora es redundante, pero lo podemos dejar
             // para mensajes que no tengan un 'case'.

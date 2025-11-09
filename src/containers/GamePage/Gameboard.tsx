@@ -16,7 +16,7 @@ import secretService from "../../services/secretService";
 import playerService from "../../services/playerService";
 import TextType from "../../components/TextType";
 import destinations from "../../navigation/destinations";
-import { VoteStep } from "./TurnSteps/VoteStep";
+import Chat from "../../components/Chat";
 
 import { useGameContext } from "../../context/GameContext";
 import { useGameWebSocket } from "../../hooks/useGameWebSocket"; // 1. Importamos el nuevo hook
@@ -87,27 +87,10 @@ export default function Gameboard() {
   }, [players, currentPlayer]);
 
   const pendingAction = currentPlayer?.pending_action;
+
   const isForcedToAct = useMemo(() => {
-    // Tu lógica actual para 'revelar secreto' (¡perfecta!)
     return !isMyTurn && pendingAction === "REVEAL_SECRET";
   }, [isMyTurn, pendingAction]);
-
-  const isForcedToVote = useMemo(() => {
-    return (
-      pendingAction === "VOTE" || pendingAction === "WAITING_VOTING_TO_END"
-    );
-  }, [pendingAction]);
-
-  useEffect(() => {
-    if (isMyTurn && currentStep === "wait_voting_to_end") {
-      if (pendingAction === "Clense" /*|| pendingAction === undefined*/) {
-        console.log(
-          "Transición exitosa: Revelación de secreto completada. Avanzando a 'discard_op'."
-        );
-        dispatch({ type: "SET_STEP", payload: "discard_op" });
-      }
-    }
-  }, [isMyTurn, currentStep, pendingAction, dispatch]);
 
   const isForcedToTrade = useMemo(() => {
     return (
@@ -168,7 +151,6 @@ export default function Gameboard() {
       "cards_off_the_table",
       "and_then_there_was_one_more",
       "sel_player_reveal",
-      "point_your_suspicions",
       "card_trade",
     ];
 
@@ -216,7 +198,6 @@ export default function Gameboard() {
                   currentStep === "cards_off_the_table" ||
                   currentStep === "and_then_there_was_one_more" ||
                   currentStep === "sel_player_reveal" ||
-                  currentStep === "point_your_suspicions" ||
                   currentStep === "card_trade"
                 }
                 isSelected={selectedTargetPlayer?.player_id === p.player_id}
@@ -261,10 +242,7 @@ export default function Gameboard() {
                   handleSelectPlayer(distribution.bottom);
                 }
               }}
-              selectable={
-                currentStep === "and_then_there_was_one_more" ||
-                currentStep === "point_your_suspicions"
-              }
+              selectable={currentStep === "and_then_there_was_one_more"}
               isSelected={selectedTargetPlayer?.player_id === myPlayerId}
               isSocialDisgrace={isSocialDisgrace}
               onSetClick={handleSetSelect}
@@ -274,12 +252,14 @@ export default function Gameboard() {
           ) : (
             <div className="empty-hint">Esperando jugadores…</div>
           )}
-          {(isMyTurn || currentStep === "point_your_suspicions") && ( // Inclusión para todos
+
+          {isMyTurn && (
             <div className="turn-actions-container">
               {/* TurnActions ya no recibe props, usa los hooks */}
               <TurnActions />
             </div>
           )}
+
           {/* Lógica de acción forzada (revelar secreto) */}
           {isForcedToAct && (
             <div className="turn-actions-container">
@@ -309,7 +289,7 @@ export default function Gameboard() {
                         await secretService.revealSecret(
                           selectedSecret.secret_id
                         );
-                        // await playerService.unselectPlayer(myPlayerId);
+                        await playerService.unselectPlayer(myPlayerId);
 
                         // Limpiamos el estado local usando dispatch
                         dispatch({
@@ -330,11 +310,6 @@ export default function Gameboard() {
             </div>
           )}
 
-          {isForcedToVote && (
-            <div className="turn-actions-container">
-              <VoteStep />
-            </div>
-          )}
           {isForcedToTrade && (
             <div className="turn-actions-container">
               <div className="action-step-container">
@@ -387,6 +362,7 @@ export default function Gameboard() {
           )}
         </section>
       </main>
+      <Chat />
     </div>
   );
 }

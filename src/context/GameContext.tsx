@@ -13,6 +13,14 @@ import type { SetResponse } from "../services/setService";
 import type { SecretResponse } from "../services/secretService";
 import type { Steps } from "../containers/GamePage/TurnActionsTypes"; // Ajusta la ruta si es necesario
 
+
+export interface ChatMessage {
+  sender_name: string;
+  sender_id: number;
+  message: string;
+}
+
+
 // --- 1. DEFINICIÓN DEL ESTADO ---
 // Este es el "cerebro" que almacena todo
 export interface IGameState {
@@ -35,6 +43,7 @@ export interface IGameState {
   // Estado de carga y errores
   error: string | null;
   isLoading: boolean;
+  chatMessages: ChatMessage[];
 }
 
 // --- 2. DEFINICIÓN DE ACCIONES ---
@@ -45,6 +54,7 @@ export type GameAction =
   | { type: "SET_GAME"; payload: GameResponse }
   | { type: "SET_DISCARD_PILE"; payload: CardResponse[] }
   | { type: "SET_DRAFT_PILE"; payload: CardResponse[] }
+  | { type: "ADD_CHAT_MESSAGE"; payload: ChatMessage }
 
   // Acciones de UI (selección)
   | { type: "SET_STEP"; payload: Steps }
@@ -76,6 +86,11 @@ export const gameReducer = (
       return { ...state, discardPile: action.payload };
     case "SET_DRAFT_PILE":
       return { ...state, draftPile: action.payload };
+    case "ADD_CHAT_MESSAGE":
+      return {
+        ...state,
+        chatMessages: [...state.chatMessages, action.payload],
+      };
 
     // Casos de UI
     case "SET_STEP":
@@ -168,6 +183,7 @@ export const GameProvider = ({
     activeEventCard: null,
     error: null,
     isLoading: false,
+    chatMessages: [],
   };
 
   const [state, dispatch] = useReducer(gameReducer, initialState);

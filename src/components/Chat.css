@@ -1,0 +1,121 @@
+/* Contenedor principal del chat */
+.chat-container {
+  /* Posición (ej. fijo en una esquina) */
+  position: fixed;
+  
+  /* Anclado a la izquierda */
+  left: 20px; 
+  
+  /* Centrado vertical */
+  top: 50%;
+  transform: translateY(-50%);
+  left: 20px;
+  
+  background: transparent;
+  backdrop-filter: brightness(0.6);
+  filter : brightness(0.6);
+  /* Tamaño */
+  width: 300px;
+  height: 250px;
+
+  z-index: 100;
+
+  /* Estilo */
+  border: 1px solid #444;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  
+  /* Flexbox para ordenar mensajes y form */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Área de mensajes (con scroll) */
+.chat-messages {
+  flex-grow: 1; /* Ocupa todo el espacio disponible */
+  overflow-y: auto; /* ¡Importante para el scroll! */
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px; /* Espacio entre mensajes */
+}
+
+/* Estilo de cada burbuja de mensaje */
+.chat-message {
+  padding: 8px 12px;
+  border-radius: 12px;
+  max-width: 80%;
+  word-wrap: break-word; /* Para que el texto no se salga */
+}
+
+/* Estilo del nombre del remitente */
+.chat-sender-name {
+  display: block;
+  font-weight: bold;
+  font-size: 0.8rem;
+  margin-bottom: 2px;
+  color: #c0c0c0;
+}
+
+/* Mensajes de otros (izquierda) */
+.other-message {
+  align-self: flex-start;
+  background: #4a4a4a;
+  color: #f1f1f1;
+}
+.other-message .chat-sender-name {
+  color: #a3cff0; /* Color distintivo para el nombre */
+}
+
+
+/* Mis mensajes (derecha) */
+.my-message {
+  align-self: flex-end;
+  background: #0078d4;
+  color: #ffffff;
+}
+.my-message .chat-sender-name {
+  color: #d1e9ff; /* Color para mi nombre */
+}
+
+
+/* Formulario de envío */
+.chat-form {
+  display: flex;
+  padding: 10px;
+  border-top: 1px solid #444;
+}
+
+.chat-input {
+  flex-grow: 1;
+  padding: 8px;
+  border: 1px solid #555;
+  border-radius: 4px 0 0 4px;
+  background: #1e1e1e;
+  color: #f1f1f1;
+  border-right: none;
+}
+.chat-input:focus {
+  outline: none;
+  border-color: #0078d4;
+}
+
+.chat-send-button {
+  padding: 8px 12px;
+  background: #0078d4;
+  color: white;
+  border: none;
+  border-radius: 0 4px 4px 0;
+  cursor: pointer;
+}
+.chat-send-button:hover {
+  background: #005a9e;
+}
+
+/* Mensaje de error */
+.chat-error {
+  color: #ff8a8a;
+  font-size: 0.85rem;
+  padding: 0 10px 5px 10px;
+  text-align: center;
+}
