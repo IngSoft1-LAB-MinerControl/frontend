@@ -99,11 +99,14 @@ export default function Gameboard() {
   }, [pendingAction]);
 
   const isForcedToTradeFolly = useMemo(() => {
-    return pendingAction === "SELECT_TRADE_CARD_FOLLY";
+    return (
+      pendingAction === "SELECT_FOLLY_CARD" ||
+      pendingAction === "WAITING_FOR_FOLLY_TRADE"
+    );
   }, [pendingAction]);
 
   useEffect(() => {
-    if (currentStep === "wait_trade") {
+    if (currentStep === "wait_trade" || currentStep === "wait_trade_folly") {
       if (pendingAction === null || pendingAction === undefined) {
         console.log("Trade completado. Avanzando a 'discard_op'.");
         dispatch({ type: "SET_STEP", payload: "discard_op" });
@@ -121,7 +124,10 @@ export default function Gameboard() {
   };
 
   const handleHandCardSelect = (card: CardResponse) => {
-    if (pendingAction === "SELECT_TRADE_CARD") {
+    if (
+      pendingAction === "SELECT_TRADE_CARD" ||
+      pendingAction === "SELECT_FOLLY_CARD"
+    ) {
       const newCard = selectedCard?.card_id === card.card_id ? null : card;
       dispatch({ type: "SET_SELECTED_CARD", payload: newCard });
       return;
@@ -171,6 +177,31 @@ export default function Gameboard() {
   const handleDraftSelect = (card: CardResponse) => {
     const newCard = selectedCard === card ? null : card;
     dispatch({ type: "SET_SELECTED_CARD", payload: newCard });
+  };
+
+  // Devuelve el jugador que recibe la carta de myPlayerId según la dirección
+  const getFollyTarget = () => {
+    if (!players.length || !myPlayerId) return null;
+
+    // Ordenamos por turno
+    const ordered = [...players].sort(
+      (a, b) => (a.turn_order ?? 0) - (b.turn_order ?? 0)
+    );
+
+    // Encontramos el índice del jugador actual
+    const index = ordered.findIndex((p) => p.player_id === myPlayerId);
+    if (index === -1) return null;
+
+    let targetIndex;
+    if (state.directionFolly === "right") {
+      // pasa a la derecha → siguiente jugador en la lista
+      targetIndex = (index + 1) % ordered.length;
+    } else {
+      // pasa a la izquierda → jugador anterior
+      targetIndex = (index - 1 + ordered.length) % ordered.length;
+    }
+
+    return ordered[targetIndex];
   };
 
   console.log("RENDERIZANDO Gameboard. Step:", currentStep);
@@ -379,9 +410,18 @@ export default function Gameboard() {
                     className="action-button"
                     onClick={async () => {
                       if (!selectedCard || !myPlayerId) return;
+                      const targetPlayer = getFollyTarget();
+                      if (!targetPlayer) {
+                        alert("No se pudo determinar el jugador destino.");
+                        return;
+                      }
 
                       try {
-                        //aca va la llamada aun service
+                        await eventService.follyTrade(
+                          myPlayerId,
+                          targetPlayer.player_id,
+                          selectedCard.card_id
+                        );
                         dispatch({ type: "SET_SELECTED_CARD", payload: null });
                       } catch (err) {
                         console.error(
@@ -394,10 +434,10 @@ export default function Gameboard() {
                     // Deshabilitado si no hay carta o si ya esperamos
                     disabled={
                       !selectedCard ||
-                      pendingAction === "WAITING_FOR_TRADE_PARTNER"
+                      pendingAction === "WAITING_FOR_FOLLY_TRADE"
                     }
                   >
-                    {pendingAction === "WAITING_FOR_TRADE_PARTNER"
+                    {pendingAction === "WAITING_FOR_FOLLY_TRADE"
                       ? "Esperando..."
                       : "Confirmar Carta"}
                   </button>

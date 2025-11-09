@@ -46,6 +46,12 @@ export const useGameWebSocket = (gameId: number | undefined) => {
             break;
           case "gameUpdated":
             dispatch({ type: "SET_GAME", payload: dataContent });
+            if (dataContent.direction_folly) {
+              dispatch({
+                type: "SET_TRADE_DIRECTION",
+                payload: dataContent.direction_folly,
+              });
+            }
             break;
           case "droppedCards":
             dispatch({ type: "SET_DISCARD_PILE", payload: dataContent });

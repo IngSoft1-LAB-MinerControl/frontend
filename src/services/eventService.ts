@@ -135,10 +135,11 @@ async function cardTrade(player_id: number, card_id: number) {
 async function initiateDeadCardFolly(
   player_id: number,
   gameId: number,
-  card_id: number
+  card_id: number,
+  direction: string
 ) {
   const response = await fetch(
-    `${httpServerUrl}/event/dead_card_folly/initiate/${player_id}/${gameId}/${card_id}`,
+    `${httpServerUrl}/event/dead_card_folly/initiate/${player_id}/${gameId}/${card_id}/${direction}`,
     {
       method: "POST",
       headers: {

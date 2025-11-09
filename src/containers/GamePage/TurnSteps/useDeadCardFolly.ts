@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useGameContext } from "../../../context/GameContext";
 import eventService from "../../../services/eventService";
+import cardService from "../../../services/cardService";
 
 export const useDeadCardFolly = () => {
   const { state, dispatch } = useGameContext();
@@ -23,12 +24,14 @@ export const useDeadCardFolly = () => {
 
     setLock(true);
     try {
-      dispatch({ type: "SET_TRADE_DIRECTION", payload: direction });
       await eventService.initiateDeadCardFolly(
         myPlayerId,
         game.game_id,
-        activeEventCard.card_id
+        activeEventCard.card_id,
+        direction
       );
+
+      dispatch({ type: "SET_TRADE_DIRECTION", payload: direction });
       dispatch({ type: "SET_STEP", payload: "wait_trade_folly" });
       dispatch({ type: "SET_ACTIVE_EVENT", payload: null });
     } catch (err) {

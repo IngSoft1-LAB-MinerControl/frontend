@@ -23,9 +23,15 @@ export const WaitTradeFollyStep = () => {
     (a, b) => (a.turn_order ?? 0) - (b.turn_order ?? 0)
   );
 
-  const orderString =
-    orderedPlayers.map((p) => p.name).join(" → ") +
-    ` → ${orderedPlayers[0].name}`;
+  const displayedPlayers =
+    directionFolly === "left" ? [...orderedPlayers].reverse() : orderedPlayers;
+
+  const pairs = displayedPlayers.map((p, i) => {
+    const next = displayedPlayers[(i + 1) % displayedPlayers.length];
+    return `${p.name} → ${next.name}`;
+  });
+
+  const orderString = pairs.join(", ");
 
   const messages = [
     `Todos los jugadores pasan una carta a la ${directionText}.`,
