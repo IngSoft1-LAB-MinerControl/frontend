@@ -28,6 +28,13 @@ export const useWaitEventResolution = () => {
       } else {
         console.log(`Evento "${activeEventCard.name}" se resuelve.`);
         switch (activeEventCard.name) {
+          case "Card trade":
+            dispatch({ type: "SET_STEP", payload: "card_trade" });
+            return; // Salimos antes de registrarlo
+
+          case "Point your suspicions":
+            dispatch({ type: "SET_STEP", payload: "point_your_suspicions" });
+            return;
           case "Another Victim":
             dispatch({ type: "SET_STEP", payload: "another_victim" });
             return;

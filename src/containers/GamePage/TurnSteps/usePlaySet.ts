@@ -41,9 +41,12 @@ export const usePlaySet = () => {
         throw new Error("Set inválido.");
       }
       dispatch({ type: "SET_ACTIVE_SET", payload: playedSet });
-      await logService.registerCancelableSet(playedSet.set_id);
-
-      dispatch({ type: "SET_STEP", payload: "wait_set_resolution" });
+      // switch para no cancelables
+      switch (playedSet.name) {
+        default:
+          await logService.registerCancelableSet(playedSet.set_id);
+          dispatch({ type: "SET_STEP", payload: "wait_set_resolution" });
+      }
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Set inválido.");
       setTimeout(() => setMessage(""), 3000);

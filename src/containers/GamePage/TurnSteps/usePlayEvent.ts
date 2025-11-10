@@ -22,16 +22,6 @@ export const usePlayEvent = () => {
       dispatch({ type: "SET_ACTIVE_EVENT", payload: selectedCard });
       // switch para no cancelables
       switch (selectedCard.name) {
-        case "Card trade":
-          dispatch({ type: "SET_STEP", payload: "card_trade" });
-          setLock(false);
-          return; // Salimos antes de registrarlo
-
-        case "Point your suspicions":
-          dispatch({ type: "SET_STEP", payload: "point_your_suspicions" });
-          setLock(false);
-          return;
-
         default:
           await logService.registerCancelableEvent(selectedCard.card_id);
           dispatch({ type: "SET_STEP", payload: "wait_event_resolution" });
