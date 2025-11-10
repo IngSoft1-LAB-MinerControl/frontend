@@ -1,10 +1,11 @@
 import { useState } from "react";
 import cardService from "../../../services/cardService";
 import { useGameContext } from "../../../context/GameContext";
+import eventService from "../../../services/eventService";
 
 export const usePointYourSuspicions = () => {
   const { state, dispatch } = useGameContext();
-  const { activeEventCard, myPlayerId } = state;
+  const { activeEventCard, myPlayerId, game } = state;
 
   const [lock, setLock] = useState(false);
   const [message, setMessage] = useState("");
@@ -15,7 +16,7 @@ export const usePointYourSuspicions = () => {
 
     setLock(true);
     try {
-      await cardService.pointYourSuspicions(state.game.game_id);
+      await eventService.pointYourSuspicions(game.game_id);
       dispatch({ type: "SET_STEP", payload: "wait_voting_to_end" });
       dispatch({ type: "SET_ACTIVE_EVENT", payload: null });
 

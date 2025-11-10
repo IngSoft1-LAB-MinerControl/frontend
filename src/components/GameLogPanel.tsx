@@ -59,11 +59,16 @@ export const GameLogPanel = () => {
     const isDiscardStep =
       currentStep === "discard_op" || currentStep === "discard_skip";
 
+    const isResponseWindowOpen =
+      currentStep === "wait_event_resolution" ||
+      currentStep === "wait_set_resolution";
+
     // 2. El prompt SÓLO se muestra si la carta es NSF Y NO estamos descartando
     return (
       selectedCard !== null &&
       selectedCard.name === "Not so fast" &&
-      !isDiscardStep
+      !isDiscardStep &&
+      isResponseWindowOpen
     );
   }, [selectedCard, currentStep]);
 
