@@ -13,6 +13,15 @@ import type { SetResponse } from "../services/setService";
 import type { SecretResponse } from "../services/secretService";
 import type { Steps } from "../containers/GamePage/TurnActionsTypes"; // Ajusta la ruta si es necesario
 
+export interface LogEntry {
+  log_id: number;
+  created_at: string;
+  type: string;
+  player_id: number;
+  card_name: string | null;
+  set_name: string | null;
+}
+
 // --- 1. DEFINICIÓN DEL ESTADO ---
 // Este es el "cerebro" que almacena todo
 export interface IGameState {
@@ -31,6 +40,10 @@ export interface IGameState {
   selectedSecret: SecretResponse | null;
   selectedTargetPlayer: PlayerStateResponse | null;
   activeEventCard: CardResponse | null;
+  activeSet: SetResponse | null; // Para saber qué set resolver
+  lastCancelableEvent: LogEntry | null;
+  lastCancelableSet: LogEntry | null;
+  logs: LogEntry[]; // Para el historial del panel
 
   // Estado de carga y errores
   error: string | null;
@@ -55,6 +68,10 @@ export type GameAction =
   | { type: "SET_SELECTED_TARGET_PLAYER"; payload: PlayerStateResponse | null }
   | { type: "CLEAR_SELECTIONS" } // Resetea todas las selecciones
   | { type: "SET_ACTIVE_EVENT"; payload: CardResponse | null }
+  | { type: "SET_ACTIVE_SET"; payload: SetResponse | null }
+  | { type: "SET_LAST_CANCELABLE_EVENT"; payload: LogEntry | null }
+  | { type: "SET_LAST_CANCELABLE_SET"; payload: LogEntry | null }
+  | { type: "SET_LOGS"; payload: LogEntry[] }
 
   // Acciones de Carga/Error
   | { type: "SET_LOADING"; payload: boolean }
@@ -104,6 +121,18 @@ export const gameReducer = (
     case "SET_ACTIVE_EVENT":
       return { ...state, activeEventCard: action.payload };
 
+    case "SET_ACTIVE_SET":
+      return { ...state, activeSet: action.payload };
+
+    case "SET_LAST_CANCELABLE_EVENT":
+      return { ...state, lastCancelableEvent: action.payload };
+
+    case "SET_LAST_CANCELABLE_SET":
+      return { ...state, lastCancelableSet: action.payload };
+
+    case "SET_LOGS":
+      return { ...state, logs: action.payload };
+
     case "CLEAR_SELECTIONS":
       return {
         ...state,
@@ -114,6 +143,9 @@ export const gameReducer = (
         selectedSecret: null,
         selectedTargetPlayer: null,
         activeEventCard: null,
+        activeSet: null,
+        lastCancelableEvent: null,
+        lastCancelableSet: null,
       };
 
     // Casos de Carga/Error
@@ -166,15 +198,15 @@ export const GameProvider = ({
     selectedSecret: null,
     selectedTargetPlayer: null,
     activeEventCard: null,
+    activeSet: null,
+    logs: [],
+    lastCancelableEvent: null,
+    lastCancelableSet: null,
     error: null,
     isLoading: false,
   };
 
   const [state, dispatch] = useReducer(gameReducer, initialState);
-
-  // --- Selectores (Valores calculados) ---
-  // Los calculamos aquí una vez y los proveemos al contexto.
-  // Así, los componentes no tienen que recalcularlos.
 
   const currentPlayer = useMemo(
     () => state.players.find((p) => p.player_id === state.myPlayerId),
@@ -208,8 +240,6 @@ export const GameProvider = ({
   );
 };
 
-// --- 6. EL HOOK PERSONALIZADO ---
-// Así es como los componentes consumirán el contexto
 export const useGameContext = () => {
   const context = useContext(GameContext);
   if (context === undefined) {

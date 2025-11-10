@@ -21,4 +21,6 @@ export type Steps =
   | "card_trade"
   | "wait_trade"
   | "delay_escape_selection"
+  | "wait_event_resolution"
+  | "wait_set_resolution"
   | "add_detective";

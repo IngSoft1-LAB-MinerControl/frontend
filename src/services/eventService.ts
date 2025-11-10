@@ -1,4 +1,6 @@
+import type { CardResponse } from "./cardService";
 import { httpServerUrl } from "./config";
+import type { SetResponse } from "./setService";
 
 async function cardsOffTheTable(playerId: number) {
   const response = await fetch(
@@ -131,13 +133,51 @@ async function cardTrade(player_id: number, card_id: number) {
   return await response.json();
 }
 
+async function countNSF(gameId: number): Promise<CardResponse> {
+  const response = await fetch(
+    `${httpServerUrl}/events/count/Not_so_fast/${gameId}`,
+    {
+      method: "GET",
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || "No se puede jugar esta carta ahora.");
+  }
+
+  return response.json();
+}
+
+async function pointYourSuspicions(gameId: number) {
+  const response = await fetch(
+    `${httpServerUrl}/event/point_your_suspicion/${gameId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(
+      errorData.detail || "Error al iniciar Point Your Supicions"
+    );
+  }
+  return await response.json();
+}
+
 const eventService = {
   cardsOffTheTable,
   andThenThereWasOneMore,
   delayEscape,
   earlyTrainPaddington,
+  pointYourSuspicions,
   initiateCardTrade,
   cardTrade,
+  countNSF,
 };
 
 export default eventService;

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useGameContext } from "../../../context/GameContext";
 import setService, { type SetResponse } from "../../../services/setService";
+import logService from "../../../services/logService";
 
 export const usePlaySet = () => {
   const { state, dispatch } = useGameContext();
@@ -21,56 +22,39 @@ export const usePlaySet = () => {
     }
     setLock(true);
     try {
+      // 1. Jugamos el set (el backend lo crea en la BD)
       let playedSet: SetResponse | null = null;
       if (selectedCardIds.length === 2) {
         playedSet = await setService.playSet2(
           selectedCardIds[0],
           selectedCardIds[1]
         );
-      } else if (selectedCardIds.length === 3) {
+      } else {
         playedSet = await setService.playSet3(
           selectedCardIds[0],
           selectedCardIds[1],
           selectedCardIds[2]
         );
       }
-      setMessage("");
-      // Limpiamos la selección
-      dispatch({ type: "SET_SELECTED_CARD", payload: null });
 
       if (!playedSet) {
-        dispatch({ type: "SET_STEP", payload: "discard_op" });
-        return;
+        throw new Error("Set inválido.");
       }
+      dispatch({ type: "SET_ACTIVE_SET", payload: playedSet });
+      await logService.registerCancelableSet(playedSet.set_id);
 
-      // Avanzamos al paso correspondiente
-      switch (playedSet.name) {
-        case "Hercule Poirot":
-        case "Miss Marple":
-          dispatch({ type: "SET_STEP", payload: "sel_reveal_secret" });
-          break;
-        case "Mr Satterthwaite":
-        case "Lady Eileen 'Bundle' Brent":
-        case "Tommy Beresford":
-        case "Tuppence Beresford":
-        case "Beresford brothers":
-          dispatch({ type: "SET_STEP", payload: "sel_player_reveal" });
-          break;
-        case "Parker Pyne":
-          dispatch({ type: "SET_STEP", payload: "sel_hide_secret" });
-          break;
-        default:
-          dispatch({ type: "SET_STEP", payload: "discard_op" });
-      }
+      dispatch({ type: "SET_STEP", payload: "wait_set_resolution" });
     } catch (err) {
-      setMessage("Set inválido. Elija otra combinación");
+      setMessage(err instanceof Error ? err.message : "Set inválido.");
       setTimeout(() => setMessage(""), 3000);
     } finally {
       setLock(false);
     }
   };
+
   const cancel = () => {
     dispatch({ type: "CLEAR_SELECTIONS" });
   };
+
   return { lock, message, playSet, cancel };
 };

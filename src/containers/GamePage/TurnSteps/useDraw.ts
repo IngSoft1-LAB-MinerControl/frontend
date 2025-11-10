@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useGameContext } from "../../../context/GameContext";
 import cardService from "../../../services/cardService";
 import gameService from "../../../services/gameService";
+import logService from "../../../services/logService";
 
 export const useDraw = () => {
   const { state, dispatch, currentPlayer } = useGameContext();
@@ -47,7 +48,6 @@ export const useDraw = () => {
   const endTurn = async () => {
     try {
       await gameService.updateTurn(game.game_id);
-      dispatch({ type: "SET_STEP", payload: "start" });
     } catch (err) {
       console.error("Error al finalizar el turno:", err);
       setMessage("Error al finalizar turno. Intenta de nuevo.");

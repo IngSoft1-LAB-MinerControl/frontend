@@ -1,3 +1,4 @@
+import type { LogEntry } from "../context/GameContext";
 import { httpServerUrl } from "./config";
 
 export interface Game {
@@ -17,6 +18,7 @@ export interface GameResponse {
   players_amount: number;
   current_turn: number;
   cards_left: number;
+  log: LogEntry[];
 }
 
 export interface GameInit {

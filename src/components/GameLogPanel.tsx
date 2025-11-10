@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useGameContext } from "../context/GameContext";
 
 // Importa todas las dependencias que vamos a MOVER de Gameboard
@@ -7,7 +7,9 @@ import TextType from "./TextType.tsx";
 import secretService from "../services/secretService";
 import playerService from "../services/playerService";
 import eventService from "../services/eventService";
+import logService from "../services/logService.ts";
 import { VoteStep } from "../containers/GamePage/TurnSteps/VoteStep.tsx";
+import { LogMessage } from "./LogMessage.tsx";
 
 import "./GameLogPanel.css";
 
@@ -15,7 +17,8 @@ export const GameLogPanel = () => {
   const { state, dispatch, isMyTurn, currentPlayer } = useGameContext();
 
   // agg game para leer log
-  const { myPlayerId, selectedCard, selectedSecret } = state;
+  const { myPlayerId, selectedCard, selectedSecret, currentStep, logs, game } =
+    state;
 
   const pendingAction = currentPlayer?.pending_action;
 
@@ -38,36 +41,89 @@ export const GameLogPanel = () => {
     );
   }, [pendingAction]);
 
+  const showNotSoFastPrompt = useMemo(() => {
+    const isDiscardStep =
+      currentStep === "discard_op" || currentStep === "discard_skip";
+
+    // 2. El prompt SÓLO se muestra si la carta es NSF Y NO estamos descartando
+    return (
+      selectedCard !== null &&
+      selectedCard.name === "Not so fast" &&
+      !isDiscardStep
+    );
+  }, [selectedCard, currentStep]);
+
   const logEndRef = useRef<HTMLDivElement>(null);
-  // const gameLog = game?.log || [
-  const gameLog = [
-    "Es el turno de Jugador 1.",
-    "Jugador 1 jugó 'Lady Eileen'.",
-    "Es el turno de Jugador 2.",
-  ];
 
   useEffect(() => {
-    logEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [gameLog]);
+    if (!game?.game_id) return;
+
+    const fetchLogs = () => {
+      console.log("Actualizando logs...");
+      logService
+        .getLogs(game.game_id)
+        .then((newLogs) => {
+          dispatch({ type: "SET_LOGS", payload: newLogs });
+        })
+        .catch((err) => console.error("Error al recargar logs:", err));
+    };
+
+    fetchLogs();
+  }, [game?.current_turn, state.lastCancelableEvent, game?.game_id, dispatch]);
 
   return (
     <div className="game-log-panel-container">
       <div className="log-window">
         <h3>Registro de la Partida</h3>
         <div className="log-list">
-          {gameLog.map((msg, index) => (
-            <p key={index} className="log-message">
-              {msg}
-            </p>
-          ))}
+          {logs.length === 0 ? (
+            <p className="log-message">Aún no hay acciones en el registro.</p>
+          ) : (
+            logs.map((log) => <LogMessage key={log.log_id} log={log} />)
+          )}
           <div ref={logEndRef} />
         </div>
       </div>
 
       <div className="action-window">
-        {isMyTurn && (
+        {showNotSoFastPrompt && (
           <div className="turn-actions-container">
-            <TurnActions />
+            <div className="action-step-container">
+              <TextType text={["¿Jugar 'Not So Fast!'?"]} typingSpeed={35} />
+              <div className="action-buttons-group">
+                <button
+                  className="action-button" // Puedes darle un estilo especial
+                  onClick={async () => {
+                    if (!selectedCard) return;
+                    try {
+                      // 1. Llamamos al nuevo servicio
+                      console.log("PLAY NOT SO FAST");
+                      await logService.registerCancelableEvent(
+                        selectedCard.card_id
+                      );
+                      // 2. Limpiamos la selección
+                      dispatch({ type: "SET_SELECTED_CARD", payload: null });
+
+                      // (El WebSocket se encargará de refrescar el estado)
+                    } catch (err) {
+                      console.error("Error al jugar Not So Fast:", err);
+                      alert("No se puede jugar esta carta ahora.");
+                    }
+                  }}
+                >
+                  Confirmar
+                </button>
+                <button
+                  className="action-button secondary" // (Necesitarás un estilo para "secondary")
+                  onClick={() => {
+                    // Simplemente deselecciona la carta
+                    dispatch({ type: "SET_SELECTED_CARD", payload: null });
+                  }}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
@@ -164,6 +220,12 @@ export const GameLogPanel = () => {
         {isForcedToVote && (
           <div className="turn-actions-container">
             <VoteStep />
+          </div>
+        )}
+
+        {isMyTurn && (
+          <div className="turn-actions-container">
+            <TurnActions />
           </div>
         )}
       </div>

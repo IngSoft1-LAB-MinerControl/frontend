@@ -108,23 +108,27 @@ export default function Gameboard() {
   };
 
   const handleHandCardSelect = (card: CardResponse) => {
+    const isDiscardStep =
+      currentStep === "discard_op" || currentStep === "discard_skip";
+
+    if (card.name === "Not so fast" && !isDiscardStep) {
+      // Si ya estaba seleccionada, la deselecciona. Si no, la selecciona.
+      const newCard = selectedCard?.card_id === card.card_id ? null : card;
+      dispatch({ type: "SET_SELECTED_CARD", payload: newCard });
+      return; // Detenemos la ejecución aquí
+    }
     if (pendingAction === "SELECT_TRADE_CARD") {
       const newCard = selectedCard?.card_id === card.card_id ? null : card;
       dispatch({ type: "SET_SELECTED_CARD", payload: newCard });
       return;
     }
-    // if (pendingAction === "WAITING_FOR_TRADE_PARTNER") {
-    //   return;
-    // }
-    if (
-      currentStep === "p_set" ||
-      currentStep === "discard_op" ||
-      currentStep === "discard_skip"
-    ) {
-      dispatch({ type: "TOGGLE_HAND_CARD_ID", payload: card.card_id });
-    } else if (currentStep === "p_event" || currentStep === "add_detective") {
-      const newCard = selectedCard?.card_id === card.card_id ? null : card;
-      dispatch({ type: "SET_SELECTED_CARD", payload: newCard });
+    if (isMyTurn) {
+      if (currentStep === "p_set" || isDiscardStep) {
+        dispatch({ type: "TOGGLE_HAND_CARD_ID", payload: card.card_id });
+      } else if (currentStep === "p_event" || currentStep === "add_detective") {
+        const newCard = selectedCard?.card_id === card.card_id ? null : card;
+        dispatch({ type: "SET_SELECTED_CARD", payload: newCard });
+      }
     }
   };
 

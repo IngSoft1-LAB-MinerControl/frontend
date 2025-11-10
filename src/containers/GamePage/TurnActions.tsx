@@ -22,10 +22,11 @@ import { VoteStep } from "./TurnSteps/VoteStep";
 import { CardTradeStep } from "./TurnSteps/CardTradeStep";
 import { WaitTradeStep } from "./TurnSteps/WaitTradeStep";
 import { AddDetectiveStep } from "./TurnSteps/AddDetectiveStep";
-
+import { WaitEventResolutionStep } from "./TurnSteps/WaitEventResolutionStep";
 // estilos
 import "./TurnActions.css";
 import TextType from "../../components/TextType";
+import { WaitSetResolutionStep } from "./TurnSteps/WaitSetResolutionStep";
 
 export default function TurnActions() {
   const { state, dispatch, isSocialDisgrace } = useGameContext();
@@ -93,6 +94,10 @@ export default function TurnActions() {
             return <CardTradeStep />;
           case "wait_trade":
             return <WaitTradeStep />;
+          case "wait_event_resolution":
+            return <WaitEventResolutionStep />;
+          case "wait_set_resolution":
+            return <WaitSetResolutionStep />;
 
           // --- Pasos de Sets ---
           case "sel_reveal_secret":

@@ -26,13 +26,6 @@ export const useGameWebSocket = (gameId: number | undefined) => {
     ws.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
-        // Esto registrará CADA mensaje completo que entre por el WebSocket.
-        console.log(
-          "%c[MSJ WS RECIBIDO]",
-          "color: #00aa00; font-weight: bold;",
-          message
-        );
-        // ---
 
         const dataContent =
           typeof message.data === "string"
@@ -46,6 +39,19 @@ export const useGameWebSocket = (gameId: number | undefined) => {
             break;
           case "gameUpdated":
             dispatch({ type: "SET_GAME", payload: dataContent });
+            if (dataContent.log) {
+              dispatch({ type: "SET_LOGS", payload: dataContent.log });
+            }
+            break;
+          case "lastCancelableEvent":
+            dispatch({
+              type: "SET_LAST_CANCELABLE_EVENT",
+              payload: dataContent,
+            });
+            break;
+          case "setResponse":
+            dispatch({ type: "SET_LAST_CANCELABLE_SET", payload: dataContent });
+            console.log("Set registrado en la pila:", dataContent);
             break;
           case "droppedCards":
             dispatch({ type: "SET_DISCARD_PILE", payload: dataContent });
