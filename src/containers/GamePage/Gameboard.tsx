@@ -86,19 +86,6 @@ export default function Gameboard() {
     return !isMyTurn && pendingAction === "REVEAL_SECRET";
   }, [isMyTurn, pendingAction]);
 
-  // const isForcedToVote = useMemo(() => {
-  //   return (
-  //     pendingAction === "VOTE" || pendingAction === "WAITING_VOTING_TO_END"
-  //   );
-  // }, [pendingAction]);
-
-  // const isForcedToTrade = useMemo(() => {
-  //   return (
-  //     pendingAction === "SELECT_TRADE_CARD" ||
-  //     pendingAction === "WAITING_FOR_TRADE_PARTNER"
-  //   );
-  // }, [pendingAction]);
-
   const handleSetSelect = (set: SetResponse | undefined) => {
     const newSet =
       selectedSet && set && selectedSet.set_id === set.set_id

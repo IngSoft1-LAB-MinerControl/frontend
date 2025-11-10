@@ -59,16 +59,11 @@ export const GameLogPanel = () => {
     const isDiscardStep =
       currentStep === "discard_op" || currentStep === "discard_skip";
 
-    const isResponseWindowOpen =
-      currentStep === "wait_event_resolution" ||
-      currentStep === "wait_set_resolution";
-
     // 2. El prompt SÓLO se muestra si la carta es NSF Y NO estamos descartando
     return (
       selectedCard !== null &&
       selectedCard.name === "Not so fast" &&
-      !isDiscardStep &&
-      isResponseWindowOpen
+      !isDiscardStep
     );
   }, [selectedCard, currentStep]);
 
@@ -123,199 +118,241 @@ export const GameLogPanel = () => {
       </div>
 
       <div className="action-window">
-        {showNotSoFastPrompt && (
-          <div className="turn-actions-container">
-            <div className="action-step-container">
-              <TextType text={["¿Jugar 'Not So Fast!'?"]} typingSpeed={35} />
-              <div className="action-buttons-group">
-                <button
-                  className="action-button" // Puedes darle un estilo especial
-                  onClick={async () => {
-                    if (!selectedCard) return;
-                    try {
-                      // 1. Llamamos al nuevo servicio
-                      console.log("PLAY NOT SO FAST");
-                      await logService.registerCancelableEvent(
-                        selectedCard.card_id
-                      );
-                      // 2. Limpiamos la selección
-                      dispatch({ type: "SET_SELECTED_CARD", payload: null });
+        {/* Usamos un IIFE (una función autoejecutable) 
+            para asegurarnos de que solo UNO de estos bloques se renderice. */}
+        {(() => {
+          // --- Prioridad 1: Not So Fast! ---
+          if (showNotSoFastPrompt) {
+            return (
+              <div className="turn-actions-container">
+                <div className="action-step-container">
+                  <TextType
+                    text={["¿Jugar 'Not So Fast!'?"]}
+                    typingSpeed={35}
+                  />
+                  <div className="action-buttons-group">
+                    <button
+                      className="action-button" // Puedes darle un estilo especial
+                      onClick={async () => {
+                        if (!selectedCard) return;
+                        try {
+                          // 1. Llamamos al nuevo servicio
+                          console.log("PLAY NOT SO FAST");
+                          await logService.registerCancelableEvent(
+                            selectedCard.card_id
+                          );
+                          // 2. Limpiamos la selección
+                          dispatch({
+                            type: "SET_SELECTED_CARD",
+                            payload: null,
+                          });
 
-                      // (El WebSocket se encargará de refrescar el estado)
-                    } catch (err) {
-                      console.error("Error al jugar Not So Fast:", err);
-                      alert("No se puede jugar esta carta ahora.");
-                    }
-                  }}
-                >
-                  Confirmar
-                </button>
-                <button
-                  className="action-button secondary" // (Necesitarás un estilo para "secondary")
-                  onClick={() => {
-                    // Simplemente deselecciona la carta
-                    dispatch({ type: "SET_SELECTED_CARD", payload: null });
-                  }}
-                >
-                  Cancelar
-                </button>
+                          // (El WebSocket se encargará de refrescar el estado)
+                        } catch (err) {
+                          console.error("Error al jugar Not So Fast:", err);
+                          alert("No se puede jugar esta carta ahora.");
+                        }
+                      }}
+                    >
+                      Confirmar
+                    </button>
+                    <button
+                      className="action-button secondary" // (Necesitarás un estilo para "secondary")
+                      onClick={() => {
+                        // Simplemente deselecciona la carta
+                        dispatch({ type: "SET_SELECTED_CARD", payload: null });
+                      }}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        )}
+            );
+          }
 
-        {isForcedToAct && (
-          <div className="turn-actions-container">
-            <div className="action-step-container">
-              <TextType
-                text={[
-                  "Te han seleccionado. Debes revelar uno de tus secretos.",
-                ]}
-                typingSpeed={35}
-              />
-              <div className="ac  // 2. Lógica para el auto-scroll del logtion-buttons-group">
-                <button
-                  className="action-button"
-                  onClick={async () => {
-                    if (!selectedSecret) {
-                      alert("Por favor, selecciona un secreto para revelar.");
-                      return;
-                    }
-                    if (selectedSecret.revelated) {
-                      alert(
-                        "Ese secreto ya está revelado. Debes elegir uno oculto."
-                      );
-                      return;
-                    }
-                    try {
-                      await secretService.revealSecret(
-                        selectedSecret.secret_id
-                      );
-                      await playerService.unselectPlayer(myPlayerId);
-                      dispatch({
-                        type: "SET_SELECTED_SECRET",
-                        payload: null,
-                      });
-                    } catch (err) {
-                      console.error("Error al revelar secreto forzado:", err);
-                      alert("Error al revelar secreto.");
-                    }
-                  }}
-                  disabled={!selectedSecret || selectedSecret.revelated}
-                >
-                  Revelar Secreto
-                </button>
+          // --- Prioridad 2: Revelar Secreto ---
+          if (isForcedToAct) {
+            return (
+              <div className="turn-actions-container">
+                <div className="action-step-container">
+                  <TextType
+                    text={[
+                      "Te han seleccionado. Debes revelar uno de tus secretos.",
+                    ]}
+                    typingSpeed={35}
+                  />
+                  <div className="ac  // 2. Lógica para el auto-scroll del logtion-buttons-group">
+                    <button
+                      className="action-button"
+                      onClick={async () => {
+                        if (!selectedSecret) {
+                          alert(
+                            "Por favor, selecciona un secreto para revelar."
+                          );
+                          return;
+                        }
+                        if (selectedSecret.revelated) {
+                          alert(
+                            "Ese secreto ya está revelado. Debes elegir uno oculto."
+                          );
+                          return;
+                        }
+                        try {
+                          await secretService.revealSecret(
+                            selectedSecret.secret_id
+                          );
+                          await playerService.unselectPlayer(myPlayerId);
+                          dispatch({
+                            type: "SET_SELECTED_SECRET",
+                            payload: null,
+                          });
+                        } catch (err) {
+                          console.error(
+                            "Error al revelar secreto forzado:",
+                            err
+                          );
+                          alert("Error al revelar secreto.");
+                        }
+                      }}
+                      disabled={!selectedSecret || selectedSecret.revelated}
+                    >
+                      Revelar Secreto
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        )}
+            );
+          }
 
-        {isForcedToTrade && (
-          <div className="turn-actions-container">
-            <div className="action-step-container">
-              <TextType
-                text={
-                  pendingAction === "SELECT_TRADE_CARD"
-                    ? ["¡Intercambio! Selecciona una carta de tu mano..."]
-                    : ["Carta seleccionada. Esperando al otro jugador..."]
-                }
-                typingSpeed={35}
-              />
-              <div className="action-buttons-group">
-                <button
-                  className="action-button"
-                  onClick={async () => {
-                    if (!selectedCard || !myPlayerId) return;
-                    try {
-                      await eventService.cardTrade(
-                        myPlayerId,
-                        selectedCard.card_id
-                      );
-                      dispatch({ type: "SET_SELECTED_CARD", payload: null });
-                    } catch (err) {
-                      console.error(
-                        "Error al seleccionar carta para trade:",
-                        err
-                      );
-                      alert("Error al seleccionar carta.");
+          // --- Prioridad 3: Intercambio Normal ---
+          if (isForcedToTrade) {
+            return (
+              <div className="turn-actions-container">
+                <div className="action-step-container">
+                  <TextType
+                    text={
+                      pendingAction === "SELECT_TRADE_CARD"
+                        ? ["¡Intercambio! Selecciona una carta de tu mano..."]
+                        : ["Carta seleccionada. Esperando al otro jugador..."]
                     }
-                  }}
-                  disabled={
-                    !selectedCard ||
-                    pendingAction === "WAITING_FOR_TRADE_PARTNER"
-                  }
-                >
-                  {pendingAction === "WAITING_FOR_TRADE_PARTNER"
-                    ? "Esperando..."
-                    : "Confirmar Carta"}
-                </button>
+                    typingSpeed={35}
+                  />
+                  <div className="action-buttons-group">
+                    <button
+                      className="action-button"
+                      onClick={async () => {
+                        if (!selectedCard || !myPlayerId) return;
+                        try {
+                          await eventService.cardTrade(
+                            myPlayerId,
+                            selectedCard.card_id
+                          );
+                          dispatch({
+                            type: "SET_SELECTED_CARD",
+                            payload: null,
+                          });
+                        } catch (err) {
+                          console.error(
+                            "Error al seleccionar carta para trade:",
+                            err
+                          );
+                          alert("Error al seleccionar carta.");
+                        }
+                      }}
+                      disabled={
+                        !selectedCard ||
+                        pendingAction === "WAITING_FOR_TRADE_PARTNER"
+                      }
+                    >
+                      {pendingAction === "WAITING_FOR_TRADE_PARTNER"
+                        ? "Esperando..."
+                        : "Confirmar Carta"}
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        )}
+            );
+          }
 
-        {isForcedToTradeFolly && (
-          <div className="turn-actions-container">
-            <div className="action-step-container">
-              <TextType
-                text={
-                  pendingAction === "SELECT_FOLLY_CARD" // <-- (Usa el string correcto)
-                    ? ["¡Intercambio! Selecciona una carta de tu mano..."]
-                    : ["Carta seleccionada. Esperando jugadores..."]
-                }
-                typingSpeed={35}
-              />
-              <div className="action-buttons-group">
-                <button
-                  className="action-button"
-                  onClick={async () => {
-                    if (!selectedCard || !myPlayerId) return;
-                    const targetPlayer = getFollyTarget(); // Llama a la función que añadiste
-                    if (!targetPlayer) {
-                      alert("No se pudo determinar el jugador destino.");
-                      return;
+          // --- Prioridad 4: Intercambio Folly ---
+          if (isForcedToTradeFolly) {
+            return (
+              <div className="turn-actions-container">
+                <div className="action-step-container">
+                  <TextType
+                    text={
+                      pendingAction === "SELECT_FOLLY_CARD" // <-- (Usa el string correcto)
+                        ? ["¡Intercambio! Selecciona una carta de tu mano..."]
+                        : ["Carta seleccionada. Esperando jugadores..."]
                     }
+                    typingSpeed={35}
+                  />
+                  <div className="action-buttons-group">
+                    <button
+                      className="action-button"
+                      onClick={async () => {
+                        if (!selectedCard || !myPlayerId) return;
+                        const targetPlayer = getFollyTarget(); // Llama a la función que añadiste
+                        if (!targetPlayer) {
+                          alert("No se pudo determinar el jugador destino.");
+                          return;
+                        }
 
-                    try {
-                      // Asegúrate de que 'eventService.follyTrade' exista
-                      await eventService.follyTrade(
-                        myPlayerId,
-                        targetPlayer.player_id,
-                        selectedCard.card_id
-                      );
-                      dispatch({ type: "SET_SELECTED_CARD", payload: null });
-                    } catch (err) {
-                      console.error(
-                        "Error al seleccionar carta para trade:",
-                        err
-                      );
-                      alert("Error al seleccionar carta.");
-                    }
-                  }}
-                  disabled={
-                    !selectedCard || pendingAction === "WAITING_FOR_FOLLY_TRADE"
-                  }
-                >
-                  {pendingAction === "WAITING_FOR_FOLLY_TRADE"
-                    ? "Esperando..."
-                    : "Confirmar Carta"}
-                </button>
+                        try {
+                          // Asegúrate de que 'eventService.follyTrade' exista
+                          await eventService.follyTrade(
+                            myPlayerId,
+                            targetPlayer.player_id,
+                            selectedCard.card_id
+                          );
+                          dispatch({
+                            type: "SET_SELECTED_CARD",
+                            payload: null,
+                          });
+                        } catch (err) {
+                          console.error(
+                            "Error al seleccionar carta para trade:",
+                            err
+                          );
+                          alert("Error al seleccionar carta.");
+                        }
+                      }}
+                      disabled={
+                        !selectedCard ||
+                        pendingAction === "WAITING_FOR_FOLLY_TRADE"
+                      }
+                    >
+                      {pendingAction === "WAITING_FOR_FOLLY_TRADE"
+                        ? "Esperando..."
+                        : "Confirmar Carta"}
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        )}
+            );
+          }
 
-        {isForcedToVote && (
-          <div className="turn-actions-container">
-            <VoteStep />
-          </div>
-        )}
+          // --- Prioridad 5: Votación ---
+          if (isForcedToVote) {
+            return (
+              <div className="turn-actions-container">
+                <VoteStep />
+              </div>
+            );
+          }
 
-        {isMyTurn && (
-          <div className="turn-actions-container">
-            <TurnActions />
-          </div>
-        )}
+          if (isMyTurn) {
+            return (
+              <div className="turn-actions-container">
+                <TurnActions />
+              </div>
+            );
+          }
+
+          // Si nada aplica, no renderiza nada
+          return null;
+        })()}
       </div>
     </div>
   );
