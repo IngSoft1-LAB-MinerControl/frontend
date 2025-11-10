@@ -31,7 +31,6 @@ export const useWaitEventResolution = () => {
           case "Card trade":
             dispatch({ type: "SET_STEP", payload: "card_trade" });
             return; // Salimos antes de registrarlo
-
           case "Point your suspicions":
             dispatch({ type: "SET_STEP", payload: "point_your_suspicions" });
             return;
@@ -53,15 +52,12 @@ export const useWaitEventResolution = () => {
           case "Delay the murderer's escape!":
             dispatch({ type: "SET_STEP", payload: "delay_escape_selection" });
             return;
-          case "Point your suspicions":
-            dispatch({ type: "SET_STEP", payload: "point_your_suspicions" });
-            return;
-          case "Card trade":
-            dispatch({ type: "SET_STEP", payload: "card_trade" });
-            return;
           case "Early train to paddington":
             await eventService.earlyTrainPaddington(game.game_id, myPlayerId);
             break;
+          case "Dead card folly":
+            dispatch({ type: "SET_STEP", payload: "dead_card_folly" });
+            return;
           default:
             break;
         }

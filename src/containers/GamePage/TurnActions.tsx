@@ -27,6 +27,8 @@ import { WaitEventResolutionStep } from "./TurnSteps/WaitEventResolutionStep";
 import "./TurnActions.css";
 import TextType from "../../components/TextType";
 import { WaitSetResolutionStep } from "./TurnSteps/WaitSetResolutionStep";
+import { DeadCardFollyStep } from "./TurnSteps/DeadCardFollyStep";
+import { WaitTradeFollyStep } from "./TurnSteps/WaitTradeFollyStep";
 
 export default function TurnActions() {
   const { state, dispatch, isSocialDisgrace } = useGameContext();
@@ -94,6 +96,10 @@ export default function TurnActions() {
             return <CardTradeStep />;
           case "wait_trade":
             return <WaitTradeStep />;
+          case "dead_card_folly":
+            return <DeadCardFollyStep />;
+          case "wait_trade_folly":
+            return <WaitTradeFollyStep />;
           case "wait_event_resolution":
             return <WaitEventResolutionStep />;
           case "wait_set_resolution":

@@ -19,6 +19,7 @@ export interface GameResponse {
   current_turn: number;
   cards_left: number;
   log: LogEntry[];
+  direction_folly: string | null;
 }
 
 export interface GameInit {

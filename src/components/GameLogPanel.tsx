@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useGameContext } from "../context/GameContext";
 
 // Importa todas las dependencias que vamos a MOVER de Gameboard
@@ -17,10 +17,24 @@ export const GameLogPanel = () => {
   const { state, dispatch, isMyTurn, currentPlayer } = useGameContext();
 
   // agg game para leer log
-  const { myPlayerId, selectedCard, selectedSecret, currentStep, logs, game } =
-    state;
+  const {
+    myPlayerId,
+    selectedCard,
+    selectedSecret,
+    currentStep,
+    logs,
+    game,
+    players,
+  } = state;
 
   const pendingAction = currentPlayer?.pending_action;
+
+  const isForcedToTradeFolly = useMemo(() => {
+    return (
+      pendingAction === "SELECT_FOLLY_CARD" ||
+      pendingAction === "WAITING_FOR_FOLLY_TRADE"
+    );
+  }, [pendingAction]);
 
   const isForcedToAct = useMemo(() => {
     // Es "acción forzada" si NO es mi turno Y tengo una acción pendiente
@@ -52,6 +66,24 @@ export const GameLogPanel = () => {
       !isDiscardStep
     );
   }, [selectedCard, currentStep]);
+
+  const getFollyTarget = useCallback(() => {
+    if (!players || !players.length || !myPlayerId) return null;
+    const ordered = [...players].sort(
+      (a, b) => (a.turn_order ?? 0) - (b.turn_order ?? 0)
+    );
+    const index = ordered.findIndex((p) => p.player_id === myPlayerId);
+    if (index === -1) return null;
+
+    let targetIndex;
+    if (game?.direction_folly === "right") {
+      targetIndex = (index + 1) % ordered.length;
+    } else {
+      targetIndex = (index - 1 + ordered.length) % ordered.length;
+    }
+
+    return ordered[targetIndex];
+  }, [players, myPlayerId, game?.direction_folly]);
 
   const logEndRef = useRef<HTMLDivElement>(null);
 
@@ -209,6 +241,57 @@ export const GameLogPanel = () => {
                   }
                 >
                   {pendingAction === "WAITING_FOR_TRADE_PARTNER"
+                    ? "Esperando..."
+                    : "Confirmar Carta"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isForcedToTradeFolly && (
+          <div className="turn-actions-container">
+            <div className="action-step-container">
+              <TextType
+                text={
+                  pendingAction === "SELECT_FOLLY_CARD" // <-- (Usa el string correcto)
+                    ? ["¡Intercambio! Selecciona una carta de tu mano..."]
+                    : ["Carta seleccionada. Esperando jugadores..."]
+                }
+                typingSpeed={35}
+              />
+              <div className="action-buttons-group">
+                <button
+                  className="action-button"
+                  onClick={async () => {
+                    if (!selectedCard || !myPlayerId) return;
+                    const targetPlayer = getFollyTarget(); // Llama a la función que añadiste
+                    if (!targetPlayer) {
+                      alert("No se pudo determinar el jugador destino.");
+                      return;
+                    }
+
+                    try {
+                      // Asegúrate de que 'eventService.follyTrade' exista
+                      await eventService.follyTrade(
+                        myPlayerId,
+                        targetPlayer.player_id,
+                        selectedCard.card_id
+                      );
+                      dispatch({ type: "SET_SELECTED_CARD", payload: null });
+                    } catch (err) {
+                      console.error(
+                        "Error al seleccionar carta para trade:",
+                        err
+                      );
+                      alert("Error al seleccionar carta.");
+                    }
+                  }}
+                  disabled={
+                    !selectedCard || pendingAction === "WAITING_FOR_FOLLY_TRADE"
+                  }
+                >
+                  {pendingAction === "WAITING_FOR_FOLLY_TRADE"
                     ? "Esperando..."
                     : "Confirmar Carta"}
                 </button>

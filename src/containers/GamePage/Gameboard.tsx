@@ -111,17 +111,24 @@ export default function Gameboard() {
     const isDiscardStep =
       currentStep === "discard_op" || currentStep === "discard_skip";
 
+    if (pendingAction === "SELECT_TRADE_CARD") {
+      const newCard = selectedCard?.card_id === card.card_id ? null : card;
+      dispatch({ type: "SET_SELECTED_CARD", payload: newCard });
+      return;
+    }
+    if (pendingAction === "SELECT_FOLLY_CARD") {
+      const newCard = selectedCard?.card_id === card.card_id ? null : card;
+      dispatch({ type: "SET_SELECTED_CARD", payload: newCard });
+      return;
+    }
+
     if (card.name === "Not so fast" && !isDiscardStep) {
       // Si ya estaba seleccionada, la deselecciona. Si no, la selecciona.
       const newCard = selectedCard?.card_id === card.card_id ? null : card;
       dispatch({ type: "SET_SELECTED_CARD", payload: newCard });
       return; // Detenemos la ejecución aquí
     }
-    if (pendingAction === "SELECT_TRADE_CARD") {
-      const newCard = selectedCard?.card_id === card.card_id ? null : card;
-      dispatch({ type: "SET_SELECTED_CARD", payload: newCard });
-      return;
-    }
+
     if (isMyTurn) {
       if (currentStep === "p_set" || isDiscardStep) {
         dispatch({ type: "TOGGLE_HAND_CARD_ID", payload: card.card_id });

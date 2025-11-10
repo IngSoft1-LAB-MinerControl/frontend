@@ -23,4 +23,6 @@ export type Steps =
   | "delay_escape_selection"
   | "wait_event_resolution"
   | "wait_set_resolution"
+  | "dead_card_folly"
+  | "wait_trade_folly"
   | "add_detective";

@@ -169,6 +169,43 @@ async function pointYourSuspicions(gameId: number) {
   return await response.json();
 }
 
+async function initiateFolly(
+  playerId: number,
+  gameId: number,
+  cardId: number,
+  direction: "left" | "right"
+): Promise<void> {
+  const response = await fetch(
+    `${httpServerUrl}/event/dead_card_folly/initiate/${playerId}/${gameId}/${cardId}/${direction}`,
+    {
+      method: "POST", // Tu backend (event_routes.py) usa POST
+    }
+  );
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || "Error al iniciar Dead Card Folly");
+  }
+  return;
+}
+
+async function follyTrade(
+  fromPlayerId: number,
+  toPlayerId: number,
+  cardId: number
+): Promise<void> {
+  const response = await fetch(
+    `${httpServerUrl}/event/dead_card_folly/select_card/${fromPlayerId}/${toPlayerId}/${cardId}`,
+    {
+      method: "POST",
+    }
+  );
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || "Error al pasar la carta de Folly");
+  }
+  return;
+}
+
 const eventService = {
   cardsOffTheTable,
   andThenThereWasOneMore,
@@ -178,6 +215,8 @@ const eventService = {
   initiateCardTrade,
   cardTrade,
   countNSF,
+  initiateFolly,
+  follyTrade,
 };
 
 export default eventService;
