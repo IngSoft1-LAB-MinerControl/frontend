@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useGameContext } from "../../../context/GameContext";
 import cardService from "../../../services/cardService";
 import gameService from "../../../services/gameService";
-import logService from "../../../services/logService";
 
 export const useDraw = () => {
   const { state, dispatch, currentPlayer } = useGameContext();

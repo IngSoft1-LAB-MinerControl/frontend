@@ -5,14 +5,19 @@ import userEvent from "@testing-library/user-event";
 import DraftPile from "./DraftPile";
 import type { CardResponse } from "../services/cardService";
 
+// Mocks de componentes hijos
 vi.mock("./Cards/Detectives", () => ({
-  default: ({ name }: { name: string }) => (
-    <div data-testid="detective-card">{name}</div>
+  default: ({ name, size }: { name: string; size: string }) => (
+    <div data-testid="detective-card" data-size={size}>
+      {name}
+    </div>
   ),
 }));
 vi.mock("./Cards/Events", () => ({
-  default: ({ name }: { name: string }) => (
-    <div data-testid="event-card">{name}</div>
+  default: ({ name, size }: { name: string; size: string }) => (
+    <div data-testid="event-card" data-size={size}>
+      {name}
+    </div>
   ),
 }));
 vi.mock("./Button", () => ({
@@ -51,7 +56,7 @@ describe("DraftPile Component", () => {
   });
 
   it("renders placeholders when no cards are provided", () => {
-    render(
+    const { container } = render(
       <DraftPile
         cards={[]}
         selectedCard={null}
@@ -60,7 +65,7 @@ describe("DraftPile Component", () => {
       />
     );
     // Buscamos por la clase que se usa para los placeholders
-    const placeholders = document.querySelectorAll(".draft-placeholder");
+    const placeholders = container.querySelectorAll(".draft-placeholder");
     expect(placeholders.length).toBe(3);
     expect(screen.queryByText("Sherlock Holmes")).not.toBeInTheDocument();
   });
@@ -118,8 +123,9 @@ describe("DraftPile Component", () => {
       />
     );
 
-    const cardElement = screen.getByText("Sherlock Holmes");
-    await userEvent.click(cardElement);
+    // Hacemos clic en el contenedor de la carta (el div con el handler)
+    const cardElement = screen.getByText("Sherlock Holmes").parentElement;
+    await userEvent.click(cardElement!);
 
     expect(onCardSelectMock).toHaveBeenCalledTimes(1);
     expect(onCardSelectMock).toHaveBeenCalledWith(mockCards[0]);
@@ -135,28 +141,54 @@ describe("DraftPile Component", () => {
       />
     );
 
-    const cardElement = screen.getByText("Sherlock Holmes");
-    await userEvent.click(cardElement);
+    const cardElement = screen.getByText("Sherlock Holmes").parentElement;
+    await userEvent.click(cardElement!);
 
     expect(onCardSelectMock).not.toHaveBeenCalled();
   });
 
-  it("applies 'selected' class to the selected card", () => {
+  it("applies 'selected' class to the selected card's container", () => {
     render(
       <DraftPile
         cards={mockCards}
-        selectedCard={mockCards[0]}
+        selectedCard={mockCards[0]} // Sherlock está seleccionado
         onCardSelect={onCardSelectMock}
         isMyTurn={true}
       />
     );
 
-    const selectedCardElement =
+    const selectedCardContainer =
       screen.getByText("Sherlock Holmes").parentElement;
-    expect(selectedCardElement).toHaveClass("selected");
+    expect(selectedCardContainer).toHaveClass("selected");
 
-    const notSelectedCardElement =
+    const notSelectedCardContainer =
       screen.getByText("Mistery Unveiled").parentElement;
-    expect(notSelectedCardElement).not.toHaveClass("selected");
+    expect(notSelectedCardContainer).not.toHaveClass("selected");
+  });
+
+  it("changes card size prop when expanded", async () => {
+    render(
+      <DraftPile
+        cards={mockCards}
+        selectedCard={null}
+        onCardSelect={onCardSelectMock}
+        isMyTurn={true}
+      />
+    );
+
+    // Estado inicial (colapsado)
+    expect(screen.getByText("Sherlock Holmes")).toHaveAttribute(
+      "data-size",
+      "medium"
+    );
+
+    // Expandir
+    await userEvent.click(screen.getByRole("button", { name: /Ver Draft/i }));
+
+    // Estado expandido
+    expect(screen.getByText("Sherlock Holmes")).toHaveAttribute(
+      "data-size",
+      "large"
+    );
   });
 });

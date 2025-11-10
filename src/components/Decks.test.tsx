@@ -51,11 +51,24 @@ describe("Decks Component", () => {
     expect(screen.getByTestId("card-base")).toBeInTheDocument();
   });
 
+  it("does NOT render the card count if cardsLeftCount is null", () => {
+    render(<Decks discardedCards={[]} cardsLeftCount={null} />);
+    // La forma más segura de verificar que no está, es por la clase
+    const { container } = render(
+      <Decks discardedCards={[]} cardsLeftCount={null} />
+    );
+    expect(container.querySelector(".card-counter")).toBeNull();
+  });
+
   it("renders an empty discard pile when no cards are discarded", () => {
     render(<Decks discardedCards={[]} cardsLeftCount={10} />);
     // Verificamos que no se renderice ninguna carta específica
     expect(screen.queryByTestId("detective-card")).not.toBeInTheDocument();
     expect(screen.queryByTestId("event-card")).not.toBeInTheDocument();
+    // El componente renderiza un <p></p> vacío
+    expect(screen.getByTitle("Descarte (tope visible)").innerHTML).toBe(
+      "<p></p>"
+    );
   });
 
   it("renders the top card of the discard pile if it's a detective", () => {
@@ -63,7 +76,7 @@ describe("Decks Component", () => {
     const topCard = screen.getByTestId("detective-card");
     expect(topCard).toBeInTheDocument();
     expect(topCard).toHaveTextContent("Last Discarded Detective");
-    // Verificamos que la segunda carta del array NO se renderice
+    // Verificamos que la segunda carta del array (Previous Card) NO se renderice
     expect(screen.queryByText("Previous Card")).not.toBeInTheDocument();
   });
 

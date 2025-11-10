@@ -1,53 +1,86 @@
-import { render, screen } from "@testing-library/react";
+/// <reference types="vitest" />
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, it, expect, vi } from "vitest";
-import You from "./MyHand"; // 'You' is the name of the default export
+import You from "./MyHand"; // 'You' is the default export
 import { type PlayerStateResponse } from "../services/playerService";
+import { type SetResponse } from "../services/setService";
+import { type SecretResponse } from "../services/secretService";
+import { type CardResponse } from "../services/cardService";
 
-// mock myhand
+// Mocks de todos los componentes hijos
 vi.mock("./Cards/Detectives", () => ({
-  default: ({ name, onCardClick, isSelected }: any) => (
+  default: ({ name, onCardClick, isSelected, size }: any) => (
     <button
       data-testid="detective-card"
-      onClick={() => onCardClick()}
+      onClick={onCardClick}
       data-selected={isSelected}
+      data-size={size}
     >
       {name}
     </button>
   ),
 }));
 vi.mock("./Cards/Events", () => ({
-  default: ({ name, onCardClick, isSelected }: any) => (
+  default: ({ name, onCardClick, isSelected, size }: any) => (
     <button
       data-testid="event-card"
-      onClick={() => onCardClick()}
+      onClick={onCardClick}
       data-selected={isSelected}
+      data-size={size}
     >
       {name}
     </button>
   ),
 }));
 vi.mock("./Cards/Secret", () => ({
-  default: ({ onClick, isSelected }: any) => (
+  default: ({ onClick, isSelected, secret_id, revealed, murderer }: any) => (
     <button
-      data-testid="secret"
+      data-testid="secret-card"
       onClick={onClick}
       data-selected={isSelected}
+      data-secret-id={secret_id}
+      data-revealed={revealed}
+      data-murderer={murderer}
     ></button>
   ),
 }));
 vi.mock("./Set", () => ({
-  default: ({ name }: any) => <div data-testid="set">{name}</div>,
+  default: ({ name, onSetClick, isSelected, set_id }: any) => (
+    <div
+      data-testid="set-component"
+      onClick={() => onSetClick && onSetClick({ set_id, name })} // Simulamos el clic con el objeto set
+      data-selected={isSelected}
+      data-set-id={set_id}
+    >
+      {name}
+    </div>
+  ),
+}));
+vi.mock("./Button", () => ({
+  default: ({ label, onClick }: any) => (
+    <button onClick={onClick}>{label}</button>
+  ),
 }));
 
 describe("MyHand (You) Component", () => {
-  // mock player
+  let onCardsSelectedMock: ReturnType<typeof vi.fn>;
+  let onSecretClickMock: ReturnType<typeof vi.fn>;
+  let onSetClickMock: ReturnType<typeof vi.fn>;
+  let onClickMock: ReturnType<typeof vi.fn>;
+
+  // Mock robusto con todas las propiedades necesarias
   const mockPlayer: PlayerStateResponse = {
     player_id: 1,
-    name: "Jugador",
+    name: "Ulises",
     host: true,
     game_id: 1,
     birth_date: "2000-01-01",
+    social_disgrace: false,
+    // CORREGIDO: de 'false' a 'null'
+    pending_action: null,
+    votes_received: 0,
+    // ---
     cards: [
       {
         card_id: 1,
@@ -57,7 +90,7 @@ describe("MyHand (You) Component", () => {
         player_id: 1,
         picked_up: true,
         dropped: false,
-      },
+      } as CardResponse,
       {
         card_id: 2,
         type: "event",
@@ -66,15 +99,8 @@ describe("MyHand (You) Component", () => {
         player_id: 1,
         picked_up: true,
         dropped: false,
-      },
-      {
-        type: "event",
-        name: "Card without ID",
-        game_id: 1,
-        player_id: 1,
-        picked_up: true,
-        dropped: false,
-      } as any,
+      } as CardResponse,
+      { type: "event", name: "Card without ID" } as any, // Para probar el guard
     ],
     secrets: [
       {
@@ -83,174 +109,204 @@ describe("MyHand (You) Component", () => {
         murderer: false,
         accomplice: false,
         game_id: 1,
-      },
+      } as SecretResponse,
       {
         secret_id: 11,
         revelated: false,
-        murderer: false,
+        murderer: true,
         accomplice: false,
         game_id: 1,
-      },
+      } as SecretResponse,
     ],
     sets: [
-      { set_id: 20, name: "Mi Set", detective: [], game_id: 1, player_id: 1 },
+      {
+        set_id: 20,
+        name: "Mi Set",
+        detective: [],
+        game_id: 1,
+        player_id: 1,
+      } as SetResponse,
     ],
   };
 
-  it("debería renderizar el nombre, cartas, secretos y sets del jugador", () => {
-    render(
-      <You
-        player={mockPlayer}
-        onCardsSelected={() => {}}
-        selectedCardIds={[]}
-        isMyTurn={true}
-        selectedCard={null}
-        onSecretClick={() => {}}
-        selectedSecret={null}
-        isSecretSelectionStep={false}
-      />
-    );
+  // Props base para no repetir
+  const baseProps = {
+    player: mockPlayer,
+    onCardsSelected: vi.fn(),
+    selectedCardIds: [],
+    isMyTurn: false,
+    selectedCard: null,
+    onSecretClick: vi.fn(),
+    selectedSecret: null,
+    isSecretSelectionStep: false,
+    onClick: vi.fn(),
+    isSelected: false,
+    selectable: false,
+    isSocialDisgrace: false, // Esta es la prop del componente, no la del player
+    onSetClick: vi.fn(),
+    selectedSet: null,
+    isSetSelectionStep: false,
+  };
 
-    expect(screen.getByText("Jugador")).toBeInTheDocument();
+  beforeEach(() => {
+    vi.clearAllMocks();
+    cleanup();
+    onCardsSelectedMock = vi.fn();
+    onSecretClickMock = vi.fn();
+    onSetClickMock = vi.fn();
+    onClickMock = vi.fn();
+    // Reiniciamos las props base con los mocks frescos
+    baseProps.onCardsSelected = onCardsSelectedMock;
+    baseProps.onSecretClick = onSecretClickMock;
+    baseProps.onSetClick = onSetClickMock;
+    baseProps.onClick = onClickMock;
+  });
+
+  it("should render name, cards, secrets, and sets", () => {
+    render(<You {...baseProps} />);
+    expect(screen.getByText("Ulises")).toBeInTheDocument();
     expect(screen.getByText("Poirot")).toBeInTheDocument();
     expect(screen.getByText("Ashes")).toBeInTheDocument();
-    expect(screen.getAllByTestId("secret")).toHaveLength(2);
-    expect(screen.getByTestId("set")).toBeInTheDocument();
+    expect(screen.getAllByTestId("secret-card")).toHaveLength(2);
+    expect(screen.getByText("Mi Set")).toBeInTheDocument();
   });
 
-  it("debería aplicar la clase 'myturn' cuando isMyTurn es true", () => {
-    render(
-      <You
-        player={mockPlayer}
-        onCardsSelected={() => {}}
-        selectedCardIds={[]}
-        isMyTurn={true}
-        selectedCard={null}
-        onSecretClick={() => {}}
-        selectedSecret={null}
-        isSecretSelectionStep={false}
-      />
-    );
-    expect(screen.getByText("Jugador")).toHaveClass("myturn");
+  it("should apply 'myturn' class when isMyTurn is true", () => {
+    render(<You {...baseProps} isMyTurn={true} />);
+    expect(screen.getByText("Ulises")).toHaveClass("myturn");
   });
 
-  it("debería llamar a onCardsSelected con la carta correcta al hacer clic", async () => {
-    const handleCardClick = vi.fn();
-    render(
-      <You
-        player={mockPlayer}
-        onCardsSelected={handleCardClick}
-        selectedCardIds={[]}
-        isMyTurn={true}
-        selectedCard={null}
-        onSecretClick={() => {}}
-        selectedSecret={null}
-        isSecretSelectionStep={false}
-      />
-    );
-
-    const poirotCard = screen.getByText("Poirot");
-    await userEvent.click(poirotCard);
-
-    expect(handleCardClick).toHaveBeenCalledTimes(1);
-    expect(handleCardClick).toHaveBeenCalledWith(mockPlayer.cards[0]); // Asserts it's called with the full card object
+  it("should render social disgrace banner if isSocialDisgrace is true", () => {
+    // Probamos la prop del componente
+    render(<You {...baseProps} isSocialDisgrace={true} />);
+    expect(screen.getByText("DESGRACIA SOCIAL")).toBeInTheDocument();
   });
 
-  it("no debería renderizar una carta si su card_id es undefined", () => {
-    render(
-      <You
-        player={mockPlayer}
-        onCardsSelected={() => {}}
-        selectedCardIds={[]}
-        isMyTurn={true}
-        selectedCard={null}
-        onSecretClick={() => {}}
-        selectedSecret={null}
-        isSecretSelectionStep={false}
-      />
-    );
+  it("should not render card if card_id is undefined", () => {
+    render(<You {...baseProps} />);
     expect(screen.queryByText("Card without ID")).not.toBeInTheDocument();
   });
 
-  describe("Lógica de Selección de Secretos", () => {
-    it("debería ser clickeable un secreto revelado si es el turno y el paso de selección", async () => {
-      const handleSecretClick = vi.fn();
-      render(
-        <You
-          player={mockPlayer}
-          onCardsSelected={() => {}}
-          selectedCardIds={[]}
-          isMyTurn={true}
-          selectedCard={null}
-          onSecretClick={handleSecretClick}
-          selectedSecret={null}
-          isSecretSelectionStep={true}
-        />
-      );
+  describe("Expansion Logic", () => {
+    it("should toggle button label and card size on click", async () => {
+      render(<You {...baseProps} />);
+      const poirotCard = screen.getByText("Poirot");
+      const toggleButton = screen.getByRole("button", { name: "Ampliar" });
 
-      const revealedSecret = screen.getAllByTestId("secret")[0]; // El primer secreto está revelado
-      await userEvent.click(revealedSecret);
-      expect(handleSecretClick).toHaveBeenCalledTimes(1);
+      // Estado inicial (compacto)
+      expect(poirotCard).toHaveAttribute("data-size", "medium");
+
+      // Expandir
+      await userEvent.click(toggleButton);
+      expect(
+        screen.getByRole("button", { name: "Volver" })
+      ).toBeInTheDocument();
+      expect(poirotCard).toHaveAttribute("data-size", "large");
+
+      // Contraer
+      await userEvent.click(screen.getByRole("button", { name: "Volver" }));
+      expect(
+        screen.getByRole("button", { name: "Ampliar" })
+      ).toBeInTheDocument();
+      expect(poirotCard).toHaveAttribute("data-size", "medium");
+    });
+  });
+
+  describe("Card Interaction", () => {
+    it("should call onCardsSelected with the card object on click", async () => {
+      render(<You {...baseProps} />);
+      await userEvent.click(screen.getByText("Poirot"));
+      expect(onCardsSelectedMock).toHaveBeenCalledTimes(1);
+      expect(onCardsSelectedMock).toHaveBeenCalledWith(mockPlayer.cards[0]);
     });
 
-    it("NO debería ser clickeable si no es el turno del jugador", async () => {
-      const handleSecretClick = vi.fn();
-      render(
-        <You
-          player={mockPlayer}
-          onCardsSelected={() => {}}
-          selectedCardIds={[]}
-          isMyTurn={false}
-          selectedCard={null}
-          onSecretClick={handleSecretClick}
-          selectedSecret={null}
-          isSecretSelectionStep={true}
-        />
+    it("should pass isSelected=true if card is in selectedCardIds", () => {
+      render(<You {...baseProps} selectedCardIds={[1, 3]} />);
+      expect(screen.getByText("Poirot")).toHaveAttribute(
+        "data-selected",
+        "true"
       );
+    });
 
-      const secret = screen.getAllByTestId("secret")[0];
+    it("should pass isSelected=true if card matches selectedCard", () => {
+      render(<You {...baseProps} selectedCard={mockPlayer.cards[1]} />);
+      expect(screen.getByText("Ashes")).toHaveAttribute(
+        "data-selected",
+        "true"
+      );
+    });
+  });
+
+  describe("Secret Interaction", () => {
+    it("should call onSecretClick when isSecretSelectionStep is true", async () => {
+      render(<You {...baseProps} isSecretSelectionStep={true} />);
+      const secret = screen.getAllByTestId("secret-card")[0]; // El primer secreto
       await userEvent.click(secret);
-      expect(handleSecretClick).not.toHaveBeenCalled();
+      expect(onSecretClickMock).toHaveBeenCalledTimes(1);
+      expect(onSecretClickMock).toHaveBeenCalledWith(mockPlayer.secrets[0]);
     });
 
-    it("NO debería ser clickeable si no es el paso de selección de secretos", async () => {
-      const handleSecretClick = vi.fn();
-      render(
-        <You
-          player={mockPlayer}
-          onCardsSelected={() => {}}
-          selectedCardIds={[]}
-          isMyTurn={true}
-          selectedCard={null}
-          onSecretClick={handleSecretClick}
-          selectedSecret={null}
-          isSecretSelectionStep={false}
-        />
-      );
-
-      const secret = screen.getAllByTestId("secret")[0];
+    it("should NOT be clickable if isSecretSelectionStep is false", async () => {
+      render(<You {...baseProps} isSecretSelectionStep={false} />);
+      const secret = screen.getAllByTestId("secret-card")[0];
       await userEvent.click(secret);
-      expect(handleSecretClick).not.toHaveBeenCalled();
+      expect(onSecretClickMock).not.toHaveBeenCalled();
     });
 
-    it("NO debería ser clickeable un secreto que no está revelado", async () => {
-      const handleSecretClick = vi.fn();
-      render(
-        <You
-          player={mockPlayer}
-          onCardsSelected={() => {}}
-          selectedCardIds={[]}
-          isMyTurn={true}
-          selectedCard={null}
-          onSecretClick={handleSecretClick}
-          selectedSecret={null}
-          isSecretSelectionStep={true}
-        />
-      );
+    it("should pass isSelected to the correct secret", () => {
+      render(<You {...baseProps} selectedSecret={mockPlayer.secrets[1]} />);
+      const secret1 = screen.getAllByTestId("secret-card")[0];
+      const secret2 = screen.getAllByTestId("secret-card")[1];
+      expect(secret1).toHaveAttribute("data-selected", "false");
+      expect(secret2).toHaveAttribute("data-selected", "true");
+    });
+  });
 
-      const unrevealedSecret = screen.getAllByTestId("secret")[1]; // El segundo secreto no está revelado
-      await userEvent.click(unrevealedSecret);
-      expect(handleSecretClick).not.toHaveBeenCalled();
+  describe("Set Interaction", () => {
+    it("should call onSetClick when isSetSelectionStep is true", async () => {
+      render(<You {...baseProps} isSetSelectionStep={true} />);
+      const set = screen.getByTestId("set-component");
+      await userEvent.click(set);
+      expect(onSetClickMock).toHaveBeenCalledTimes(1);
+      // El mock simula el clic devolviendo el objeto
+      expect(onSetClickMock).toHaveBeenCalledWith({
+        set_id: mockPlayer.sets[0].set_id,
+        name: mockPlayer.sets[0].name,
+      });
+    });
+
+    it("should NOT be clickable if isSetSelectionStep is false", async () => {
+      render(<You {...baseProps} isSetSelectionStep={false} />);
+      const set = screen.getByTestId("set-component");
+      await userEvent.click(set);
+      expect(onSetClickMock).not.toHaveBeenCalled();
+    });
+
+    it("should pass isSelected to the correct set", () => {
+      render(<You {...baseProps} selectedSet={mockPlayer.sets[0]} />);
+      const set = screen.getByTestId("set-component");
+      expect(set).toHaveAttribute("data-selected", "true");
+    });
+  });
+
+  describe("Player Name Interaction", () => {
+    it("should apply selectable and selected classes", () => {
+      render(<You {...baseProps} selectable={true} isSelected={true} />);
+      const name = screen.getByText("Ulises");
+      expect(name).toHaveClass("selectable");
+      expect(name).toHaveClass("selected");
+    });
+
+    it("should call onClick when selectable and clicked", async () => {
+      render(<You {...baseProps} selectable={true} />);
+      await userEvent.click(screen.getByText("Ulises"));
+      expect(onClickMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("should NOT call onClick when not selectable", async () => {
+      render(<You {...baseProps} selectable={false} />);
+      await userEvent.click(screen.getByText("Ulises"));
+      expect(onClickMock).not.toHaveBeenCalled();
     });
   });
 });

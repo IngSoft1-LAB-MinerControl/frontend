@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useGameContext } from "../../../context/GameContext";
-import cardService, { type CardResponse } from "../../../services/cardService";
+import cardService from "../../../services/cardService";
 
 export const useLookIntoAshes = () => {
   const { state, dispatch } = useGameContext();
