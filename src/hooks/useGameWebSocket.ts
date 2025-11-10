@@ -59,9 +59,11 @@ export const useGameWebSocket = (gameId: number | undefined) => {
           case "draftCards":
             dispatch({ type: "SET_DRAFT_PILE", payload: dataContent });
             break;
+          case "blackmailed":
+            console.log("Received BLACKMAILED broadcast:", dataContent);
+            dispatch({ type: "SET_BLACKMAIL_SECRET", payload: dataContent });
+            break;
           default:
-            // Este log ahora es redundante, pero lo podemos dejar
-            // para mensajes que no tengan un 'case'.
             console.log("Mensaje WS recibido sin tipo conocido:", message);
         }
       } catch (err) {

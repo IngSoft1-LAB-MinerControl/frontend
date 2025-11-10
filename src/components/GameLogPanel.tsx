@@ -37,9 +37,8 @@ export const GameLogPanel = () => {
   }, [pendingAction]);
 
   const isForcedToAct = useMemo(() => {
-    // Es "acción forzada" si NO es mi turno Y tengo una acción pendiente
-    return !isMyTurn && pendingAction === "REVEAL_SECRET";
-  }, [isMyTurn, pendingAction]);
+    return pendingAction === "REVEAL_SECRET";
+  }, [pendingAction]);
 
   const isForcedToTrade = useMemo(() => {
     // Es "trade forzado" si tengo cualquiera de estas acciones pendientes
@@ -54,6 +53,25 @@ export const GameLogPanel = () => {
       pendingAction === "VOTE" || pendingAction === "WAITING_VOTING_TO_END"
     );
   }, [pendingAction]);
+
+  // 1. Social Faux Pas: Forzado a revelar un secreto (público)
+  const isForcedToSocialFauxPas = useMemo(() => {
+    return pendingAction === "REVEAL_SOCIAL_FAUX_PAS_SECRET";
+  }, [pendingAction]);
+
+  // 2. Blackmailed: Forzado a elegir un secreto propio para mostrar (privado)
+  const isForcedToChooseBlackmailed = useMemo(() => {
+    return pendingAction === "CHOOSE_BLACKMAIL_SECRET";
+  }, [pendingAction]);
+
+  // 3. Jugador Objetivo de Blackmail (El que recibe el secreto)
+  const blackmailedTargetPlayer = useMemo(() => {
+    if (!isForcedToChooseBlackmailed) return null;
+    // Asumimos que el jugador que espera ver el secreto tiene la acción 'WAITING_FOR_BLACKMAIL'
+    return players.find((p) => p.pending_action === "WAITING_FOR_BLACKMAIL");
+  }, [players, isForcedToChooseBlackmailed]);
+
+  // 4. Lógica para saber si yo debo ver el modal del secreto ya revelado
 
   const showNotSoFastPrompt = useMemo(() => {
     const isDiscardStep =
@@ -202,11 +220,17 @@ export const GameLogPanel = () => {
                           await secretService.revealSecret(
                             selectedSecret.secret_id
                           );
-                          await playerService.unselectPlayer(myPlayerId);
                           dispatch({
                             type: "SET_SELECTED_SECRET",
                             payload: null,
                           });
+                          await playerService.unselectPlayer(myPlayerId);
+                          if (isMyTurn) {
+                            dispatch({
+                              type: "SET_STEP",
+                              payload: "discard_op",
+                            });
+                          }
                         } catch (err) {
                           console.error(
                             "Error al revelar secreto forzado:",
@@ -225,8 +249,58 @@ export const GameLogPanel = () => {
             );
           }
 
-          // --- Prioridad 3: Intercambio Normal ---
+          if (isForcedToSocialFauxPas) {
+            return (
+              <div className="turn-actions-container">
+                <div className="action-step-container">
+                  <TextType
+                    text={[
+                      "¡Social Faux Pas! Debes revelar un secreto de tu elección.",
+                    ]}
+                    typingSpeed={35}
+                  />
+                  {/* El botón es idéntico a isForcedToAct */}
+                  <div className="action-buttons-group">
+                    <button
+                      className="action-button"
+                      onClick={async () => {
+                        if (!selectedSecret) {
+                          alert(
+                            "Por favor, selecciona un secreto para revelar."
+                          );
+                          return;
+                        }
+                        // La llamada al servicio debe ser la misma
+                        // que la de isForcedToAct (revelar secreto y limpiar)
+                        try {
+                          await secretService.revealSecret(
+                            selectedSecret.secret_id
+                          );
+                          await playerService.unselectPlayer(myPlayerId);
+                          dispatch({
+                            type: "SET_SELECTED_SECRET",
+                            payload: null,
+                          });
+                        } catch (err) {
+                          console.error(
+                            "Error al revelar secreto forzado:",
+                            err
+                          );
+                          alert("Error.");
+                        }
+                      }}
+                      disabled={!selectedSecret || selectedSecret.revelated}
+                    >
+                      Revelar Secreto
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
           if (isForcedToTrade) {
+            // --- Prioridad 3: Intercambio Normal ---
             return (
               <div className="turn-actions-container">
                 <div className="action-step-container">
@@ -268,6 +342,62 @@ export const GameLogPanel = () => {
                       {pendingAction === "WAITING_FOR_TRADE_PARTNER"
                         ? "Esperando..."
                         : "Confirmar Carta"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          if (isForcedToChooseBlackmailed && blackmailedTargetPlayer) {
+            return (
+              <div className="turn-actions-container">
+                <div className="action-step-container">
+                  <TextType
+                    text={[
+                      `¡Te han chantajeado! Debes elegir uno de TUS secretos para mostrarle a ${blackmailedTargetPlayer.name}.`,
+                    ]}
+                    typingSpeed={35}
+                  />
+                  <div className="action-buttons-group">
+                    <button
+                      className="action-button"
+                      onClick={async () => {
+                        if (!selectedSecret) {
+                          alert(
+                            "Por favor, selecciona un secreto para mostrar."
+                          );
+                          return;
+                        }
+                        if (selectedSecret.revelated) {
+                          alert(
+                            "Ese secreto ya está revelado. Debes elegir uno oculto."
+                          );
+                          return;
+                        }
+                        if (!currentPlayer) return;
+
+                        try {
+                          // Asumo que tienes una función en eventService que maneja la revelación privada
+                          // Esta función pone el secreto en el estado 'blackmailedSecret' en el backend
+                          await eventService.activateBlackmailed(
+                            currentPlayer.player_id,
+                            blackmailedTargetPlayer.player_id,
+                            selectedSecret.secret_id
+                          );
+
+                          dispatch({
+                            type: "SET_SELECTED_SECRET",
+                            payload: null,
+                          });
+                        } catch (err) {
+                          console.error("Error al activar chantaje:", err);
+                          alert("Error al activar el chantaje.");
+                        }
+                      }}
+                      disabled={!selectedSecret || selectedSecret.revelated}
+                    >
+                      Mostrar Secreto
                     </button>
                   </div>
                 </div>
