@@ -12,11 +12,17 @@ export const useVote = () => {
   const [voted, setVoted] = useState(false);
 
   useEffect(() => {
-    if (myId) {
-      const isVoted = sessionStorage.getItem(`voted_${myId}`) === "true";
-      setVoted(isVoted);
+    // Si mi pendingAction se limpia a None o REVEAL_SECRET, limpiamos el voto.
+    const playerState = state.players.find((p) => p.player_id === myId);
+    if (
+      playerState &&
+      playerState.pending_action !== "VOTE" &&
+      playerState.pending_action !== "WAITING_VOTING_TO_END"
+    ) {
+      sessionStorage.removeItem(`voted_${myId}`);
+      setVoted(false);
     }
-  }, [myId]);
+  }, [state.players, myId]);
 
   const handleVote = async (targetPlayerId: number) => {
     if (lock || voted || !myId) return;

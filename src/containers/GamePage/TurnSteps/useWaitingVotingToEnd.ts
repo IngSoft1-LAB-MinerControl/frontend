@@ -1,27 +1,31 @@
 import { useEffect } from "react";
 import { useGameContext } from "../../../context/GameContext";
-import { usePrevious } from "../../../hooks/usePrevious"; // Asegúrate que la ruta sea correcta
+import { usePrevious } from "../../../hooks/usePrevious";
 
 export const useWaitingVotingToEnd = () => {
-  const { state, dispatch, isMyTurn, currentPlayer } = useGameContext();
-  const { currentStep } = state;
+  const { state, dispatch, isMyTurn } = useGameContext();
+  const { currentStep, players } = state;
+
+  // 1. Obtenemos el jugador activo (para obtener su pendingAction)
+  const currentPlayer = players.find((p) => p.player_id === state.myPlayerId);
   const pendingAction = currentPlayer?.pending_action;
+
+  // 2. Obtenemos el pendingAction anterior
   const prevPendingAction = usePrevious(pendingAction);
 
   useEffect(() => {
-    // Si no es mi turno o no estamos en este paso, no hacemos nada
+    // Solo me interesa esta lógica si soy el jugador activo y estoy en el paso de espera.
     if (!isMyTurn || currentStep !== "wait_voting_to_end") {
       return;
     }
-
-    if (prevPendingAction === "WAITING_VOTING_TO_END") {
-      if (
-        pendingAction !== "VOTE" &&
-        pendingAction !== "WAITING_VOTING_TO_END"
-      ) {
+    if (pendingAction !== "VOTE" && pendingAction !== "WAITING_VOTING_TO_END") {
+      console.log("Votación finalizada (Jugador activo). Avanzando.");
+      if (pendingAction === "REVEAL_SECRET") {
         console.log(
-          "Votación completada (detectada por hook). Avanzando a 'discard_op'."
+          "Turno se detiene. Esperando revelación forzada del ganador."
         );
+      } else {
+        // Si perdiste o todo terminó, voy a descarte.
         dispatch({ type: "SET_STEP", payload: "discard_op" });
       }
     }

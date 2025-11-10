@@ -43,6 +43,7 @@ export interface IGameState {
   activeSet: SetResponse | null; // Para saber qué set resolver
   lastCancelableEvent: LogEntry | null;
   lastCancelableSet: LogEntry | null;
+  blackmailedSecret: SecretResponse | null;
   logs: LogEntry[]; // Para el historial del panel
 
   // Estado de carga y errores
@@ -71,6 +72,7 @@ export type GameAction =
   | { type: "SET_ACTIVE_SET"; payload: SetResponse | null }
   | { type: "SET_LAST_CANCELABLE_EVENT"; payload: LogEntry | null }
   | { type: "SET_LAST_CANCELABLE_SET"; payload: LogEntry | null }
+  | { type: "SET_BLACKMAIL_SECRET"; payload: SecretResponse | null }
   | { type: "SET_LOGS"; payload: LogEntry[] }
 
   // Acciones de Carga/Error
@@ -129,6 +131,9 @@ export const gameReducer = (
 
     case "SET_LAST_CANCELABLE_SET":
       return { ...state, lastCancelableSet: action.payload };
+
+    case "SET_BLACKMAIL_SECRET":
+      return { ...state, blackmailedSecret: action.payload };
 
     case "SET_LOGS":
       return { ...state, logs: action.payload };
@@ -202,6 +207,7 @@ export const GameProvider = ({
     logs: [],
     lastCancelableEvent: null,
     lastCancelableSet: null,
+    blackmailedSecret: null,
     error: null,
     isLoading: false,
   };

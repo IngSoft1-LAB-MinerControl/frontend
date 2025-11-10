@@ -1,5 +1,6 @@
 import type { CardResponse } from "./cardService";
 import { httpServerUrl } from "./config";
+import type { SecretResponse } from "./secretService";
 
 async function cardsOffTheTable(playerId: number) {
   const response = await fetch(
@@ -205,6 +206,44 @@ async function follyTrade(
   return;
 }
 
+async function activateBlackmailed(
+  playerIdFrom: number,
+  playerIdTo: number,
+  secretId: number
+): Promise<SecretResponse> {
+  const response = await fetch(
+    `${httpServerUrl}/event/blackmailed/${playerIdFrom},${playerIdTo},${secretId}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || "Error al activar el chantaje");
+  }
+  return await response.json();
+}
+
+async function deactivateBlackmailed(
+  playerIdFrom: number,
+  playerIdTo: number
+): Promise<void> {
+  const response = await fetch(
+    `${httpServerUrl}/event/blackmailed/deactivate/${playerIdFrom},${playerIdTo}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || "Error al desactivar el chantaje");
+  }
+}
+
 const eventService = {
   cardsOffTheTable,
   andThenThereWasOneMore,
@@ -216,6 +255,8 @@ const eventService = {
   countNSF,
   initiateFolly,
   follyTrade,
+  activateBlackmailed,
+  deactivateBlackmailed,
 };
 
 export default eventService;

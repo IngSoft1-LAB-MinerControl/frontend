@@ -16,6 +16,7 @@ import destinations from "../../navigation/destinations";
 import { useGameContext } from "../../context/GameContext";
 import { useGameWebSocket } from "../../hooks/useGameWebSocket"; // 1. Importamos el nuevo hook
 import { GameLogPanel } from "../../components/GameLogPanel";
+import { BlackmailedModal } from "../../components/BlackmailedModal";
 
 export default function Gameboard() {
   const navigate = useNavigate();
@@ -36,6 +37,7 @@ export default function Gameboard() {
     selectedSet,
     selectedTargetPlayer,
     myPlayerId,
+    blackmailedSecret,
     error,
   } = state;
 
@@ -81,10 +83,74 @@ export default function Gameboard() {
 
   const pendingAction = currentPlayer?.pending_action;
 
-  const isForcedToAct = useMemo(() => {
-    // Tu lógica actual para 'revelar secreto' (¡perfecta!)
-    return !isMyTurn && pendingAction === "REVEAL_SECRET";
+  useEffect(() => {
+    // Solo me interesa esta lógica si es mi turno
+    if (!isMyTurn) return;
+
+    // Verificamos si estamos en un paso de espera de Trade/Folly
+    if (currentStep === "wait_trade" || currentStep === "wait_trade_folly") {
+      // Si el 'pendingAction' es null o undefined, el backend ya resolvió la acción.
+      if (pendingAction === null || pendingAction === undefined) {
+        console.log("Trade/Folly completado. Avanzando a 'discard_op'.");
+
+        // Limpiamos la selección del Target Player (si se usó)
+        dispatch({ type: "SET_SELECTED_CARD", payload: null });
+        dispatch({ type: "SET_SELECTED_TARGET_PLAYER", payload: null });
+
+        // ¡Avanzamos al siguiente paso del turno!
+        dispatch({ type: "SET_STEP", payload: "discard_op" });
+      }
+    }
+  }, [isMyTurn, currentStep, pendingAction, dispatch]);
+
+  const isActionRevealSecret = useMemo(() => {
+    return pendingAction === "REVEAL_SECRET";
+  }, [pendingAction]);
+
+  // (Crea esta variable para mantener tu lógica de trade, pero sin el bug)
+  const isForcedByOthers = useMemo(() => {
+    return (
+      !isMyTurn &&
+      (pendingAction === "REVEAL_SECRET" ||
+        pendingAction === "CHOOSE_BLACKMAIL_SECRET")
+    );
   }, [isMyTurn, pendingAction]);
+
+  const isForcedToSocialFauxPas = useMemo(() => {
+    return pendingAction === "REVEAL_SOCIAL_FAUX_PAS_SECRET";
+  }, [pendingAction]);
+
+  const isForcedToChooseBlackmailed = useMemo(() => {
+    return pendingAction === "CHOOSE_BLACKMAIL_SECRET";
+  }, [pendingAction]);
+
+  const amIInvolvedInBlackmail = useMemo(() => {
+    if (!currentPlayer || !blackmailedSecret) return false;
+
+    const playerShowingId = blackmailedSecret.player_id;
+    const playerTargeted = players.find(
+      (p) =>
+        p.player_id !== playerShowingId && p.pending_action === "BLACKMAILED"
+    );
+
+    return (
+      currentPlayer.player_id === playerShowingId ||
+      (playerTargeted && currentPlayer.player_id === playerTargeted.player_id)
+    );
+  }, [currentPlayer, blackmailedSecret, players]);
+
+  const isAnySecretForced = useMemo(() => {
+    return (
+      // Casos de turnos que no usan pendingAction
+      currentStep === "sel_reveal_secret" ||
+      currentStep === "sel_hide_secret" ||
+      currentStep === "and_then_there_was_one_more" ||
+      // Casos de PENDING_ACTION que fuerzan la selección
+      pendingAction === "REVEAL_SECRET" || // <-- Voto ganado o Set de Poirot
+      pendingAction === "REVEAL_SOCIAL_FAUX_PAS_SECRET" ||
+      pendingAction === "CHOOSE_BLACKMAIL_SECRET"
+    );
+  }, [currentStep, pendingAction]);
 
   const handleSetSelect = (set: SetResponse | undefined) => {
     const newSet =
@@ -163,6 +229,9 @@ export default function Gameboard() {
   return (
     <div className="game-page">
       {error && <div className="game-error-banner">{error}</div>}
+      {blackmailedSecret && amIInvolvedInBlackmail && (
+        <BlackmailedModal secret={blackmailedSecret} players={players} />
+      )}
       <div className="game-board-layout">
         <main className="table-grid">
           <section className="area-top">
@@ -218,12 +287,7 @@ export default function Gameboard() {
                 selectedCard={selectedCard}
                 onSecretClick={handleSecretSelect}
                 selectedSecret={selectedSecret}
-                isSecretSelectionStep={
-                  currentStep === "sel_reveal_secret" ||
-                  currentStep === "sel_hide_secret" ||
-                  currentStep === "and_then_there_was_one_more" ||
-                  isForcedToAct
-                }
+                isSecretSelectionStep={isAnySecretForced}
                 onClick={() => {
                   if (
                     currentStep === "and_then_there_was_one_more" &&
