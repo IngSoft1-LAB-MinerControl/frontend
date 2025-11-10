@@ -49,7 +49,6 @@ const BlackmailedModal: React.FC<BlackmailedModalProps> = ({
       title = `${playerShowing.name} te ha mostrado su secreto:`;
     }
   }
-
   return (
     <div className="modal-overlay">
       <div className="modal-content">
@@ -184,6 +183,27 @@ export default function Gameboard() {
     return players.find((p) => p.pending_action === "WAITING_FOR_BLACKMAIL");
   }, [players, isForcedToChooseBlackmailed]);
 
+  const playerShowing = useMemo(() => {
+    if (!blackmailedSecret) return null;
+    return players.find((p) => p.player_id === blackmailedSecret.player_id);
+  }, [players, blackmailedSecret]);
+
+  const playerTargeted = useMemo(() => {
+    if (!blackmailedSecret) return null;
+    return players.find(
+      (p) =>
+        p.player_id !== blackmailedSecret.player_id &&
+        p.pending_action === "BLACKMAILED"
+    );
+  }, [players, blackmailedSecret]);
+
+  const amIInvolvedInBlackmail = useMemo(() => {
+    if (!currentPlayer || !playerShowing || !playerTargeted) return false;
+    return (
+      currentPlayer.player_id === playerShowing.player_id ||
+      currentPlayer.player_id === playerTargeted.player_id
+    );
+  }, [currentPlayer, playerShowing, playerTargeted]);
   useEffect(() => {
     if (currentStep === "wait_trade" || currentStep === "wait_trade_folly") {
       if (pendingAction === null || pendingAction === undefined) {
@@ -317,7 +337,7 @@ export default function Gameboard() {
   return (
     <div className="game-page">
       {error && <div className="game-error-banner">{error}</div>}
-      {blackmailedSecret && currentPlayer && (
+      {blackmailedSecret && currentPlayer && amIInvolvedInBlackmail && (
         <BlackmailedModal
           secret={blackmailedSecret}
           onClose={handleCloseBlackmailedModal}
