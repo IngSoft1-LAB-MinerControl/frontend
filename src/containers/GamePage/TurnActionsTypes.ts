@@ -23,4 +23,5 @@ export type Steps =
   | "delay_escape_selection"
   | "add_detective"
   | "dead_card_folly"
-  | "wait_trade_folly";
+  | "wait_trade_folly"
+  | "choose_blackmailed_secret";

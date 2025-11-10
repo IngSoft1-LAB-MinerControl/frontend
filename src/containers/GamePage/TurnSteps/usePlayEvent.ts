@@ -54,7 +54,6 @@ export const usePlayEvent = () => {
 
           setLock(false);
           return;
-
         case "Early train to paddington":
           await eventService.earlyTrainPaddington(game.game_id, myPlayerId);
           await cardService.discardSelectedList(myPlayerId, [

@@ -13,14 +13,65 @@ import type { SetResponse } from "../../services/setService";
 import type { Steps } from "./TurnActionsTypes";
 import type { SecretResponse } from "../../services/secretService";
 import secretService from "../../services/secretService";
-import playerService from "../../services/playerService";
 import TextType from "../../components/TextType";
 import destinations from "../../navigation/destinations";
 import { VoteStep } from "./TurnSteps/VoteStep";
 
 import { useGameContext } from "../../context/GameContext";
 import { useGameWebSocket } from "../../hooks/useGameWebSocket"; // 1. Importamos el nuevo hook
+import Secret from "../../components/Cards/Secret";
 import eventService from "../../services/eventService";
+
+interface BlackmailedModalProps {
+  secret: SecretResponse;
+  onClose: () => void;
+  currentPlayerId: number;
+  players: PlayerStateResponse[];
+}
+
+const BlackmailedModal: React.FC<BlackmailedModalProps> = ({
+  secret,
+  onClose,
+  currentPlayerId,
+  players,
+}) => {
+  const playerShowing = players.find((p) => p.player_id === secret.player_id);
+  const playerTargeted = players.find(
+    (p) =>
+      p.player_id !== secret.player_id && p.pending_action === "BLACKMAILED"
+  );
+
+  let title = "Secreto por Chantaje";
+  if (playerShowing && playerTargeted) {
+    if (currentPlayerId === playerShowing.player_id) {
+      title = `Le mostraste tu secreto a ${playerTargeted.name}:`;
+    } else {
+      title = `${playerShowing.name} te ha mostrado su secreto:`;
+    }
+  }
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <h3>{title}</h3>
+        <div className="modal-secret-container">
+          <Secret
+            secret_id={secret.secret_id}
+            mine={secret.player_id === currentPlayerId}
+            revealed={true}
+            murderer={secret.murderer}
+            accomplice={secret.accomplice}
+            size="large"
+            isSelected={false}
+          />
+        </div>
+        <button className="action-button" onClick={onClose}>
+          Entendido
+        </button>
+      </div>
+    </div>
+  );
+};
 
 export default function Gameboard() {
   const navigate = useNavigate();
@@ -43,6 +94,7 @@ export default function Gameboard() {
     selectedSet,
     selectedTargetPlayer,
     myPlayerId,
+    blackmailedSecret,
     error,
   } = state;
 
@@ -122,6 +174,15 @@ export default function Gameboard() {
       pendingAction === "WAITING_FOR_FOLLY_TRADE"
     );
   }, [pendingAction]);
+
+  const isForcedToChooseBlackmailed = useMemo(() => {
+    return pendingAction === "CHOOSE_BLACKMAIL_SECRET";
+  }, [pendingAction]);
+
+  const blackmailedTargetPlayer = useMemo(() => {
+    if (!isForcedToChooseBlackmailed) return null;
+    return players.find((p) => p.pending_action === "WAITING_FOR_BLACKMAIL");
+  }, [players, isForcedToChooseBlackmailed]);
 
   useEffect(() => {
     if (currentStep === "wait_trade" || currentStep === "wait_trade_folly") {
@@ -223,11 +284,47 @@ export default function Gameboard() {
     return ordered[targetIndex];
   };
 
+  const handleCloseBlackmailedModal = async () => {
+    if (!currentPlayer) return;
+    if (!blackmailedSecret) return;
+
+    const playerShowingId = blackmailedSecret.player_id;
+    const playerTargeted = players.find(
+      (p) =>
+        p.player_id !== playerShowingId && p.pending_action === "BLACKMAILED"
+    );
+
+    if (playerTargeted && playerShowingId != null) {
+      try {
+        await eventService.deactivateBlackmailed(
+          playerShowingId,
+          playerTargeted.player_id
+        );
+        console.log("Blackmail modal cerrado, pending_action reseteado.");
+      } catch (err) {
+        console.error("Error al desactivar blackmail:", err);
+      }
+    } else if (!playerShowingId) {
+      console.warn(
+        "No se pudo desactivar blackmail: playerShowingId indefinido."
+      );
+    }
+
+    dispatch({ type: "SET_BLACKMAILED_SECRET", payload: null });
+  };
+
   console.log("RENDERIZANDO Gameboard. Step:", currentStep);
   return (
     <div className="game-page">
       {error && <div className="game-error-banner">{error}</div>}
-
+      {blackmailedSecret && currentPlayer && (
+        <BlackmailedModal
+          secret={blackmailedSecret}
+          onClose={handleCloseBlackmailedModal}
+          currentPlayerId={currentPlayer.player_id}
+          players={players}
+        />
+      )}
       <main className="table-grid">
         <section className="area-top">
           <div className="opponents-row">
@@ -247,13 +344,13 @@ export default function Gameboard() {
                   currentStep === "sel_hide_secret"
                 }
                 onClick={() => handleSelectPlayer(p)}
-                selectable={
-                  currentStep === "cards_off_the_table" ||
-                  currentStep === "and_then_there_was_one_more" ||
-                  currentStep === "sel_player_reveal" ||
-                  currentStep === "point_your_suspicions" ||
-                  currentStep === "card_trade"
-                }
+                selectable={[
+                  "cards_off_the_table",
+                  "and_then_there_was_one_more",
+                  "sel_player_reveal",
+                  "point_your_suspicions",
+                  "card_trade",
+                ].includes(currentStep)}
                 isSelected={selectedTargetPlayer?.player_id === p.player_id}
               />
             ))}
@@ -283,10 +380,13 @@ export default function Gameboard() {
               onSecretClick={handleSecretSelect}
               selectedSecret={selectedSecret}
               isSecretSelectionStep={
-                currentStep === "sel_reveal_secret" ||
-                currentStep === "sel_hide_secret" ||
-                currentStep === "and_then_there_was_one_more" ||
-                isForcedToAct
+                [
+                  "sel_reveal_secret",
+                  "sel_hide_secret",
+                  "and_then_there_was_one_more",
+                ].includes(currentStep) ||
+                isForcedToAct ||
+                isForcedToChooseBlackmailed
               }
               onClick={() => {
                 if (
@@ -466,6 +566,59 @@ export default function Gameboard() {
                     {pendingAction === "WAITING_FOR_FOLLY_TRADE"
                       ? "Esperando..."
                       : "Confirmar Carta"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          {isForcedToChooseBlackmailed && blackmailedTargetPlayer && (
+            <div className="turn-actions-container">
+              <div className="action-step-container">
+                <TextType
+                  text={[
+                    `¡Te han chantajeado! Debes elegir uno de TUS secretos para mostrarle a ${blackmailedTargetPlayer.name}.`,
+                  ]}
+                  typingSpeed={35}
+                />
+                <div className="action-buttons-group">
+                  <button
+                    className="action-button"
+                    onClick={async () => {
+                      if (!selectedSecret) {
+                        alert("Por favor, selecciona un secreto para mostrar.");
+                        return;
+                      }
+                      if (selectedSecret.revelated) {
+                        alert(
+                          "Ese secreto ya está revelado. Debes elegir uno oculto."
+                        );
+                        return;
+                      }
+                      if (!currentPlayer) return;
+
+                      try {
+                        // ¡Llamamos al endpoint que borramos y volvimos a añadir!
+                        await eventService.activateBlackmailed(
+                          currentPlayer.player_id,
+                          blackmailedTargetPlayer.player_id,
+                          selectedSecret.secret_id
+                        );
+
+                        // El backend se encargará del broadcast
+                        // El WebSocket recibirá el 'blackmailed' y mostrará el modal
+
+                        dispatch({
+                          type: "SET_SELECTED_SECRET",
+                          payload: null,
+                        });
+                      } catch (err) {
+                        console.error("Error al activar chantaje:", err);
+                        alert("Error al activar el chantaje.");
+                      }
+                    }}
+                    disabled={!selectedSecret || selectedSecret.revelated}
+                  >
+                    Mostrar Secreto
                   </button>
                 </div>
               </div>

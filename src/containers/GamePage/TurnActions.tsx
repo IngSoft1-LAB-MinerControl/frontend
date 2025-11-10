@@ -99,7 +99,6 @@ export default function TurnActions() {
             return <DeadCardFollyStep />;
           case "wait_trade_folly":
             return <WaitTradeFollyStep />;
-
           // --- Pasos de Sets ---
           case "sel_reveal_secret":
             return <RevealSecretStep />;
