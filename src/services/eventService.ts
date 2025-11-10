@@ -1,6 +1,5 @@
 import type { CardResponse } from "./cardService";
 import { httpServerUrl } from "./config";
-import type { SetResponse } from "./setService";
 
 async function cardsOffTheTable(playerId: number) {
   const response = await fetch(
