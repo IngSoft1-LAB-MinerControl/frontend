@@ -152,11 +152,11 @@ h1 {
   flex-grow: 1;
 
   /* Le da una altura mínima por si acaso */
-  min-height: 350px;
+  /* min-height: 350px; */
 
   width: 100%;
   max-width: 450px; /* (Opcional) Limita el ancho */
 
   /* Hack para que el flex-grow funcione bien con el 100% de los hijos */
-  height: 0;
+  /* height: 0; */
 }

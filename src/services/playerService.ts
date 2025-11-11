@@ -129,6 +129,7 @@ async function votePlayer(
     throw error;
   }
 }
+
 const playerService = {
   createPlayer,
   getPlayersByGame,

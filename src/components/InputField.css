@@ -1,6 +1,6 @@
 .input-field {
   background-color: transparent;
-  color: #2a1713;
+  /* ELIMINADO: color: #2a1713; <--- ESTO ES LO QUE HACÍA EL TEXTO OSCURO */
   border: 2px solid #2a1713a0;
   border-radius: 6px;
   font-weight: 600;
@@ -26,6 +26,7 @@
   animation: pulseBorder 1s infinite ease-in-out;
 }
 
+/* Estas reglas ya fuerzan el color a blanco en error, lo cual está bien */
 .input-field.input-error::placeholder {
   color: white;
   opacity: 1;

@@ -63,6 +63,10 @@ export const useGameWebSocket = (gameId: number | undefined) => {
             console.log("Received BLACKMAILED broadcast:", dataContent);
             dispatch({ type: "SET_BLACKMAIL_SECRET", payload: dataContent });
             break;
+          case "Chat":
+            dispatch({ type: "ADD_CHAT_MESSAGE", payload: dataContent });
+            break;
+
           default:
             console.log("Mensaje WS recibido sin tipo conocido:", message);
         }

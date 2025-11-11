@@ -17,6 +17,7 @@ import { useGameContext } from "../../context/GameContext";
 import { useGameWebSocket } from "../../hooks/useGameWebSocket"; // 1. Importamos el nuevo hook
 import { GameLogPanel } from "../../components/GameLogPanel";
 import { BlackmailedModal } from "../../components/BlackmailedModal";
+import { Chat } from "../../components/Chat";
 
 export default function Gameboard() {
   const navigate = useNavigate();
@@ -310,8 +311,10 @@ export default function Gameboard() {
               <div className="empty-hint">Esperando jugadores…</div>
             )}
           </section>
+          <aside className="chat-panel">
+            <Chat />
+          </aside>
         </main>
-
         <aside className="game-log-panel">
           <GameLogPanel />
         </aside>
