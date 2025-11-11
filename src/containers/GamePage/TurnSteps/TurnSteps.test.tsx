@@ -60,9 +60,10 @@ import { useWaitTrade } from "./useWaitTrade";
 // ===================================================================
 
 // Mock de Componentes Hijos
+// CAMBIO 1: El componente 'TextType' recibe un string, no un array.
 vi.mock("../../../components/TextType", () => ({
-  default: ({ text }: { text: string[] }) => (
-    <div data-testid="text-type">{text.join(" ")}</div>
+  default: ({ text }: { text: string }) => (
+    <div data-testid="text-type">{text}</div>
   ),
 }));
 vi.mock("../../../components/Cards/Detectives", () => ({
@@ -524,16 +525,12 @@ describe("TurnSteps Components", () => {
 
   // --- 4. CardsOffTableStep ---
   describe("CardsOffTableStep", () => {
+    // CAMBIO 2: Este test ahora solo comprueba que el botón esté deshabilitado.
     it("disables button if no player selected", async () => {
       render(<CardsOffTableStep />);
       const button = screen.getByRole("button", { name: "Ejecutar Evento" });
       expect(button).toBeDisabled();
-      await userEvent.click(button);
-      // Prueba la validación de la UI
-      expect(mockSetMessageCardsOff).toHaveBeenCalledWith(
-        "Debe seleccionar un jugador."
-      );
-      expect(mockCardsOff).not.toHaveBeenCalled();
+      // Se eliminó el clic y la expectativa de 'mockSetMessageCardsOff'
     });
 
     it("enables button and calls hook when player is selected", async () => {

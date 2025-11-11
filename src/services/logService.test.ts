@@ -61,10 +61,8 @@ describe("logService", () => {
     const mockLogs = [{ log_id: 1, message: "Test" }];
     mockFetchSuccess(mockLogs);
     const result = await logService.getLogs(100);
-    expect(mockFetch).toHaveBeenCalledWith(
-      "http://mock-server.com/logs/100",
-      undefined // GET no tiene 2do argumento
-    );
+    // CORRECCIÓN: Un fetch tipo GET solo recibe un argumento.
+    expect(mockFetch).toHaveBeenCalledWith("http://mock-server.com/logs/100");
     expect(result).toEqual(mockLogs);
   });
 });

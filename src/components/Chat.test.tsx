@@ -40,6 +40,10 @@ describe("Chat Component", () => {
       myPlayerId: 1,
     };
 
+    // CORRECCIÓN: Mockear scrollIntoView
+    // JSDOM no tiene implementación de layout, así que esta función no existe.
+    window.HTMLDivElement.prototype.scrollIntoView = vi.fn();
+
     // Mock de Context
     vi.mocked(useGameContext).mockReturnValue({
       state: mockState,
@@ -73,14 +77,11 @@ describe("Chat Component", () => {
     const input = screen.getByPlaceholderText("Escribe un mensaje...");
     const sendButton = screen.getByRole("button", { name: "Enviar" });
 
-    // Escribir en el input
     await userEvent.type(input, "Mensaje de prueba");
     expect(input).toHaveValue("Mensaje de prueba");
 
-    // Enviar
     await userEvent.click(sendButton);
 
-    // Verificar
     expect(chatService.sendMessage).toHaveBeenCalledTimes(1);
     expect(chatService.sendMessage).toHaveBeenCalledWith(
       100, // game_id
@@ -88,7 +89,6 @@ describe("Chat Component", () => {
       "Mensaje de prueba"
     );
 
-    // Verificar que el input se limpió
     expect(input).toHaveValue("");
     expect(screen.queryByText(/Error al enviar/i)).not.toBeInTheDocument();
   });
@@ -104,13 +104,8 @@ describe("Chat Component", () => {
     await userEvent.type(input, "Mensaje fallido");
     await userEvent.click(sendButton);
 
-    // Verificar
     expect(chatService.sendMessage).toHaveBeenCalledTimes(1);
-
-    // El input NO se limpia
     expect(input).toHaveValue("Mensaje fallido");
-
-    // Se muestra el error
     expect(screen.getByText("API Falló")).toBeInTheDocument();
     expect(screen.getByText("API Falló")).toHaveClass("chat-error");
   });
@@ -120,16 +115,13 @@ describe("Chat Component", () => {
     const header = screen.getByText("Chat").parentElement; // El .chat-header
     const chatContainer = container.querySelector(".chat-container");
 
-    // Estado inicial (abierto)
     expect(chatContainer).not.toHaveClass("collapsed");
     expect(screen.getByRole("button", { name: "—" })).toBeInTheDocument();
 
-    // Click para cerrar
     await userEvent.click(header!);
     expect(chatContainer).toHaveClass("collapsed");
     expect(screen.getByRole("button", { name: "□" })).toBeInTheDocument();
 
-    // Click para abrir
     await userEvent.click(header!);
     expect(chatContainer).not.toHaveClass("collapsed");
     expect(screen.getByRole("button", { name: "—" })).toBeInTheDocument();

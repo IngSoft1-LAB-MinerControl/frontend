@@ -1,5 +1,4 @@
 /// <reference types="vitest" />
-// <--- CORRECCIÓN 1: ESTA LÍNEA ARREGLA EL ERROR DE 'vi'
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, cleanup } from "@testing-library/react";
 import { useGameWebSocket } from "./useGameWebSocket";
@@ -14,7 +13,6 @@ vi.mock("../services/config", () => ({
 vi.mock("../context/GameContext");
 
 // --- Mock del WebSocket Global ---
-// Esta variable la usaremos en los tests para controlar el WS
 let mockWebSocketInstance: {
   onopen: () => void;
   onmessage: (event: { data: string }) => void;
@@ -23,14 +21,19 @@ let mockWebSocketInstance: {
   close: ReturnType<typeof vi.fn>;
 };
 
-class MockWebSocket {
-  close = vi.fn();
-  // CORRECCIÓN 2: 'url' renombrado a '_url' para silenciar el warning
-  constructor(_url: string) {
-    // Almacenamos la instancia 'this' para controlarla desde el test
-    mockWebSocketInstance = this as any;
-  }
-}
+// CORRECCIÓN: Se usa vi.fn() para envolver la clase y poder espiarla
+const MockWebSocket = vi.fn((_url: string) => {
+  const instance = {
+    close: vi.fn(),
+    onopen: () => {},
+    onmessage: () => {},
+    onerror: () => {},
+    onclose: () => {},
+  };
+  mockWebSocketInstance = instance as any;
+  return instance;
+});
+
 vi.stubGlobal("WebSocket", MockWebSocket);
 // ---
 
@@ -41,33 +44,31 @@ describe("useGameWebSocket Hook", () => {
     vi.clearAllMocks();
     mockDispatch = vi.fn();
 
-    // Mockeamos el hook del contexto para espiar el dispatch
     vi.mocked(useGameContext).mockReturnValue({
       dispatch: mockDispatch,
     } as any);
   });
 
   afterEach(() => {
-    cleanup(); // Limpia los hooks renderizados
+    cleanup();
   });
 
   it("should not connect if gameId is undefined", () => {
     renderHook(() => useGameWebSocket(undefined));
-    // Si no hay gameId, no debería ni intentar crear el WebSocket
-    expect(mockWebSocketInstance).toBeUndefined();
+    expect(MockWebSocket).not.toHaveBeenCalled(); // Verificamos que el constructor no se llamó
   });
 
   it("should connect to the correct WebSocket URL", () => {
     renderHook(() => useGameWebSocket(123));
-    // Verifica que la URL se construyó correctamente
-    expect(vi.mocked(global.WebSocket)).toHaveBeenCalledWith(
+    // CORRECCIÓN: Así es como se testea un constructor mockeado
+    expect(MockWebSocket).toHaveBeenCalledWith(
       "ws://mock-server.com/ws/game/123"
     );
   });
 
+  // ... (el resto de los tests de este archivo estaban bien, los pego por las dudas)
   it("should dispatch SET_ERROR null on open", () => {
     renderHook(() => useGameWebSocket(123));
-    // Simulamos la apertura de la conexión
     act(() => {
       mockWebSocketInstance.onopen();
     });
@@ -79,7 +80,6 @@ describe("useGameWebSocket Hook", () => {
 
   it("should dispatch SET_ERROR on error", () => {
     renderHook(() => useGameWebSocket(123));
-    // Simulamos un error
     act(() => {
       mockWebSocketInstance.onerror(new Event("error"));
     });
@@ -91,16 +91,12 @@ describe("useGameWebSocket Hook", () => {
 
   it("should call ws.close on unmount", () => {
     const { unmount } = renderHook(() => useGameWebSocket(123));
-    // El hook se desmonta
     unmount();
     expect(mockWebSocketInstance.close).toHaveBeenCalledTimes(1);
   });
 
   describe("onmessage handling (switch statement)", () => {
-    // Helper para simular mensajes
     const simulateMessage = (type: string, data: any) => {
-      // El hook espera que 'message.data' sea un string JSON
-      // Y que 'data' (dataContent) también pueda ser un string JSON
       const dataString = JSON.stringify(data);
       const message = { type: type, data: dataString };
       act(() => {
@@ -126,7 +122,6 @@ describe("useGameWebSocket Hook", () => {
         type: "SET_GAME",
         payload: gameData,
       });
-      // Verifica el dispatch anidado
       expect(mockDispatch).toHaveBeenCalledWith({
         type: "SET_LOGS",
         payload: gameData.log,
@@ -196,7 +191,6 @@ describe("useGameWebSocket Hook", () => {
     it("should handle data not being a string (dataContent = message.data)", () => {
       renderHook(() => useGameWebSocket(123));
       const chatMsg = { sender_name: "Test", message: "Hola" };
-      // Esta vez 'data' NO es un string, es un objeto
       const message = { type: "Chat", data: chatMsg };
       act(() => {
         mockWebSocketInstance.onmessage({ data: JSON.stringify(message) });
@@ -210,21 +204,16 @@ describe("useGameWebSocket Hook", () => {
     it("should ignore unknown message types", () => {
       renderHook(() => useGameWebSocket(123));
       simulateMessage("TIPO_DESCONOCIDO", { data: "test" });
-      // El único dispatch debería ser el de onopen
       expect(mockDispatch).not.toHaveBeenCalled();
     });
 
     it("should catch errors if JSON.parse fails", () => {
       renderHook(() => useGameWebSocket(123));
       act(() => {
-        // Simulamos un onopen para limpiar el error
         mockWebSocketInstance.onopen();
-        // Limpiamos ese dispatch
         mockDispatch.mockClear();
-        // Enviamos basura
         mockWebSocketInstance.onmessage({ data: "esto no es json" });
       });
-      // No debe crashear, y no debe llamar a dispatch
       expect(mockDispatch).not.toHaveBeenCalled();
     });
   });

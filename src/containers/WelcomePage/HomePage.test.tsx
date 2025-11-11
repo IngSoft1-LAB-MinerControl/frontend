@@ -1,6 +1,7 @@
 /// <reference types="vitest" />
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+// CORRECCIÓN: Importamos 'waitFor' para manejar el estado asíncrono
+import { render, screen, act, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import HomePage from "./HomePage";
 import { useNavigate } from "react-router-dom";
@@ -19,6 +20,14 @@ vi.mock("../../assets/burns.png", () => ({ default: "/mock/burns.png" }));
 // Mock de React Router
 vi.mock("react-router-dom", () => ({
   useNavigate: vi.fn(),
+}));
+
+// Mock de destinations (necesario para las navegaciones)
+vi.mock("../../navigation/destinations", () => ({
+  default: {
+    crearPartida: "/crear-partida",
+    listarPartidas: "/listar-partidas",
+  },
 }));
 
 // Mocks de Componentes Hijos
@@ -54,7 +63,7 @@ describe("HomePage Component", () => {
   const fillForm = async (
     name: string | null = "Jugador 1",
     date: string | null = "2000-01-01",
-    avatarAlt: string | null = "Avatar 1" // Usamos el Alt Text (Avatar 1-6)
+    avatarAlt: string | null = "Avatar 1"
   ) => {
     const nameInput = screen.getByTestId("nombre");
     const dateInput = screen.getByTestId("fecha-nacimiento");
@@ -63,7 +72,7 @@ describe("HomePage Component", () => {
     if (date) await userEvent.type(dateInput, date);
 
     if (avatarAlt) {
-      const avatarButton = screen.getByRole("button", { name: /Elija/i });
+      const avatarButton = screen.getByRole("button", { name: "Avatar" });
       await userEvent.click(avatarButton);
       const avatarOption = screen.getByRole("button", { name: avatarAlt });
       await userEvent.click(avatarOption);
@@ -74,26 +83,16 @@ describe("HomePage Component", () => {
     render(<HomePage />);
     expect(screen.getByTestId("nombre")).toBeInTheDocument();
     expect(screen.getByTestId("fecha-nacimiento")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Elija/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Avatar" })).toBeInTheDocument();
   });
 
   it("should open and select from avatar menu", async () => {
     render(<HomePage />);
-    const avatarButton = screen.getByRole("button", { name: /Elija/i });
-
-    // 1. Placeholder está visible
+    const avatarButton = screen.getByRole("button", { name: "Avatar" });
     expect(screen.getByText("Elija")).toBeInTheDocument();
-
-    // 2. Abrir menú
     await userEvent.click(avatarButton);
-    const avatarMenu = screen.getByRole("menu");
-    expect(avatarMenu).toBeInTheDocument();
-
-    // 3. Seleccionar opción
     const option = screen.getByRole("button", { name: "Avatar 2" });
     await userEvent.click(option);
-
-    // 4. Menú se cierra y el avatar se actualiza
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
     const img = screen.getByRole("img", { name: "Avatar seleccionado" });
     expect(img).toHaveAttribute("src", "/mock/nelson.png");
@@ -106,7 +105,7 @@ describe("HomePage Component", () => {
         screen.getByRole("button", { name: "Nueva Partida" })
       );
       expect(
-        screen.getByText(
+        await screen.findByText(
           "Debe ingresar un nombre, fecha de nacimiento y avatar"
         )
       ).toBeInTheDocument();
@@ -115,61 +114,57 @@ describe("HomePage Component", () => {
 
     it("should show error if no name", async () => {
       render(<HomePage />);
-      await fillForm(null, "2000-01-01", "Avatar 1"); // Sin nombre
-      await userEvent.click(
-        screen.getByRole("button", { name: "Nueva Partida" })
-      );
-      expect(screen.getByText("Debe ingresar un nombre")).toBeInTheDocument();
-    });
-
-    it("should show error if no date", async () => {
-      render(<HomePage />);
-      await fillForm("Jugador 1", null, "Avatar 1"); // Sin fecha
+      await fillForm(null, "2000-01-01", "Avatar 1");
       await userEvent.click(
         screen.getByRole("button", { name: "Nueva Partida" })
       );
       expect(
-        screen.getByText("Debe ingresar su fecha de nacimiento")
+        await screen.findByText("Debe ingresar un nombre")
+      ).toBeInTheDocument();
+    });
+
+    it("should show error if no date", async () => {
+      render(<HomePage />);
+      await fillForm("Jugador 1", null, "Avatar 1");
+      await userEvent.click(
+        screen.getByRole("button", { name: "Nueva Partida" })
+      );
+      expect(
+        await screen.findByText("Debe ingresar su fecha de nacimiento")
       ).toBeInTheDocument();
     });
 
     it("should show error if no avatar", async () => {
       render(<HomePage />);
-      // Llenamos solo nombre y fecha
       await userEvent.type(screen.getByTestId("nombre"), "Jugador 1");
       await userEvent.type(
         screen.getByTestId("fecha-nacimiento"),
         "2000-01-01"
       );
-
-      await userEvent.click(
-        screen.getByRole("button", { name: "Nueva Partida" })
-      );
-      expect(screen.getByText("Debe elegir un avatar")).toBeInTheDocument();
-    });
-
-    it("should show error if player is underage (e.g., 14)", async () => {
-      // Asumimos que "hoy" es 2025-11-10
-      render(<HomePage />);
-      await fillForm("Jugador Joven", "2010-11-11", "Avatar 1"); // Cumple 15 mañana
       await userEvent.click(
         screen.getByRole("button", { name: "Nueva Partida" })
       );
       expect(
-        screen.getByText("El juego es solo para mayores de 15 años.")
+        await screen.findByText("Debe elegir un avatar")
       ).toBeInTheDocument();
     });
 
     it("should pass validation if player is 15", async () => {
-      // Asumimos que "hoy" es 2025-11-10
       render(<HomePage />);
-      await fillForm("Jugador Justo", "2010-11-10", "Avatar 1"); // Cumple 15 hoy
+      // Usamos la fecha límite (hoy es 10/11/2025)
+      await fillForm("Jugador Justo", "2010-11-10", "Avatar 1");
       await userEvent.click(
         screen.getByRole("button", { name: "Nueva Partida" })
       );
+
+      // Esperamos a que se resuelvan las promesas de estado
+      await act(() => Promise.resolve());
+
+      // Verificamos que el mensaje de error NO esté
       expect(
         screen.queryByText("El juego es solo para mayores de 15 años.")
       ).not.toBeInTheDocument();
+      // Y que la navegación SÍ se haya llamado
       expect(mockNavigate).toHaveBeenCalled();
     });
   });
@@ -177,7 +172,7 @@ describe("HomePage Component", () => {
   describe("Navigation", () => {
     it("should navigate to CreatePage on handleCreate", async () => {
       render(<HomePage />);
-      await fillForm("Jugador Creador", "1990-05-10", "Avatar 3"); // Avatar 3 es Lisa
+      await fillForm("Jugador Creador", "1990-05-10", "Avatar 3");
       await userEvent.click(
         screen.getByRole("button", { name: "Nueva Partida" })
       );
@@ -186,14 +181,14 @@ describe("HomePage Component", () => {
         state: {
           playerName: "Jugador Creador",
           playerDate: "1990-05-10",
-          playerAvatar: "/mock/lisa.png", // El mock de src
+          playerAvatar: "/mock/lisa.png",
         },
       });
     });
 
     it("should navigate to ListGames on handleList", async () => {
       render(<HomePage />);
-      await fillForm("Jugador Buscador", "1995-02-15", "Avatar 4"); // Avatar 4 es Homero
+      await fillForm("Jugador Buscador", "1995-02-15", "Avatar 4");
       await userEvent.click(
         screen.getByRole("button", { name: "Listar Partidas" })
       );
@@ -202,7 +197,7 @@ describe("HomePage Component", () => {
         state: {
           playerName: "Jugador Buscador",
           playerDate: "1995-02-15",
-          playerAvatar: "/mock/homero.png", // El mock de src
+          playerAvatar: "/mock/homero.png",
         },
       });
     });

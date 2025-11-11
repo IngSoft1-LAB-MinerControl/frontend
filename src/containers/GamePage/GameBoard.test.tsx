@@ -3,12 +3,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Gameboard from "./Gameboard";
-
 // Mocks de Hooks
 import { useGameContext } from "../../context/GameContext";
 import { useGameWebSocket } from "../../hooks/useGameWebSocket";
 import { useNavigate } from "react-router-dom";
-
 import destinations from "../../navigation/destinations";
 
 // --- Mocks de Hooks ---
@@ -24,15 +22,23 @@ vi.mock("../../navigation/destinations", () => ({
 }));
 
 // --- Mocks de Componentes Hijos ---
-// Hacemos mocks "interactivos" para probar los handlers
 vi.mock("../../components/Opponent", () => ({
   default: (props: any) => (
     <div data-testid="opponent">
-      <button onClick={props.onClick}>Simulate Opponent Click</button>
-      <button onClick={() => props.onSetClick({ set_id: 1 })}>
+      {/* CORRECCIÓN: Asegurarse de que las props se pasen antes de llamarlas */}
+      <button onClick={() => props.onClick && props.onClick()}>
+        Simulate Opponent Click
+      </button>
+      <button
+        onClick={() => props.onSetClick && props.onSetClick({ set_id: 1 })}
+      >
         Simulate Set Click
       </button>
-      <button onClick={() => props.onSecretClick({ secret_id: 1 })}>
+      <button
+        onClick={() =>
+          props.onSecretClick && props.onSecretClick({ secret_id: 1 })
+        }
+      >
         Simulate Secret Click
       </button>
     </div>
@@ -42,12 +48,16 @@ vi.mock("../../components/MyHand", () => ({
   default: (props: any) => (
     <div data-testid="you">
       <button
-        onClick={() => props.onCardsSelected({ card_id: 1, name: "Test Card" })}
+        onClick={() =>
+          props.onCardsSelected &&
+          props.onCardsSelected({ card_id: 1, name: "Test Card" })
+        }
       >
         Simulate Card Click
       </button>
       <button
         onClick={() =>
+          props.onCardsSelected &&
           props.onCardsSelected({ card_id: 99, name: "Not so fast" })
         }
       >
@@ -59,7 +69,11 @@ vi.mock("../../components/MyHand", () => ({
 vi.mock("../../components/DraftPile", () => ({
   default: (props: any) => (
     <div data-testid="draft-pile">
-      <button onClick={() => props.onCardSelect({ card_id: 100 })}>
+      <button
+        onClick={() =>
+          props.onCardSelect && props.onCardSelect({ card_id: 100 })
+        }
+      >
         Simulate Draft Click
       </button>
     </div>
@@ -68,7 +82,6 @@ vi.mock("../../components/DraftPile", () => ({
 vi.mock("../../components/BlackmailedModal", () => ({
   BlackmailedModal: () => <div data-testid="blackmailed-modal"></div>,
 }));
-// Mocks simples
 vi.mock("../../components/Decks", () => ({
   default: () => <div data-testid="decks"></div>,
 }));
@@ -102,7 +115,11 @@ describe("GameBoard Component", () => {
     mockState = {
       myPlayerId: 1,
       game: { game_id: 100, status: "in course" },
-      players: [mockCurrentPlayer],
+      // CORRECCIÓN: Agregamos un oponente para que 'distribution' funcione
+      players: [
+        mockCurrentPlayer,
+        { player_id: 2, name: "Opponent", pending_action: null },
+      ],
       discardPile: [],
       draftPile: [],
       currentStep: "start",
@@ -115,7 +132,6 @@ describe("GameBoard Component", () => {
       error: null,
     };
 
-    // Mock de Context
     vi.mocked(useGameContext).mockReturnValue({
       state: mockState,
       dispatch: mockDispatch,
@@ -124,14 +140,13 @@ describe("GameBoard Component", () => {
       isSocialDisgrace: mockIsSocialDisgrace,
     });
 
-    // Mock de Hooks
     vi.mocked(useNavigate).mockReturnValue(mockNavigate);
     vi.mocked(useGameWebSocket).mockImplementation(mockUseGameWebSocket);
   });
 
   it("should render all main components", () => {
     render(<Gameboard />);
-    expect(screen.getByTestId("opponent")).toBeInTheDocument();
+    expect(screen.getByTestId("opponent")).toBeInTheDocument(); // Ahora sí lo encuentra
     expect(screen.getByTestId("draft-pile")).toBeInTheDocument();
     expect(screen.getByTestId("decks")).toBeInTheDocument();
     expect(screen.getByTestId("you")).toBeInTheDocument();
@@ -144,7 +159,6 @@ describe("GameBoard Component", () => {
     expect(mockUseGameWebSocket).toHaveBeenCalledWith(100);
   });
 
-  // --- Test de useEffects ---
   describe("useEffects", () => {
     it("should navigate to endgame when game status is 'finished'", () => {
       mockState.game.status = "finished";
@@ -165,14 +179,23 @@ describe("GameBoard Component", () => {
     });
 
     it("should dispatch 'discard_op' if trade/folly step ends", () => {
-      mockIsMyTurn = true;
+      mockIsMyTurn = true; // Es mi turno
       mockState.currentStep = "wait_trade";
-      mockCurrentPlayer.pending_action = "SELECT_TRADE_CARD"; // Estado inicial
+      mockCurrentPlayer.pending_action = "SELECT_TRADE_CARD";
+
+      // CORRECCIÓN: Seteamos el contexto *con* isMyTurn = true
+      vi.mocked(useGameContext).mockReturnValue({
+        state: mockState,
+        dispatch: mockDispatch,
+        currentPlayer: mockCurrentPlayer,
+        isMyTurn: mockIsMyTurn,
+        isSocialDisgrace: mockIsSocialDisgrace,
+      });
 
       const { rerender } = render(<Gameboard />);
+      mockDispatch.mockClear(); // Limpiamos el 'dispatch' del useEffect(isMyTurn)
 
-      // Simula el cambio de WS
-      mockCurrentPlayer.pending_action = null; // Estado final
+      mockCurrentPlayer.pending_action = null; // El WS actualiza
       rerender(<Gameboard />);
 
       expect(mockDispatch).toHaveBeenCalledWith({
@@ -182,7 +205,6 @@ describe("GameBoard Component", () => {
     });
   });
 
-  // --- Test de Handlers ---
   describe("Event Handlers", () => {
     it("handleDraftSelect: should dispatch SET_SELECTED_CARD", async () => {
       render(<Gameboard />);
@@ -194,17 +216,18 @@ describe("GameBoard Component", () => {
     });
 
     it("handleSelectPlayer: should dispatch SET_SELECTED_TARGET_PLAYER if step is valid", async () => {
-      mockState.currentStep = "cards_off_the_table"; // Paso válido
+      mockState.currentStep = "cards_off_the_table";
       render(<Gameboard />);
+      // CORRECCIÓN: El botón ahora sí se renderiza
       await userEvent.click(screen.getByText("Simulate Opponent Click"));
       expect(mockDispatch).toHaveBeenCalledWith({
         type: "SET_SELECTED_TARGET_PLAYER",
-        payload: expect.any(Object), // el oponente
+        payload: mockState.players[1], // el oponente
       });
     });
 
     it("handleSelectPlayer: should NOT dispatch if step is invalid", async () => {
-      mockState.currentStep = "start"; // Paso inválido
+      mockState.currentStep = "start";
       render(<Gameboard />);
       await userEvent.click(screen.getByText("Simulate Opponent Click"));
       expect(mockDispatch).not.toHaveBeenCalledWith(
@@ -222,19 +245,35 @@ describe("GameBoard Component", () => {
     });
 
     it("handleHandCardSelect: should dispatch TOGGLE_HAND_CARD_ID for 'p_set' step", async () => {
-      mockIsMyTurn = true;
+      mockIsMyTurn = true; // CORRECCIÓN: Poner isMyTurn en true
       mockState.currentStep = "p_set";
+      vi.mocked(useGameContext).mockReturnValue({
+        state: mockState,
+        dispatch: mockDispatch,
+        currentPlayer: mockCurrentPlayer,
+        isMyTurn: mockIsMyTurn,
+        isSocialDisgrace: mockIsSocialDisgrace,
+      });
+
       render(<Gameboard />);
       await userEvent.click(screen.getByText("Simulate Card Click"));
       expect(mockDispatch).toHaveBeenCalledWith({
         type: "TOGGLE_HAND_CARD_ID",
-        payload: 1, // card_id de la carta simulada
+        payload: 1,
       });
     });
 
     it("handleHandCardSelect: should dispatch SET_SELECTED_CARD for 'p_event' step", async () => {
-      mockIsMyTurn = true;
+      mockIsMyTurn = true; // CORRECCIÓN: Poner isMyTurn en true
       mockState.currentStep = "p_event";
+      vi.mocked(useGameContext).mockReturnValue({
+        state: mockState,
+        dispatch: mockDispatch,
+        currentPlayer: mockCurrentPlayer,
+        isMyTurn: mockIsMyTurn,
+        isSocialDisgrace: mockIsSocialDisgrace,
+      });
+
       render(<Gameboard />);
       await userEvent.click(screen.getByText("Simulate Card Click"));
       expect(mockDispatch).toHaveBeenCalledWith({
@@ -244,7 +283,6 @@ describe("GameBoard Component", () => {
     });
   });
 
-  // --- Test de Renderizado Condicional ---
   describe("Conditional Rendering", () => {
     it("should render error banner if state.error is set", () => {
       mockState.error = "Test Error Message";
@@ -254,10 +292,9 @@ describe("GameBoard Component", () => {
 
     it("should render BlackmailedModal if conditions are met", () => {
       mockState.blackmailedSecret = { player_id: 2 };
-      mockState.players[0].pending_action = "BLACKMAILED"; // Yo soy el target
+      mockState.players[0].pending_action = "BLACKMAILED";
       mockCurrentPlayer = mockState.players[0];
 
-      // Re-mockeamos el contexto con el estado modificado
       vi.mocked(useGameContext).mockReturnValue({
         state: mockState,
         dispatch: mockDispatch,
@@ -272,7 +309,6 @@ describe("GameBoard Component", () => {
 
     it("should NOT render BlackmailedModal if not involved", () => {
       mockState.blackmailedSecret = { player_id: 2 };
-      // Nadie tiene el pending_action, así que no estoy involucrado
       render(<Gameboard />);
       expect(screen.queryByTestId("blackmailed-modal")).not.toBeInTheDocument();
     });
