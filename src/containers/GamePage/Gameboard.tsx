@@ -104,27 +104,6 @@ export default function Gameboard() {
     }
   }, [isMyTurn, currentStep, pendingAction, dispatch]);
 
-  const isActionRevealSecret = useMemo(() => {
-    return pendingAction === "REVEAL_SECRET";
-  }, [pendingAction]);
-
-  // (Crea esta variable para mantener tu lógica de trade, pero sin el bug)
-  const isForcedByOthers = useMemo(() => {
-    return (
-      !isMyTurn &&
-      (pendingAction === "REVEAL_SECRET" ||
-        pendingAction === "CHOOSE_BLACKMAIL_SECRET")
-    );
-  }, [isMyTurn, pendingAction]);
-
-  const isForcedToSocialFauxPas = useMemo(() => {
-    return pendingAction === "REVEAL_SOCIAL_FAUX_PAS_SECRET";
-  }, [pendingAction]);
-
-  const isForcedToChooseBlackmailed = useMemo(() => {
-    return pendingAction === "CHOOSE_BLACKMAIL_SECRET";
-  }, [pendingAction]);
-
   const amIInvolvedInBlackmail = useMemo(() => {
     if (!currentPlayer || !blackmailedSecret) return false;
 

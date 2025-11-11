@@ -1,74 +1,126 @@
+/// <reference types="vitest" />
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import playerService, {
-  type Player,
-  type PlayerStateResponse,
-} from "./playerService";
-import { httpServerUrl } from "./config";
+import playerService, { type Player } from "./playerService";
 
-vi.stubGlobal("fetch", vi.fn());
+// Mock de la config
+vi.mock("./config", () => ({
+  httpServerUrl: "http://mock-server.com",
+}));
 
-const mockPlayerStateResponse: PlayerStateResponse = {
-  player_id: 1,
-  name: "Jugador de Prueba",
-  host: true,
-  game_id: 1,
-  birth_date: "2000-10-20",
-  turn_order: 1,
-  cards: [],
-  secrets: [],
-  sets: [],
+// Mock del fetch global
+const mockFetch = vi.fn();
+vi.stubGlobal("fetch", mockFetch);
+
+// --- Helpers para mocks de fetch ---
+const mockFetchSuccess = (data: any) => {
+  mockFetch.mockResolvedValue({
+    ok: true,
+    json: vi.fn().mockResolvedValue(data),
+  });
 };
 
+const mockFetchSuccessVoid = () => {
+  mockFetch.mockResolvedValue({
+    ok: true,
+    json: vi.fn().mockResolvedValue(undefined),
+  });
+};
+
+const mockFetchFailure = (detail: string | object) => {
+  mockFetch.mockResolvedValue({
+    ok: false,
+    json: vi.fn().mockResolvedValue({ detail: detail }),
+  });
+};
+// ---
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
 describe("playerService", () => {
-  // Limpiamos los mocks antes de cada test
-  beforeEach(() => {
-    vi.mocked(fetch).mockClear();
+  it("createPlayer: should POST the player object", async () => {
+    const player: Player = {
+      name: "Test Player",
+      host: true,
+      game_id: 1,
+      birth_date: "2000-01-01",
+      avatar: "avatar.png",
+    };
+    const mockResponse = { ...player, player_id: 1, cards: [] }; // PlayerStateResponse
+    mockFetchSuccess(mockResponse);
+
+    const result = await playerService.createPlayer(player);
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      "http://mock-server.com/players",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify(player),
+      })
+    );
+    expect(result).toEqual(mockResponse);
   });
 
-  // createPlayer
-  describe("createPlayer", () => {
-    it("debería enviar una petición POST y devolver el estado del jugador creado", async () => {
-      vi.mocked(fetch).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockPlayerStateResponse,
-      } as Response);
+  it("createPlayer: should throw parsed backend error on failure", async () => {
+    const errorDetail = { msg: "Player name already exists" };
+    mockFetchFailure(errorDetail);
 
-      const newPlayer: Player = {
-        name: "Jugador de Prueba",
-        host: true,
-        game_id: 1,
-        birth_date: "2000-10-20",
-        avatar: "avatar1",
-      };
-
-      const result = await playerService.createPlayer(newPlayer);
-
-      expect(result).toEqual(mockPlayerStateResponse);
-      expect(fetch).toHaveBeenCalledWith(
-        `${httpServerUrl}/players`,
-        expect.objectContaining({
-          method: "POST",
-          body: JSON.stringify(newPlayer),
-        })
-      );
-    });
+    await expect(playerService.createPlayer({} as Player)).rejects.toThrow(
+      JSON.stringify(errorDetail)
+    );
   });
 
-  // getPlayersByGame
-  describe("getPlayersByGame", () => {
-    it("debería obtener y devolver un array de jugadores de una partida", async () => {
-      vi.mocked(fetch).mockResolvedValueOnce({
-        ok: true,
-        json: async () => [mockPlayerStateResponse],
-      } as Response);
+  it("getPlayersByGame: should GET players for a game", async () => {
+    const mockData = [{ player_id: 1 }, { player_id: 2 }];
+    mockFetchSuccess(mockData);
 
-      const result = await playerService.getPlayersByGame(1);
+    const result = await playerService.getPlayersByGame(100);
 
-      expect(result).toEqual([mockPlayerStateResponse]);
-      expect(fetch).toHaveBeenCalledWith(
-        `${httpServerUrl}/lobby/players/1`,
-        expect.any(Object)
-      );
+    expect(mockFetch).toHaveBeenCalledWith(
+      "http://mock-server.com/lobby/players/100",
+      expect.objectContaining({ method: "GET" })
+    );
+    expect(result).toEqual(mockData);
+  });
+
+  it("selectPlayer: should call PUT and return void", async () => {
+    mockFetchSuccessVoid();
+    await expect(playerService.selectPlayer(1)).resolves.toBeUndefined();
+    expect(mockFetch).toHaveBeenCalledWith(
+      "http://mock-server.com/select/player/1",
+      expect.objectContaining({ method: "PUT" })
+    );
+  });
+
+  it("unselectPlayer: should call PUT and return void", async () => {
+    mockFetchSuccessVoid();
+    await expect(playerService.unselectPlayer(1)).resolves.toBeUndefined();
+    expect(mockFetch).toHaveBeenCalledWith(
+      "http://mock-server.com/unselect/player/1",
+      expect.objectContaining({ method: "PUT" })
+    );
+  });
+
+  it("votePlayer: should call PUT and handle status 201", async () => {
+    // Caso especial: tu servicio espera 201, no 200
+    mockFetch.mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: vi.fn().mockResolvedValue({}),
     });
+
+    await expect(playerService.votePlayer(2, 1)).resolves.toBeUndefined();
+    expect(mockFetch).toHaveBeenCalledWith(
+      "http://mock-server.com/vote/player/2/1",
+      expect.objectContaining({ method: "PUT" })
+    );
+  });
+
+  it("votePlayer: should throw parsed error on failure", async () => {
+    mockFetchFailure("Player already voted");
+    await expect(playerService.votePlayer(2, 1)).rejects.toThrow(
+      "Error al votar jugador: Player already voted"
+    );
   });
 });

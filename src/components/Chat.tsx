@@ -9,9 +9,6 @@ export function Chat() {
   const [newMessage, setNewMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  // --- ¡NUEVO! ---
-  // Estado para controlar si el chat está abierto o colapsado
-  // Lo ponemos 'true' para que empiece abierto por defecto
   const [isChatOpen, setIsChatOpen] = useState(true);
 
   // Ref para el div de auto-scroll
