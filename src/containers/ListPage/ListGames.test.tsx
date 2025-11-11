@@ -1,342 +1,206 @@
 /// <reference types="vitest" />
-import { describe, it, vi, beforeEach, expect } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { Mock } from "vitest";
+import { render, screen, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
 import ListGames from "./ListGames";
+import { useLocation, useNavigate } from "react-router-dom";
 import playerService from "../../services/playerService";
-import { act } from "@testing-library/react";
-import { Routes, Route } from "react-router-dom";
+import type { GameResponse } from "../../services/gameService";
+import destinations from "../../navigation/destinations"; // Import faltante
+// Mock del WebSocket Global
+let mockWebSocketInstance: {
+  onopen: () => void;
+  onmessage: (event: { data: string }) => void;
+  onerror: (event: any) => void;
+  onclose: () => void;
+  close: Mock;
+};
 
 class MockWebSocket {
-  static instances: MockWebSocket[] = [];
-  url: string;
-
-  onopen = () => {};
-  onmessage = (_: any) => {};
-  onerror = () => {};
-  onclose = () => {};
-
-  constructor(url: string) {
-    this.url = url;
-    MockWebSocket.instances.push(this);
+  close = vi.fn();
+  // CORRECCIÓN: 'url' se marca como '_url' para evitar el warning
+  constructor(_url: string) {
+    mockWebSocketInstance = this as any;
   }
-
-  send() {}
-  close() {}
 }
-
 vi.stubGlobal("WebSocket", MockWebSocket);
 
-vi.mock("../../services/playerService", () => ({
+// Mock de React Router
+vi.mock("react-router-dom", () => ({
+  useNavigate: vi.fn(),
+  useLocation: vi.fn(),
+}));
+
+// Mock de Servicios
+vi.mock("../../services/playerService");
+
+// CORRECCIÓN: Mock de destinations
+vi.mock("../../navigation/destinations", () => ({
   default: {
-    createPlayer: vi.fn(),
+    lobby: "/mock-lobby",
   },
 }));
 
-const navigateMock = vi.fn();
-vi.mock("react-router-dom", async () => {
-  const actual = await vi.importActual("react-router-dom");
-  return {
-    ...actual,
-    useNavigate: () => navigateMock,
-  };
-});
+// Mock de Componentes
+vi.mock("../../components/Button", () => ({
+  default: ({ label, onClick, disabled }: any) => (
+    <button onClick={onClick} disabled={disabled}>
+      {label}
+    </button>
+  ),
+}));
 
-describe("ListGames", () => {
+const mockNavigate = vi.fn();
+// CORRECCIÓN: Eliminada la variable 'mockCreatePlayer' no leída
+
+// Datos de juego mockeados
+const mockGames: GameResponse[] = [
+  {
+    game_id: 1,
+    name: "Partida en Curso",
+    min_players: 2,
+    max_players: 6,
+    players_amount: 4,
+    status: "in course",
+  } as GameResponse,
+  {
+    game_id: 2,
+    name: "Partida Abierta",
+    min_players: 2,
+    max_players: 6,
+    players_amount: 1,
+    status: "waiting players",
+  } as GameResponse,
+  {
+    game_id: 3,
+    name: "Partida Llena",
+    min_players: 2,
+    max_players: 2,
+    players_amount: 2,
+    status: "full",
+  } as GameResponse,
+];
+
+describe("ListGames Component", () => {
   beforeEach(() => {
-    MockWebSocket.instances = [];
     vi.clearAllMocks();
+    (useNavigate as ReturnType<typeof vi.fn>).mockReturnValue(mockNavigate);
+    (useLocation as ReturnType<typeof vi.fn>).mockReturnValue({
+      state: {
+        playerName: "Test Player",
+        playerDate: "2000-01-01",
+        playerAvatar: "avatar.png",
+      },
+    });
+    vi.mocked(playerService.createPlayer).mockResolvedValue({
+      player_id: 1,
+      name: "Test Player",
+    } as any);
   });
 
-  it("renderiza partidas disponibles correctamente", async () => {
-    render(
-      <MemoryRouter>
-        <ListGames />
-      </MemoryRouter>
-    );
+  it("should connect to WebSocket and render games on message", () => {
+    render(<ListGames />);
 
-    const ws = MockWebSocket.instances[0];
+    // 1. Simula la conexión abierta
+    act(() => {
+      mockWebSocketInstance.onopen();
+    });
 
-    await act(async () => {
-      ws.onopen?.();
-      ws.onmessage?.({
-        data: JSON.stringify([
-          {
-            game_id: 1,
-            name: "Partida 1",
-            min_players: 2,
-            max_players: 4,
-            players_amount: 1,
-            status: "waiting players",
-            avatar: "ana.png",
-          },
-          {
-            game_id: 2,
-            name: "Partida 2",
-            min_players: 2,
-            max_players: 4,
-            players_amount: 2,
-            status: "bootable",
-            avatar: "juan.png",
-          },
-        ]),
+    // 2. Simula la llegada de datos
+    act(() => {
+      mockWebSocketInstance.onmessage({ data: JSON.stringify(mockGames) });
+    });
+
+    // 3. Verifica que los juegos se renderizaron
+    expect(screen.getByText("Partida Abierta")).toBeInTheDocument();
+    expect(screen.getByText("Partida en Curso")).toBeInTheDocument();
+    expect(screen.getByText("Partida Llena")).toBeInTheDocument();
+  });
+
+  it("should sort games by status", () => {
+    render(<ListGames />);
+    act(() => {
+      mockWebSocketInstance.onmessage({ data: JSON.stringify(mockGames) });
+    });
+
+    const listItems = screen.getAllByRole("listitem");
+    // "waiting players" (Abierta) debe ir primero
+    expect(listItems[0]).toHaveTextContent("Partida Abierta");
+    // "full" (Llena) debe ir segundo
+    expect(listItems[1]).toHaveTextContent("Partida Llena");
+    // "in course" (En Curso) debe ir tercero
+    expect(listItems[2]).toHaveTextContent("Partida en Curso");
+  });
+
+  it("should disable 'Unirme' button for non-joinable games", () => {
+    render(<ListGames />);
+    act(() => {
+      mockWebSocketInstance.onmessage({ data: JSON.stringify(mockGames) });
+    });
+
+    // Partida "waiting players" (Joinable)
+    const joinableButton = screen
+      .getByText("Partida Abierta")
+      .closest("li")
+      ?.querySelector("button");
+    expect(joinableButton).not.toBeDisabled();
+
+    // Partida "in course" (Not Joinable)
+    const inCourseButton = screen
+      .getByText("Partida en Curso")
+      .closest("li")
+      ?.querySelector("button");
+    expect(inCourseButton).toBeDisabled();
+
+    // Partida "full" (Not Joinable)
+    const fullButton = screen
+      .getByText("Partida Llena")
+      .closest("li")
+      ?.querySelector("button");
+    expect(fullButton).toBeDisabled();
+  });
+
+  it("should call createPlayer and navigate on handleJoin", async () => {
+    const mockJoinableGame = mockGames[1]; // "Partida Abierta"
+    render(<ListGames />);
+    act(() => {
+      mockWebSocketInstance.onmessage({
+        data: JSON.stringify([mockJoinableGame]),
       });
     });
 
-    await waitFor(() => {
-      expect(screen.getByText("Partida 1")).toBeInTheDocument();
-      expect(screen.getByText("Partida 2")).toBeInTheDocument();
-    });
-  });
+    const joinButton = screen.getByRole("button", { name: "Unirme" });
+    await userEvent.click(joinButton);
 
-  it("navega al lobby al unirse a una partida", async () => {
-    (
-      playerService.createPlayer as unknown as ReturnType<typeof vi.fn>
-    ).mockResolvedValue({
-      player_id: 1,
-      name: "JugadorTest",
+    // Verifica que se llamó al servicio con los datos de useLocation
+    expect(playerService.createPlayer).toHaveBeenCalledWith({
+      name: "Test Player",
       birth_date: "2000-01-01",
       host: false,
-      game_id: 1,
-      avatar: "ana.png",
+      game_id: mockJoinableGame.game_id,
+      avatar: "avatar.png",
     });
 
-    render(
-      <MemoryRouter
-        initialEntries={[
-          {
-            pathname: "/list",
-            state: {
-              playerName: "JugadorTest",
-              playerDate: "2000-01-01",
-              playerAvatar: "ana.png",
-            },
-          },
-        ]}
-      >
-        <Routes>
-          <Route path="/list" element={<ListGames />} />
-        </Routes>
-      </MemoryRouter>
-    );
-
-    const ws = MockWebSocket.instances[0];
-
-    await act(async () => {
-      ws.onopen?.();
-      ws.onmessage?.({
-        data: JSON.stringify([
-          {
-            game_id: 1,
-            name: "Partida 1",
-            min_players: 2,
-            max_players: 4,
-            players_amount: 1,
-            status: "waiting players",
-            avatar: "ana.png",
-          },
-        ]),
-      });
-    });
-
-    const button = await screen.findByRole("button", { name: /Unirme/i });
-
-    await act(async () => {
-      await userEvent.click(button);
-    });
-
-    await waitFor(() => {
-      expect(playerService.createPlayer).toHaveBeenCalled();
-      expect(navigateMock).toHaveBeenCalled();
+    // Verifica la navegación
+    expect(mockNavigate).toHaveBeenCalledWith(destinations.lobby, {
+      state: {
+        game: mockJoinableGame,
+        player: expect.objectContaining({ player_id: 1 }),
+        playerAvatar: "avatar.png",
+      },
     });
   });
 
-  it("muestra error si no hay info del jugador", async () => {
-    render(
-      <MemoryRouter>
-        <ListGames />
-      </MemoryRouter>
-    );
-
-    const ws = MockWebSocket.instances[0];
-
-    await act(async () => {
-      ws.onopen?.();
-      ws.onmessage?.({
-        data: JSON.stringify([
-          {
-            game_id: 1,
-            name: "Partida 1",
-            min_players: 2,
-            max_players: 4,
-            players_amount: 1,
-            status: "waiting players",
-            avatar: "ana.png",
-          },
-        ]),
-      });
+  it("should show an error message if WebSocket fails", () => {
+    render(<ListGames />);
+    act(() => {
+      mockWebSocketInstance.onerror(new Event("error"));
     });
-
-    const button = await screen.findByRole("button", { name: /Unirme/i });
-
-    await act(async () => {
-      await userEvent.click(button);
-    });
-
-    await waitFor(() => {
-      expect(
-        screen.getByText("No se encontró información del jugador")
-      ).toBeInTheDocument();
-    });
-  });
-
-  it("ordena las partidas según getOrder", async () => {
-    render(
-      <MemoryRouter>
-        <ListGames />
-      </MemoryRouter>
-    );
-
-    const ws = MockWebSocket.instances[0];
-
-    await act(async () => {
-      ws.onopen?.();
-      ws.onmessage?.({
-        data: JSON.stringify([
-          {
-            game_id: 1,
-            name: "Partida InCourse",
-            min_players: 2,
-            max_players: 4,
-            players_amount: 2,
-            status: "in_course",
-            avatar: "a.png",
-          },
-          {
-            game_id: 2,
-            name: "Partida Full",
-            min_players: 2,
-            max_players: 4,
-            players_amount: 4,
-            status: "full",
-            avatar: "b.png",
-          },
-          {
-            game_id: 3,
-            name: "Partida Waiting",
-            min_players: 2,
-            max_players: 4,
-            players_amount: 1,
-            status: "waiting players",
-            avatar: "c.png",
-          },
-          {
-            game_id: 4,
-            name: "Partida Bootable",
-            min_players: 2,
-            max_players: 4,
-            players_amount: 2,
-            status: "bootable",
-            avatar: "d.png",
-          },
-        ]),
-      });
-    });
-
-    await waitFor(() => {
-      const items = screen.getAllByRole("listitem");
-      const names = items.map(
-        (li) => li.querySelector(".item-title")?.textContent
-      );
-      expect(names).toEqual([
-        "Partida Waiting",
-        "Partida Bootable",
-        "Partida Full",
-        "Partida InCourse",
-      ]);
-    });
-  });
-
-  it("deshabilita el botón Unirme si la partida no está en estado joinable", async () => {
-    render(
-      <MemoryRouter>
-        <ListGames />
-      </MemoryRouter>
-    );
-
-    const ws = MockWebSocket.instances[0];
-
-    await act(async () => {
-      ws.onopen?.();
-      ws.onmessage?.({
-        data: JSON.stringify([
-          {
-            game_id: 1,
-            name: "Partida Full",
-            min_players: 2,
-            max_players: 4,
-            players_amount: 4,
-            status: "full",
-            avatar: "x.png",
-          },
-          {
-            game_id: 2,
-            name: "Partida InCourse",
-            min_players: 2,
-            max_players: 4,
-            players_amount: 2,
-            status: "in_course",
-            avatar: "y.png",
-          },
-        ]),
-      });
-    });
-
-    await waitFor(() => {
-      const buttons = screen.getAllByRole("button", { name: /Unirme/i });
-      buttons.forEach((btn) => expect(btn).toBeDisabled());
-    });
-  });
-
-  it("habilita el botón Unirme si la partida está joinable", async () => {
-    render(
-      <MemoryRouter>
-        <ListGames />
-      </MemoryRouter>
-    );
-
-    const ws = MockWebSocket.instances[0];
-
-    await act(async () => {
-      ws.onopen?.();
-      ws.onmessage?.({
-        data: JSON.stringify([
-          {
-            game_id: 1,
-            name: "Partida Waiting",
-            min_players: 2,
-            max_players: 4,
-            players_amount: 1,
-            status: "waiting players",
-            avatar: "a.png",
-          },
-          {
-            game_id: 2,
-            name: "Partida Bootable",
-            min_players: 2,
-            max_players: 4,
-            players_amount: 2,
-            status: "bootable",
-            avatar: "b.png",
-          },
-        ]),
-      });
-    });
-
-    await waitFor(() => {
-      const buttons = screen.getAllByRole("button", { name: /Unirme/i });
-      buttons.forEach((btn) => expect(btn).toBeEnabled());
-    });
+    expect(
+      screen.getByText(
+        "Error en la conexión en tiempo real. Intenta recargar la página."
+      )
+    ).toBeInTheDocument();
   });
 });

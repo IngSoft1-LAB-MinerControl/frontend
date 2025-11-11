@@ -1,199 +1,212 @@
 /// <reference types="vitest" />
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import type { Mock } from "vitest";
+import { render, screen, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
 import Lobby from "./Lobby";
+import { useLocation, useNavigate } from "react-router-dom";
 import gameService from "../../services/gameService";
+import type { PlayerResponse } from "../../services/playerService";
 
-vi.mock("../../services/gameService", () => ({
-  default: {
-    startGame: vi.fn(),
-  },
+// Mock del WebSocket Global
+let mockWebSocketInstance: {
+  onopen: () => void;
+  onmessage: (event: { data: string }) => void;
+  onerror: (event: any) => void;
+  onclose: () => void;
+  close: Mock; // CORRECCIÓN: 'Mock' es el tipo correcto de vitest
+};
+
+class MockWebSocket {
+  close = vi.fn();
+  // CORRECCIÓN: 'url' se marca como '_url' para evitar el warning
+  constructor(_url: string) {
+    mockWebSocketInstance = this as any;
+  }
+}
+vi.stubGlobal("WebSocket", MockWebSocket);
+
+// Mock de React Router
+vi.mock("react-router-dom", () => ({
+  useNavigate: vi.fn(),
+  useLocation: vi.fn(),
+}));
+
+// Mock de Servicios y Config
+vi.mock("../../services/gameService");
+vi.mock("../../services/config", () => ({
+  httpServerUrl: "http://localhost:8000",
 }));
 
 const mockNavigate = vi.fn();
-let mockLocationState: any = {};
+// CORRECCIÓN: Eliminada la variable 'mockStartGame' no leída
 
-vi.mock("react-router-dom", async () => {
-  const actual = await vi.importActual<any>("react-router-dom");
-  return {
-    ...actual,
-    useNavigate: () => mockNavigate,
-    useLocation: () => ({ state: mockLocationState }),
-  };
-});
+// --- Datos base para useLocation ---
+const mockGame = {
+  game_id: 123,
+  name: "Lobby Test",
+  min_players: 2,
+};
+const mockPlayer: PlayerResponse = {
+  player_id: 1,
+  name: "Host Player",
+  host: true,
+  birth_date: "2000-01-01",
+  avatar: "avatar.png",
+  game_id: 123, // CORRECCIÓN: 'game_id' faltante
+};
+const mockGuestPlayer: PlayerResponse = {
+  player_id: 2,
+  name: "Guest Player",
+  host: false,
+  birth_date: "2000-02-02",
+  avatar: "avatar2.png",
+  game_id: 123, // CORRECCIÓN: 'game_id' faltante
+};
 
-class MockWebSocket {
-  static instances: MockWebSocket[] = [];
-  url: string;
-
-  onopen = () => {};
-  onmessage = (_: any) => {};
-  onerror = () => {};
-  onclose = () => {};
-
-  constructor(url: string) {
-    this.url = url;
-    MockWebSocket.instances.push(this);
-  }
-
-  send() {}
-  close() {}
-}
-
-vi.stubGlobal("WebSocket", MockWebSocket);
-
-describe("Lobby", () => {
+describe("Lobby Component", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    MockWebSocket.instances = [];
+    (useNavigate as ReturnType<typeof vi.fn>).mockReturnValue(mockNavigate);
+    vi.mocked(gameService.startGame).mockResolvedValue({} as any);
+
+    // Por defecto, simulamos ser el HOST
+    (useLocation as ReturnType<typeof vi.fn>).mockReturnValue({
+      state: {
+        game: mockGame,
+        player: mockPlayer,
+      },
+    });
   });
 
-  const mockGame = {
-    game_id: 1,
-    name: "Test Game",
-    status: "waiting for players",
-    min_players: 3,
-    max_players: 6,
-    players_amount: 0,
-    current_turn: 0,
-    cards_left: 49,
-  };
-
-  const playersMock = [
-    {
-      player_id: 1,
-      name: "Ana",
-      host: true,
-      game_id: 1,
-      birth_date: "2000-02-01",
-      avatar: "ana.png",
-    },
-    {
-      player_id: 2,
-      name: "Juan",
-      host: false,
-      game_id: 1,
-      birth_date: "1998-03-12",
-      avatar: "juan.png",
-    },
-  ];
-
-  it("muestra 'Cargando jugadores...' cuando no hay jugadores", () => {
-    mockLocationState = { game: mockGame, player: playersMock[0] };
-
-    render(
-      <MemoryRouter>
-        <Lobby />
-      </MemoryRouter>
+  it("should connect to WebSocket and show loading", () => {
+    render(<Lobby />);
+    // Verifica que se conectó al WS correcto
+    expect(global.WebSocket).toHaveBeenCalledWith(
+      "ws://localhost:8000/ws/lobby/123"
     );
-
+    // Muestra "Cargando" antes de recibir el primer mensaje
     expect(screen.getByText("Cargando jugadores...")).toBeInTheDocument();
   });
 
-  it("muestra mensaje de espera si no es host", async () => {
-    mockLocationState = { game: mockGame, player: playersMock[1] };
+  it("should render players and 'Iniciar' button for Host", () => {
+    render(<Lobby />);
 
-    render(
-      <MemoryRouter>
-        <Lobby />
-      </MemoryRouter>
-    );
-
-    // Simular llegada de jugadores por WebSocket
-    const ws = MockWebSocket.instances[0];
-    ws.onmessage({
-      data: JSON.stringify({ type: "players", data: playersMock }),
-    });
-
-    await waitFor(() =>
-      expect(
-        screen.getByText("Esperando a que el anfitrión inicie la partida ...")
-      ).toBeInTheDocument()
-    );
-  });
-
-  it("muestra botón Iniciar si es host", async () => {
-    mockLocationState = { game: mockGame, player: playersMock[0] };
-
-    render(
-      <MemoryRouter>
-        <Lobby />
-      </MemoryRouter>
-    );
-
-    const ws = MockWebSocket.instances[0];
-    ws.onmessage({
-      data: JSON.stringify({ type: "players", data: playersMock }),
-    });
-
-    await waitFor(() =>
-      expect(
-        screen.getByRole("button", { name: "Iniciar" })
-      ).toBeInTheDocument()
-    );
-  });
-
-  it("muestra error si intenta iniciar sin cumplir min_players", async () => {
-    mockLocationState = { game: mockGame, player: playersMock[0] };
-
-    render(
-      <MemoryRouter>
-        <Lobby />
-      </MemoryRouter>
-    );
-
-    const ws = MockWebSocket.instances[0];
-    ws.onmessage({
-      data: JSON.stringify({ type: "players", data: playersMock }),
-    });
-
-    const startBtn = await screen.findByRole("button", { name: "Iniciar" });
-    await userEvent.click(startBtn);
-
-    await waitFor(() =>
-      expect(
-        screen.getByText(
-          "La partida necesita al menos 3 jugadores para iniciar."
-        )
-      ).toBeInTheDocument()
-    );
-  });
-
-  it("llama a startGame si hay jugadores suficientes", async () => {
-    mockLocationState = {
-      game: { ...mockGame, min_players: 2 },
-      player: playersMock[0],
+    // Simula la llegada de jugadores
+    const wsMessage = {
+      type: "players",
+      data: JSON.stringify([mockPlayer, mockGuestPlayer]), // data es un string JSON
     };
-
-    vi.mocked(gameService.startGame).mockResolvedValue({
-      game_id: 1,
-      name: "PartidaTest",
-      status: "in course",
-      min_players: 2,
-      max_players: 4,
-      players_amount: 2,
-      current_turn: 0,
-      cards_left: 0,
+    act(() => {
+      mockWebSocketInstance.onmessage({ data: JSON.stringify(wsMessage) });
     });
 
-    render(
-      <MemoryRouter>
-        <Lobby />
-      </MemoryRouter>
-    );
+    // Se renderizan los jugadores
+    expect(screen.getByText("Host Player")).toBeInTheDocument();
+    expect(screen.getByText("(HOST)")).toBeInTheDocument();
+    expect(screen.getByText("Guest Player")).toBeInTheDocument();
 
-    const ws = MockWebSocket.instances[0];
-    ws.onmessage({
-      data: JSON.stringify({ type: "players", data: playersMock }),
+    // El host ve el botón "Iniciar"
+    expect(screen.getByRole("button", { name: "Iniciar" })).toBeInTheDocument();
+    expect(
+      screen.queryByText("Esperando a que el anfitrión...")
+    ).not.toBeInTheDocument();
+  });
+
+  it("should render players and 'Waiting' text for Guest", () => {
+    // Sobreescribimos useLocation para ser el GUEST
+    (useLocation as ReturnType<typeof vi.fn>).mockReturnValue({
+      state: {
+        game: mockGame,
+        player: mockGuestPlayer, // Soy el invitado
+      },
+    });
+    render(<Lobby />);
+
+    const wsMessage = {
+      type: "players",
+      data: JSON.stringify([mockPlayer, mockGuestPlayer]),
+    };
+    act(() => {
+      mockWebSocketInstance.onmessage({ data: JSON.stringify(wsMessage) });
     });
 
-    const startBtn = await screen.findByRole("button", { name: "Iniciar" });
-    await userEvent.click(startBtn);
+    // Se renderizan los jugadores
+    expect(screen.getByText("Host Player")).toBeInTheDocument();
+    expect(screen.getByText("Guest Player")).toBeInTheDocument();
 
-    await waitFor(() => {
-      expect(gameService.startGame).toHaveBeenCalledWith(1);
+    // El invitado NO ve el botón "Iniciar"
+    expect(
+      screen.queryByRole("button", { name: "Iniciar" })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText("Esperando a que el anfitrión inicie la partida ...")
+    ).toBeInTheDocument();
+  });
+
+  it("should show validation error if host clicks 'Iniciar' too early", async () => {
+    render(<Lobby />);
+
+    // Simula la llegada de 1 solo jugador (insuficiente)
+    const wsMessage = {
+      type: "players",
+      data: JSON.stringify([mockPlayer]),
+    };
+    act(() => {
+      mockWebSocketInstance.onmessage({ data: JSON.stringify(wsMessage) });
+    });
+
+    const startButton = screen.getByRole("button", { name: "Iniciar" });
+    await userEvent.click(startButton);
+
+    // Muestra error, no llama al servicio
+    expect(
+      screen.getByText("La partida necesita al menos 2 jugadores para iniciar.")
+    ).toBeInTheDocument();
+    expect(gameService.startGame).not.toHaveBeenCalled();
+  });
+
+  it("should call startGame if host clicks 'Iniciar' with enough players", async () => {
+    render(<Lobby />);
+
+    // Simula la llegada de 2 jugadores (suficiente)
+    const wsMessage = {
+      type: "players",
+      data: JSON.stringify([mockPlayer, mockGuestPlayer]),
+    };
+    act(() => {
+      mockWebSocketInstance.onmessage({ data: JSON.stringify(wsMessage) });
+    });
+
+    const startButton = screen.getByRole("button", { name: "Iniciar" });
+    await userEvent.click(startButton);
+
+    // No muestra error y llama al servicio
+    expect(
+      screen.queryByText("La partida necesita al menos 2 jugadores...")
+    ).not.toBeInTheDocument();
+    expect(gameService.startGame).toHaveBeenCalledWith(mockGame.game_id);
+  });
+
+  it("should navigate to /game when 'in course' message is received", () => {
+    render(<Lobby />);
+
+    // Simula mensaje de inicio de partida
+    const gameData = { ...mockGame, status: "in course" };
+    const wsMessage = {
+      type: "game",
+      data: JSON.stringify(gameData), // data es un string JSON
+    };
+    act(() => {
+      mockWebSocketInstance.onmessage({ data: JSON.stringify(wsMessage) });
+    });
+
+    // Debe navegar
+    expect(mockNavigate).toHaveBeenCalledWith("/game", {
+      state: {
+        game: gameData,
+        player: mockPlayer,
+      },
     });
   });
 });
