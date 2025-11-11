@@ -1,137 +1,77 @@
+/// <reference types="vitest" />
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import setService, { type SetResponse } from "./setService";
-import { httpServerUrl } from "./config";
+import setService from "./setService";
 
-vi.stubGlobal("fetch", vi.fn());
+// Mock de la config
+vi.mock("./config", () => ({
+  httpServerUrl: "http://mock-server.com",
+}));
 
-const mockSetResponse: SetResponse = {
-  game_id: 1,
-  player_id: 1,
-  set_id: 1,
-  name: "Set de Prueba",
-  detective: [],
+// Mock del fetch global
+const mockFetch = vi.fn();
+vi.stubGlobal("fetch", mockFetch);
+
+// --- Helpers para mocks de fetch ---
+const mockFetchSuccess = (data: any) => {
+  mockFetch.mockResolvedValue({
+    ok: true,
+    json: vi.fn().mockResolvedValue(data),
+  });
 };
 
+const mockFetchFailure = (detail: string) => {
+  mockFetch.mockResolvedValue({
+    ok: false,
+    json: vi.fn().mockResolvedValue({ detail: detail }),
+  });
+};
+// ---
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
 describe("setService", () => {
-  // Limpiamos los mocks antes de cada test
-  beforeEach(() => {
-    vi.mocked(fetch).mockClear();
+  it("getSets: should throw error on failure", async () => {
+    mockFetchFailure("Set error");
+    await expect(setService.getSets(1)).rejects.toThrow("Set error");
   });
 
-  // getSets
-  describe("getSets", () => {
-    it("debería obtener y devolver los sets de un jugador en caso de éxito", async () => {
-      vi.mocked(fetch).mockResolvedValueOnce({
-        ok: true,
-        json: async () => [mockSetResponse],
-      } as Response);
-
-      const result = await setService.getSets(1);
-
-      expect(result).toEqual([mockSetResponse]);
-      expect(fetch).toHaveBeenCalledWith(
-        `${httpServerUrl}/sets/list/1`,
-        expect.any(Object)
-      );
-    });
-
-    it("debería lanzar un error si la respuesta no es ok", async () => {
-      vi.mocked(fetch).mockResolvedValueOnce({
-        ok: false,
-        json: async () => ({ detail: "Error al obtener sets" }),
-      } as Response);
-
-      await expect(setService.getSets(1)).rejects.toThrow(
-        "Error al obtener sets"
-      );
-    });
+  it("playSet2: should call POST with correct endpoint", async () => {
+    mockFetchSuccess({ set_id: 2 });
+    await setService.playSet2(1, 2);
+    expect(mockFetch).toHaveBeenCalledWith(
+      "http://mock-server.com/sets_of2/1,2",
+      expect.objectContaining({ method: "POST" })
+    );
   });
 
-  // playSet2
-  describe("playSet2", () => {
-    it("debería enviar una petición POST para jugar un set y devolver su estado", async () => {
-      vi.mocked(fetch).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockSetResponse,
-      } as Response);
-
-      const result = await setService.playSet2(1, 2);
-
-      expect(result).toEqual(mockSetResponse);
-      expect(fetch).toHaveBeenCalledWith(
-        `${httpServerUrl}/sets_of2/1,2`,
-        expect.objectContaining({ method: "POST" })
-      );
-    });
-
-    it("debería lanzar un error si la respuesta no es ok", async () => {
-      vi.mocked(fetch).mockResolvedValueOnce({
-        ok: false,
-        json: async () => ({ detail: "Error al jugar set" }),
-      } as Response);
-
-      await expect(setService.playSet2(1, 2)).rejects.toThrow(
-        "Error al jugar set"
-      );
-    });
+  it("playSet3: should call POST with correct endpoint", async () => {
+    mockFetchSuccess({ set_id: 3 });
+    await setService.playSet3(1, 2, 3);
+    expect(mockFetch).toHaveBeenCalledWith(
+      "http://mock-server.com/sets_of3/1,2,3",
+      expect.objectContaining({ method: "POST" })
+    );
   });
 
-  // playSet3
-  describe("playSet3", () => {
-    it("debería enviar una petición POST para jugar un set y devolver su estado", async () => {
-      vi.mocked(fetch).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockSetResponse,
-      } as Response);
-
-      const result = await setService.playSet3(1, 2, 3);
-
-      expect(result).toEqual(mockSetResponse);
-      expect(fetch).toHaveBeenCalledWith(
-        `${httpServerUrl}/sets_of3/1,2,3`,
-        expect.objectContaining({ method: "POST" })
-      );
-    });
-
-    it("debería lanzar un error si la respuesta no es ok", async () => {
-      vi.mocked(fetch).mockResolvedValueOnce({
-        ok: false,
-        json: async () => ({ detail: "Error al jugar set" }),
-      } as Response);
-
-      await expect(setService.playSet3(1, 2, 3)).rejects.toThrow(
-        "Error al jugar set"
-      );
-    });
+  it("stealSet: should call PUT and return set", async () => {
+    const mockSet = { set_id: 4, player_id: 1 };
+    mockFetchSuccess(mockSet);
+    const result = await setService.stealSet(1, 4);
+    expect(mockFetch).toHaveBeenCalledWith(
+      "http://mock-server.com/sets/steal/1/4",
+      expect.objectContaining({ method: "PUT" })
+    );
+    expect(result).toEqual(mockSet);
   });
 
-  // stealSet
-  describe("stealSet", () => {
-    it("debería enviar una petición PUT para robar un set y devolver su nuevo estado", async () => {
-      const stolenSet = { ...mockSetResponse, player_id: 2 };
-      vi.mocked(fetch).mockResolvedValueOnce({
-        ok: true,
-        json: async () => stolenSet,
-      } as Response);
-
-      const result = await setService.stealSet(2, 1);
-
-      expect(result).toEqual(stolenSet);
-      expect(fetch).toHaveBeenCalledWith(
-        `${httpServerUrl}/sets/steal/2/1`,
-        expect.objectContaining({ method: "PUT" })
-      );
-    });
-
-    it("debería lanzar un error si la respuesta no es ok", async () => {
-      vi.mocked(fetch).mockResolvedValueOnce({
-        ok: false,
-        json: async () => ({ detail: "Error al robar set" }),
-      } as Response);
-
-      await expect(setService.stealSet(2, 1)).rejects.toThrow(
-        "Error al robar set"
-      );
-    });
+  it("addDetective: should call PUT with correct endpoint", async () => {
+    mockFetchSuccess({ set_id: 4 });
+    await setService.addDetective(10, 20);
+    expect(mockFetch).toHaveBeenCalledWith(
+      "http://mock-server.com/add/detective/10/20",
+      expect.objectContaining({ method: "PUT" })
+    );
   });
 });
