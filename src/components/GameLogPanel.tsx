@@ -74,14 +74,19 @@ export const GameLogPanel = () => {
   // 4. Lógica para saber si yo debo ver el modal del secreto ya revelado
 
   const showNotSoFastPrompt = useMemo(() => {
-    const isDiscardStep =
-      currentStep === "discard_op" || currentStep === "discard_skip";
+    const notAvailable =
+      currentStep === "discard_op" ||
+      currentStep === "discard_skip" ||
+      currentStep === "look_into_the_ashes" ||
+      currentStep === "delay_escape_selection" ||
+      currentStep === "wait_trade_folly" ||
+      currentStep === "wait_trade";
 
     // 2. El prompt SÓLO se muestra si la carta es NSF Y NO estamos descartando
     return (
       selectedCard !== null &&
       selectedCard.name === "Not so fast" &&
-      !isDiscardStep
+      !notAvailable
     );
   }, [selectedCard, currentStep]);
 

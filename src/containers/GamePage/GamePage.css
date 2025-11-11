@@ -64,9 +64,10 @@
   max-height: 100dvh; /* en lugar de min-height */
   padding: 70px 16px 16px;
   display: grid;
-  grid-template-rows: auto auto auto; /* TOP | MIDDLE | BOTTOM */
+  grid-template-rows: auto auto 1fr; /* TOP | MIDDLE | BOTTOM */
   grid-template-columns: 1fr;
   gap: 12px;
+  overflow: hidden;
   box-sizing: border-box; /* asegura que padding cuente dentro del 100vh */
   overflow-y: auto; /* por si algo se sale */
   align-items: center;
@@ -99,6 +100,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  min-height: 0;
 }
 
 @media (min-width: 900px) {
@@ -142,4 +144,19 @@ h1 {
   margin: 0;
   margin-top: 1rem;
   padding: 1rem;
+}
+
+.turn-actions-container {
+  /* Le dice que CREZCA y ocupe el espacio 
+     que NO usa la mano del jugador (<You>) */
+  flex-grow: 1;
+
+  /* Le da una altura mínima por si acaso */
+  min-height: 350px;
+
+  width: 100%;
+  max-width: 450px; /* (Opcional) Limita el ancho */
+
+  /* Hack para que el flex-grow funcione bien con el 100% de los hijos */
+  height: 0;
 }
